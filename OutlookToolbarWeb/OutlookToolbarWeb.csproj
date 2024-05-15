@@ -111,13 +111,20 @@
     <Content Include="Functions\FunctionFile.html" />
     <Content Include="Functions\FunctionFile.js" />
     <Content Include="Images\Close.png" />
+    <Content Include="Images\icon-send.svg" />
+    <Content Include="Images\icon-settings.svg" />
+    <Content Include="Images\icon-sync.svg" />
     <Content Include="Images\Icon16.png" />
     <Content Include="Images\Icon32.png" />
     <Content Include="Images\Icon64.png" />
     <Content Include="Images\Icon80.png" />
-    <Content Include="MessageRead.css" />
-    <Content Include="MessageRead.html" />
-    <Content Include="MessageRead.js" />
+    <Content Include="Images\logo.ico" />
+    <Content Include="Pages\Index\Index.css" />
+    <Content Include="Pages\Index\Index.html" />
+    <Content Include="Pages\Index\Index.js" />
+    <Content Include="Pages\SendEmail\SendEmail.html" />
+    <Content Include="Pages\Settings\Settings.html" />
+    <Content Include="Pages\SyncEmail\SyncEmail.html" />
     <Content Include="Scripts\jquery-3.6.0.js" />
     <Content Include="Scripts\jquery-3.6.0.min.js" />
     <Content Include="Scripts\jquery-3.6.0.slim.js" />
@@ -584,6 +591,7 @@
   <ItemGroup>
     <Service Include="{4A0DDDB5-7A95-4FBF-97CC-616D07737A77}" />
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
