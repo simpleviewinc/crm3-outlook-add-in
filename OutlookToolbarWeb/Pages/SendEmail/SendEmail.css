@@ -1,0 +1,73 @@
+﻿body {
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+    justify-content: space-between; /* Distribute space between the elements */
+    height: 100vh; /* Use the full height of the viewport */
+    margin: 0;
+    padding: 5px;
+    font-family: Arial, sans-serif;
+    background-color: #E5E4E2;
+}
+
+.box {
+    border: 2px solid #000;
+    margin: 20px;
+    padding: 10px;
+    width: calc(100% - 44px); /* Full width minus margin and border */
+    height: 200px; /* Fixed height */
+    overflow-y: scroll; /* Enable vertical scroll if content overflows */
+    position: relative; /* Required for absolute positioning */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #000;
+    padding: 5px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+/* Select all and clear all button styles */
+.box-header {
+    display: flex;
+    justify-content: flex-end; /* Aligns children to the right */
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.select-all-button,
+.clear-all-button,
+.ok-button,
+.cancel-button,
+.skip-button {
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.button-container {
+    display: flex;
+    align-items: center;
+}
+
+.bottom-right-buttons {
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+}
+
+fieldset {
+    border: 1px solid #000;
+}
+
+tr:hover {
+    background-color: #89CFF0;
+}

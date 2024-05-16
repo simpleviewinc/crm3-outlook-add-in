@@ -122,9 +122,15 @@
     <Content Include="Pages\Index\Index.css" />
     <Content Include="Pages\Index\Index.html" />
     <Content Include="Pages\Index\Index.js" />
+    <Content Include="Pages\SendEmail\SendEmail.css" />
     <Content Include="Pages\SendEmail\SendEmail.html" />
+    <Content Include="Pages\SendEmail\SendEmail.js" />
+    <Content Include="Pages\Settings\Settings.css" />
     <Content Include="Pages\Settings\Settings.html" />
+    <Content Include="Pages\Settings\Settings.js" />
+    <Content Include="Pages\SyncEmail\SyncEmail.css" />
     <Content Include="Pages\SyncEmail\SyncEmail.html" />
+    <Content Include="Pages\SyncEmail\SyncEmail.js" />
     <Content Include="Scripts\jquery-3.6.0.js" />
     <Content Include="Scripts\jquery-3.6.0.min.js" />
     <Content Include="Scripts\jquery-3.6.0.slim.js" />

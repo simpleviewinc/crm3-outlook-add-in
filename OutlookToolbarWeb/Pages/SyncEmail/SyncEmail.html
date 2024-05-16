@@ -1,11 +1,110 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Send Email(s) to CRM</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="../../Images/logo.ico">
+    <title>Select Email(s)</title>
+    <script src="SyncEmail.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="SyncEmail.css">
 </head>
 <body>
-    <h2>Sync Email to CRM</h2>
-    <p>This is content for synchronizing emails with CRM.</p>
-    <button onclick="window.close();">Close</button>
+    <div class="content-container">
+        <fieldset>
+            <legend><h3>Inbound Emails</h3></legend>
+            <div class="box-header">
+                <div class="button-container">
+                    <button class="select-all-button" onclick="handleSelectAllButton('box1')">Select All</button>
+                    <button class="clear-all-button" onclick="handleSelectAllButton('box1')">Clear All</button>
+                </div>
+            </div>
+            <div class="box" id="box1">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Choose</th>
+                            <th>From</th>
+                            <th>Subject</th>
+                            <th>Received</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>John Doe</td>
+                            <td>30</td>
+                            <td>Developer</td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>John Doe</td>
+                            <td>30</td>
+                            <td>Developer</td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>John Doe</td>
+                            <td>30</td>
+                            <td>Developer</td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>John Doe</td>
+                            <td>30</td>
+                            <td>Developer</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </fieldset>
+
+        <!-- Repeat the same structure for other boxes -->
+        <fieldset>
+            <legend><h3>Outbound Emails</h3></legend>
+            <div class="box-header">
+                <div class="button-container">
+                    <button class="select-all-button" onclick="handleSelectAllButton('box2')">Select All</button>
+                    <button class="clear-all-button" onclick="handleSelectAllButton('box2')">Clear All</button>
+                </div>
+            </div>
+            <div class="box" id="box2">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Choose</th>
+                            <th>From</th>
+                            <th>Subject</th>
+                            <th>Received</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>John Doe</td>
+                            <td>30</td>
+                            <td>Developer</td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>John Doe</td>
+                            <td>30</td>
+                            <td>Developer</td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>John Doe</td>
+                            <td>30</td>
+                            <td>Developer</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </fieldset>
+    </div>
+        <!-- Buttons at the bottom right corner -->
+    <div class="bottom-right-buttons">
+        <button class="ok-button">OK</button>
+        <button onclick="window.close();" class="cancel-button">Cancel</button>
+    </div>
 </body>
 </html>
