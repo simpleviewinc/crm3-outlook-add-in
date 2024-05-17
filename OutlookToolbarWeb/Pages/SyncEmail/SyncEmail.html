@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/x-icon" href="../../Images/logo.ico">
     <title>Select Email(s)</title>
+    <script src="../../Scripts/jquery-3.6.0.js" type="text/javascript"></script>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/9.6.0/css/fabric.min.css">
+    <script src="../Index/Index.js"></script>
     <script src="SyncEmail.js" type="text/javascript"></script>
     <link rel="stylesheet" href="SyncEmail.css">
+
 </head>
 <body>
     <div class="content-container">
@@ -19,7 +24,7 @@
                 </div>
             </div>
             <div class="box" id="box1">
-                <table>
+                <table id="subjectLinesTable">
                     <thead>
                         <tr>
                             <th>Choose</th>
@@ -29,30 +34,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><input type="checkbox" class="row-checkbox"></td>
-                            <td>John Doe</td>
-                            <td>30</td>
-                            <td>Developer</td>
-                        </tr>
-                        <tr>
-                            <td><input type="checkbox" class="row-checkbox"></td>
-                            <td>John Doe</td>
-                            <td>30</td>
-                            <td>Developer</td>
-                        </tr>
-                        <tr>
-                            <td><input type="checkbox" class="row-checkbox"></td>
-                            <td>John Doe</td>
-                            <td>30</td>
-                            <td>Developer</td>
-                        </tr>
-                        <tr>
-                            <td><input type="checkbox" class="row-checkbox"></td>
-                            <td>John Doe</td>
-                            <td>30</td>
-                            <td>Developer</td>
-                        </tr>
+                        <!-- Table body will be populated dynamically by JavaScript -->
                     </tbody>
                 </table>
             </div>
@@ -101,7 +83,7 @@
             </div>
         </fieldset>
     </div>
-        <!-- Buttons at the bottom right corner -->
+    <!-- Buttons at the bottom right corner -->
     <div class="bottom-right-buttons">
         <button class="ok-button">OK</button>
         <button onclick="window.close();" class="cancel-button">Cancel</button>
