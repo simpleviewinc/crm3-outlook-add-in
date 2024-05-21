@@ -19,6 +19,30 @@
     position: relative; /* Required for absolute positioning */
 }
 
+.headings {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px;
+}
+
+.left-side {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Allow it to take only necessary space */
+}
+
+    .left-side h5 {
+        margin: 5px 0; /* Add some margin to avoid overlapping */
+    }
+
+.right-side {
+    text-align: right;
+    flex-shrink: 0; /* Prevent it from shrinking */
+    margin-left: 20px; /* Add some margin to separate it from the left-side content */
+}
+
+
 table {
     width: 100%;
     border-collapse: collapse;
