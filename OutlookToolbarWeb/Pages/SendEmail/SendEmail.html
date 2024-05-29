@@ -8,6 +8,7 @@
     <title>Choose the Contact</title>
     <script src="SendEmail.js" type="text/javascript"></script>
     <link rel="stylesheet" href="SendEmail.css">
+    <link rel="stylesheet" href="../Settings/Settings.css">
 </head>
 <body>
     <div class="main-content">
@@ -22,31 +23,112 @@
                     <h5 id="received">Received: </h5>
                 </div>
             </div>
+            <div id="grids">
+                <div class="toggle-buttons">
+                    <button class="active" id="showGrid1">Matching Contacts</button>
+                    <button id="showGrid2">Search for a Contact</button>
+                </div>
+
+                <div class="box grid active" id="box1">
+                    <table id="contactTable">
+                        <thead>
+                            <tr>
+                                <th>Group</th>
+                                <th>Contact Name</th>
+                                <th>Company Event</th>
+                                <th>Type</th>
+                                <th>Address</th>
+                                <th>Email Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
 
 
-            <div class="box" id="box1">
-                <table id="contactTable">
-                    <thead>
-                        <tr>
-                            <th>Group</th>
-                            <th>Contact Name</th>
-                            <th>Company Event</th>
-                            <th>Type</th>
-                            <th>Address</th>
-                            <th>Email Address</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
+                <div class="box grid" id="box2">
+                    <div class="input-container">
+                        <label for="group-name">Group :</label>
+                        <select id="group-name" name="group-name"></select>
+                        <label for="name">Contact Name :</label>
+                        <input type="text" id="name" name="name" maxlength="50" placeholder="Enter Contact Name">
+                    </div>
+                    <div class="input-container">
+                        <label for="company">Company :</label>
+                        <input type="text" id="company" name="company" maxlength="50" placeholder="Enter Company Name">
+                        <button id="searchContacts">Search for Contacts</button>
+                    </div>
+                    <div class="box grid active" id="box3">
+                        <table id="searchTable">
+                            <thead>
+                                <tr>
+                                    <th>Contact Name</th>
+                                    <th>Company</th>
+                                    <th>Type</th>
+                                    <th>Address</th>
+                                    <th>Email Address</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <
+            </div>
+            <div id="selectContact" class="grid">
+                <fieldset>
+                    <legend>Trace Information</legend>
+                    <div class="input-container">
+                        <label for="priority">Priority :</label>
+                        <select id="priority" name="priority"></select>
+                        <label for="trace-type">Trace Type :</label>
+                        <select id="trace-type" name="trace-type"></select>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Attached To: </legend>
+                    <div class="input-container">
+                        <label>Group :</label>
+                        <label id="groupLbl"></label>
+                        <label>Contact :</label>
+                        <label id="contactLbl"></label>
+                    </div>
+                    <div class="input-container">
+                        <label>Company/Event:</label>
+                        <label id="companyLbl"></label>
+                    </div>
+                    <div class="input-container">
+                        <label>Lead:</label>
+                        <select id="lead"></select>
+                    </div>
+                    <div class="input-container">
+                        <label>Profile:</label>
+                        <select id="profile"></select>
+                    </div>
+                    <div class="input-container">
+                        <label>Service Request:</label>
+                        <select id="request"></select>
+                    </div>
+                    <div class="input-container">
+                        <label>Planner Account:</label>
+                        <select id="plannerAct"></select>
+                    </div>
+                    <div class="input-container">
+                        <label>Planner Contact:</label>
+                        <select id="plannerContact"></select>
+                    </div>
+                </fieldset>
             </div>
         </fieldset>
     </div>
-        <!-- Buttons at the bottom right corner -->
-        <div class="bottom-right-buttons">
-            <button class="ok-button">Select Contact</button>
-            <button class="skip-button">Skip</button>
-            <button onclick="window.close();" class="cancel-button">Cancel</button>
-        </div>
+    <!-- Buttons at the bottom right corner -->
+    <div class="bottom-right-buttons">
+        <button id="sendEmail" class="ok-button hide">Send Email</button>
+        <button id="diffContact" class="ok-button hide">Choose Different Contact</button>
+        <button id="selectBtn" class="ok-button">Select Contact</button>
+        <button class="skip-button">Skip</button>
+        <button onclick="window.close();" class="cancel-button">Cancel</button>
+    </div>
 </body>
 </html>

@@ -3,6 +3,7 @@
 <head>
     <link rel="icon" type="image/x-icon" href="../../Images/logo.ico">
     <title>User Settings</title>
+    <script src="../../Scripts/jquery-3.6.0.js" type="text/javascript"></script>
     <script src="Settings.js" type="text/javascript"></script>
     <link rel="stylesheet" href="Settings.css">
 </head>
@@ -12,15 +13,15 @@
             <legend><h3>CRM Settings</h3></legend>
             <div class="input-container">
                 <label for="crm-url">CRM URL:</label>
-                <input type="text" id="crm-url" name="crm-url" placeholder="Enter CRM URL">
+                <input type="text" id="crm-url" name="crm-url" maxlength="100" placeholder="Enter CRM URL">
             </div>
             <div class="input-container">
                 <label for="crm-login">CRM Login:</label>
-                <input type="text" id="crm-login" name="crm-login" placeholder="Enter CRM Login">
+                <input type="text" id="crm-login" name="crm-login" maxlength="100" placeholder="Enter CRM Login">
             </div>
             <div class="input-container">
                 <label for="crm-password">CRM Password:</label>
-                <input type="password" id="crm-password" name="crm-password" placeholder="Enter CRM Password">
+                <input type="password" id="crm-password" maxlength="50" name="crm-password" placeholder="Enter CRM Password">
             </div>
         </fieldset>
     </div>
@@ -32,66 +33,64 @@
             <div class="input-container">
                 <label for="sent-flag-color">Sent Flag Color:</label>
                 <select id="sent-flag-color" name="sent-flag-color">
-                    <option value="type1">Red</option>
-                    <option value="type2">Blue</option>
-                    <!-- Add more options as needed -->
+                    <option value="5">Blue</option>
+                    <option value="3">Green</option>
+                    <option value="2">Orange</option>
+                    <option value="1">Purple</option>
+                    <option value="6">Red</option>
+                    <option value="4">Yellow</option>
                 </select>
             </div>
             <div class="input-container">
                 <label for="skip-flag-color">Skip Flag Color:</label>
                 <select id="skip-flag-color" name="skip-flag-color">
-                    <option value="type1">Orange</option>
-                    <option value="type2">Blue</option>
-                    <!-- Add more options as needed -->
+                    <option value="5">Blue</option>
+                    <option value="3">Green</option>
+                    <option value="2">Orange</option>
+                    <option value="1">Purple</option>
+                    <option value="6">Red</option>
+                    <option value="4">Yellow</option>
                 </select>
             </div>
             <div class="input-container">
                 <label for="days-to-synch">Days to Synch:</label>
                 <select id="days-to-synch" name="days-to-synch">
-                    <option value="type1">Yesterday</option>
-                    <option value="type2">Today</option>
+                    <option value="0">Last 1 Day (Today)</option>
+                    <option value="1">Last 2 Days</option>
+                    <option value="2">Last 3 Days</option>
+                    <option value="3">Last 4 Days</option>
+                    <option value="4">Last 5 Days</option>
+                    <option value="5">Last 6 Days</option>
+                    <option value="6">Last 7 Days</option>
+                    <option value="9">Last 10 Days</option>
+                    <option value="29">Last 30 Days</option>
                     <!-- Add more options as needed -->
                 </select>
             </div>
             <div class="input-container">
                 <label for="inbound-trace-type">Inbound Trace Type:</label>
-                <select id="inbound-trace-type" name="inbound-trace-type">
-                    <option value="type1">Communication - Email Received</option>
-                    <option value="type2">Communication - Email Sent</option>
-                    <!-- Add more options as needed -->
-                </select>
+                <select id="inbound-trace-type" name="inbound-trace-type"></select>
             </div>
             <div class="input-container">
                 <label for="outbound-trace-type">Outbound Trace Type:</label>
-                <select id="outbound-trace-type" name="outbound-trace-type">
-                    <option value="type1">Type 1</option>
-                    <option value="type2">Type 2</option>
-                    <!-- Add more options as needed -->
-                </select>
+                <select id="outbound-trace-type" name="outbound-trace-type"></select>
             </div>
             <div class="input-container">
                 <label for="inbound-priority">Inbound Priority:</label>
-                <select id="inbound-priority" name="inbound-priority">
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                </select>
+                <select id="inbound-priority" name="inbound-priority"></select>
             </div>
             <div class="input-container">
                 <label for="outbound-priority">Outbound Priority:</label>
-                <select id="outbound-priority" name="outbound-priority">
-                    <option value="high">Medium</option>
-                    <option value="medium">High</option>
-                    <option value="low">Low</option>
-                </select>
+                <select id="outbound-priority" name="outbound-priority"></select>
             </div>
         </fieldset>
     </div>
 
     <div class="button-container">
-        <button class="select-contact">Ok</button>
-        <button class="skip">Cancel</button>
-        <button onclick="window.close();">Apply</button>
+        <button id="okButton" onclick="window.close();" class="select-contact">Ok</button>
+        <button class="skip" onclick="window.close();">Cancel</button>
+        <button id="applyButton" onclick="window.close();">Apply</button>
     </div>
+    <!--onclick="window.close();"-->
 </body>
 </html>

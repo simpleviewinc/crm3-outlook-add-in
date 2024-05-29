@@ -1,8 +1,8 @@
 ﻿body {
     padding: 10px;
     margin: 0px;
-    font-family: Arial, sans-serif;
-    background-color: #E5E4E2;
+    font-family: math;
+    /*background-color: #E5E4E2;*/
 }
 
 
@@ -31,7 +31,7 @@ input, select, option{
 }
 
 button {
-    margin-top: 10px;
+    border-radius:5px;
     padding: 10px 20px;
     cursor: pointer;
     border: 1px solid #ddd;

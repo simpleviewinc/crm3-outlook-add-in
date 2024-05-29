@@ -10,7 +10,7 @@ window.selectedEmailData = {}; // Global Variable to store the selected emails d
         if (info.host === Office.HostType.Outlook) {
             $(document).ready(() => {
                 console.log("Document is Ready");
-                loadItemProps(Office.context.mailbox.item);
+                
                 attachClickEventHandlers();
                 fetchSelectedEmails();
                 Office.context.mailbox.addHandlerAsync(Office.EventType.SelectedItemsChanged, fetchSelectedEmails);
@@ -177,7 +177,7 @@ window.selectedEmailData = {}; // Global Variable to store the selected emails d
 
     // Open popup for sending email
     function openPopupForSendEmail(url, title, emailId) {
-        openPopup(url, title, 800, 500, (popup) => {
+        openPopup(url, title, 1000, 800, (popup) => {
             popup.window.selectedEmailData = window.selectedEmailData[emailId];
             popup.window.MatchedData = window.MatchedData[emailId];
             if (typeof popup.window.initPopup === 'function') {
@@ -191,6 +191,8 @@ window.selectedEmailData = {}; // Global Variable to store the selected emails d
         isPopupOpen = true;
     }
 
+   
+
     // Open a generic popup
     function openPopup(url, title, width = 800, height = 500, onloadCallback) {
         const left = (window.screen.width / 2) - (width / 2);
@@ -203,9 +205,12 @@ window.selectedEmailData = {}; // Global Variable to store the selected emails d
                 onloadCallback(popup);
             }
         };
-    }
-
-    function loadItemProps(item) {
-        // Load item properties if needed
+        window.addEventListener('message', function (event) {
+            if (event.origin !== window.location.origin) {
+                // Ignore messages from different origins
+                return;
+            }
+            localStorage.setItem("CRM", btoa(event.data));
+        });
     }
 })();
