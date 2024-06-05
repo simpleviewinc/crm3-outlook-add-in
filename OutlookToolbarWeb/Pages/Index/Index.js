@@ -36,7 +36,7 @@ window.selectedEmailData = {}; // Global Variable to store the selected emails d
         });
 
         $('#settings-btn').on('click', () => {
-            openPopup('../Settings/Settings.html', 'Settings', 500, 600);
+            openPopup('../Settings/Settings.html', 'Settings', 500, 550);
         });
     }
 

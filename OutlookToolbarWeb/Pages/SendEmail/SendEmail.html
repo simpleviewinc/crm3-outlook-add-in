@@ -7,6 +7,7 @@
     <link rel="icon" type="image/x-icon" href="../../Images/logo.ico">
     <title>Choose the Contact</title>
     <script src="SendEmail.js" type="text/javascript"></script>
+    <!--<script src="../Settings/Settings.js" type="text/javascript"></script>-->
     <link rel="stylesheet" href="SendEmail.css">
     <link rel="stylesheet" href="../Settings/Settings.css">
 </head>
@@ -60,6 +61,7 @@
                         <button id="searchContacts">Search for Contacts</button>
                     </div>
                     <div class="box grid active" id="box3">
+                        <div id="loader" class="loader"></div>
                         <table id="searchTable">
                             <thead>
                                 <tr>
@@ -74,7 +76,6 @@
                         </table>
                     </div>
                 </div>
-                <
             </div>
             <div id="selectContact" class="grid">
                 <fieldset>
@@ -88,14 +89,14 @@
                 </fieldset>
                 <fieldset>
                     <legend>Attached To: </legend>
-                    <div class="input-container">
-                        <label>Group :</label>
+                    <div class="input-container block">
+                        <label class="bold">Group :</label>
                         <label id="groupLbl"></label>
-                        <label>Contact :</label>
+                        <label class="bold ml">Contact :</label>
                         <label id="contactLbl"></label>
                     </div>
-                    <div class="input-container">
-                        <label>Company/Event:</label>
+                    <div class="input-container block">
+                        <label class="bold">Company/Event:</label>
                         <label id="companyLbl"></label>
                     </div>
                     <div class="input-container">

@@ -1,7 +1,25 @@
 ﻿
 $(document).ready(function () {
-    GetTaskTypes(); GetPriorityType();
+    // Get and set dropdown data
+     GetTaskTypes();  GetPriorityType();
+
+    var resval = localStorage.getItem("crm");
+    var data = {};
+    if (resval != null) {
+         data = decodeFromBase64(resval);
+        console.log(data);
+        if (data != null) {
+            $('#crm-login').val(data.crmLogin);
+            $('#crm-password').val(data.crmPassword);
+            $('#crm-url').val(data.crmUrl);
+            $('#sent-flag-color').val(data.sentFlagColor);
+            $('#skip-flag-color').val(data.skipFlagColor);
+            $('#days-to-sync').val(data.daysToSynch);
+        }
+    }
+
     function GetPriorityType() {
+       
         const settings = {
             url: "http://localhost:4000/api/cftags/outlook.cfc",
             method: "POST",
@@ -47,6 +65,8 @@ $(document).ready(function () {
                     };
                     priorityList.push(priObj);
                 }
+                console.log("kevin");
+                console.log(priorityList);
                 const inboundPrt = document.getElementById('inbound-priority');
                 const outboundPrt = document.getElementById('outbound-priority');
 
@@ -63,12 +83,16 @@ $(document).ready(function () {
                     option.textContent = item.priname;
                     outboundPrt.appendChild(option);
                 });
+
+                $('#inbound-priority').val(data.inboundPriority);
+                $('#outbound-priority').val(data.outboundPriority);
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
                 console.error('Error:', textStatus, errorThrown);
             });
 
     }
+
     function GetTaskTypes() {
         const settings = {
             url: "http://localhost:4000/api/cftags/outlook.cfc",
@@ -135,11 +159,25 @@ $(document).ready(function () {
                     option.textContent = item.typename;
                     outboundDD.appendChild(option);
                 });
+
+                $('#inbound-trace-type').val(data.inboundPriority);
+                $('#outbound-trace-type').val(data.outboundTraceType);
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
                 console.error('Error:', textStatus, errorThrown);
             });
 
+    }
+
+    function decodeFromBase64(base64Str) {
+        const jsonString = atob(base64Str);
+
+        // Parse the JSON string into an object
+        return JSON.parse(jsonString);
+    }
+
+    function encodeToBase64(str) {
+        return btoa(str);
     }
 
     function htmlToString(html) {
@@ -171,21 +209,16 @@ $(document).ready(function () {
             crmPassword: $("#crm-password").val(),
             sentFlagColor: $("#sent-flag-color").val(),
             skipFlagColor: $("#skip-flag-color").val(),
-            daysToSynch: $("#days-to-synch").val(),
+            daysToSynch: $("#days-to-sync").val(),
             inboundTraceType: $("#inbound-trace-type").val(),
             outboundTraceType: $("#outbound-trace-type").val(),
             inboundPriority: $("#inbound-priority").val(),
             outboundPriority: $("#outbound-priority").val()
         };
 
-        // Convert the form data object to a string
         const formDataString = JSON.stringify(formData);
-
-        // Encrypt the data
-        //const encryptedData = CryptoJS.AES.encrypt(formDataString, "secret key 123").toString();
-
-        // Store the encrypted data in local storage
-        localStorage.setItem("formData", formDataString);
+        localStorage.setItem("crm", encodeToBase64(formDataString));
         window.opener.postMessage(formDataString, window.location.origin);
+        alert("Settings Updated !!");
     });
 });

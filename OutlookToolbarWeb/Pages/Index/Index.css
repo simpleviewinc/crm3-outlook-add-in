@@ -53,5 +53,19 @@
 }
 
 p {
-    font-size: 12px;
+    display: inline;
+    font-size: 16px;
+    font-family: math;
+}
+
+.btnIndex {
+    width: 240px;
+    border-radius: 10px;
+    display: block;
+    height: 35px;
+    font-family: math;
+    background: #ADD8E6;
+    margin-top: 20px;
+    border: 1px solid grey;
+    cursor:pointer;
 }
