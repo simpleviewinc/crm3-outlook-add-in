@@ -7,6 +7,7 @@
     document.querySelector('.headings h5:nth-child(1)').textContent = 'From: ' + emailData.From.EmailAddress.Address;
     document.querySelector('.headings h5:nth-child(2)').textContent = 'Subject: ' + emailData.Subject;
     document.querySelector('#received').textContent = 'Received: ' + new Date(emailData.ReceivedDateTime).toLocaleString()
+    $('#EmailId').val(emailData.Id);
     GetGroupsByUserId(1);
     let contactList = [];
     // Function to append rows to the table
@@ -36,6 +37,7 @@
     // Populate the table with data
     populateTable(contactList);
 }
+
 
 
 function GetAttachedToDDInfo() {
@@ -334,6 +336,16 @@ function GetTaskTypes() {
 }
 
 $(document).ready(function () {
+    $('#skipit').on('click', () => {
+        var id = $('#EmailId').val();
+        console.log("Email id: " + id);
+        if (window.opener) {
+            // Call function in parent window
+            window.opener.setCategoryToEmail(id, "Blue category");
+        } else {
+            console.error("No parent window found!");
+        }
+    });
     //Intially hide the loader
     $('#loader').hide();
     $("#searchContacts").click(function () {

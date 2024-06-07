@@ -1,6 +1,8 @@
 ﻿'use strict';
 window.MatchedData = {};
 window.selectedEmailData = {}; // Global Variable to store the selected emails data
+window.inboxEmails = {};
+window.sentEmails = {};
 
 (function () {
     let popupQueue = []; // Queue to manage popups
@@ -14,10 +16,32 @@ window.selectedEmailData = {}; // Global Variable to store the selected emails d
                 attachClickEventHandlers();
                 fetchSelectedEmails();
                 Office.context.mailbox.addHandlerAsync(Office.EventType.SelectedItemsChanged, fetchSelectedEmails);
+                //setCategoryToEmail('"AAMkADQ4NWE4NzJhLTM0NDUtNGI5OC05YjlmLTNhODRjNDk4MjYzNABGAAAAAADWNcrcUMgwTrq4zhmXgLdCBwBCNBs43cjoTrvh_eRfcXxoAAAAAAEMAABCNBs43cjoTrvh_eRfcXxoAAPjQwFhAAA="', 'Blue category');
+
+                var resval = localStorage.getItem("CRM");
+                var data = {};
+                if (resval != null) {
+                    data = decodeFromBase64(resval);
+                    console.log(data);
+                    if (data != null) {
+                        $('#sent-flag-color').val();
+                        $('#skip-flag-color').val(data.skipFlagColor);
+                        $('#days-to-sync').val();
+                    }
+                    fetchEmailsWithCategoryAndTimeFilter(true, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
+                    fetchEmailsWithCategoryAndTimeFilter(false, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
+                }
+               
             });
         }
     });
 
+    function decodeFromBase64(base64Str) {
+        const jsonString = atob(base64Str);
+
+        // Parse the JSON string into an object
+        return JSON.parse(jsonString);
+    }
     // Attach click event handlers for buttons
     function attachClickEventHandlers() {
         $('#send-email-btn').on('click', () => {
@@ -180,6 +204,8 @@ window.selectedEmailData = {}; // Global Variable to store the selected emails d
         openPopup(url, title, 1000, 800, (popup) => {
             popup.window.selectedEmailData = window.selectedEmailData[emailId];
             popup.window.MatchedData = window.MatchedData[emailId];
+            popup.window.inboxEmails = window.inboxEmails;
+            popup.window.sentEmails = window.sentEmails;
             if (typeof popup.window.initPopup === 'function') {
                 popup.window.initPopup(); // Initialize the popup with data
             }
@@ -201,6 +227,8 @@ window.selectedEmailData = {}; // Global Variable to store the selected emails d
         popup.onload = () => {
             popup.window.selectedEmailData = popup.opener.selectedEmailData;
             popup.window.MatchedData = popup.opener.MatchedData;
+            popup.window.inboxEmails = popup.opener.inboxEmails
+            popup.window.sentEmails = popup.opener.sentEmails;
             if (onloadCallback) {
                 onloadCallback(popup);
             }
@@ -213,4 +241,101 @@ window.selectedEmailData = {}; // Global Variable to store the selected emails d
             localStorage.setItem("CRM", btoa(event.data));
         });
     }
+    // Function to set the category of an email
+    function setCategoryToEmail(emailId, categoryColor) {
+        Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
+            if (result.status === "succeeded") {
+                var accessToken = result.value;
+                var requestUrl = Office.context.mailbox.restUrl + '/v2.0/me/messages/' + emailId;
+
+                // Construct the payload to set the category
+                var categoryData = {
+                    "Categories": [categoryColor]
+                };
+
+                // Make the PATCH request to update the email with the category
+                $.ajax({
+                    url: requestUrl,
+                    type: 'PATCH',
+                    contentType: 'application/json',
+                    headers: {
+                        'Authorization': 'Bearer ' + accessToken
+                    },
+                    data: JSON.stringify(categoryData)
+                }).done(function (response) {
+                    console.log("Email category set successfully:", response);
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    console.error("Error setting category:", textStatus, errorThrown);
+                    console.error("Response text:", jqXHR.responseText);
+                });
+            } else {
+                console.error("Error getting callback token:", result.error.message);
+            }
+        });
+    }
+
+
+
+    function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryColor, skipCategoryColor) {
+        console.log(daysToSync);
+        console.log(sentCategoryColor);
+        console.log(skipCategoryColor);
+
+        Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
+            if (result.status === "succeeded") {
+                var accessToken = result.value;
+                var mailFolder = isInbox ? 'inbox' : 'sentitems';
+                var requestUrl = Office.context.mailbox.restUrl + `/v2.0/me/mailfolders/${mailFolder}/messages`;
+
+                // Get selected days to sync
+                var now = new Date();
+                var startDate = new Date(now.getTime() - (daysToSync + 1) * 24 * 60 * 60 * 1000);
+                var startDateISOString = startDate.toISOString();
+                console.log("date" + startDateISOString);
+
+                // Construct the query to filter emails within the selected timeframe,
+                // excluding those with the skip or sent categories
+                var filterQuery = `?$filter=receivedDateTime ge ${startDateISOString}` +
+                    ` and not(categories/any(c:c eq '${sentCategoryColor}'))` +
+                    ` and not(categories/any(c:c eq '${skipCategoryColor}'))`;
+
+                // Function to fetch emails with pagination
+                function fetchEmails(url, allEmails = []) {
+                    $.ajax({
+                        url: url,
+                        type: 'GET',
+                        contentType: 'application/json',
+                        headers: {
+                            'Authorization': 'Bearer ' + accessToken
+                        }
+                    }).done(function (response) {
+                        allEmails = allEmails.concat(response.value);
+
+                        if (response['@odata.nextLink']) {
+                            fetchEmails(response['@odata.nextLink'], allEmails);
+                        } else {
+                            if (isInbox) {
+                                window.inboxEmails = allEmails;
+                                console.log("Inbox emails from the selected timeframe:");
+                                console.log(window.inboxEmails);
+                            } else {
+                                window.sentEmails = allEmails;
+                                console.log("Sent emails from the selected timeframe:");
+                                console.log(window.sentEmails);
+                            }
+                        }
+                    }).fail(function (jqXHR, textStatus, errorThrown) {
+                        console.error("Error fetching emails:", textStatus, errorThrown);
+                        console.error("Response text:", jqXHR.responseText);
+                    });
+                }
+
+                fetchEmails(requestUrl + filterQuery);
+            } else {
+                console.error("Error getting callback token:", result.error.message);
+            }
+        });
+    }
+   
+
 })();

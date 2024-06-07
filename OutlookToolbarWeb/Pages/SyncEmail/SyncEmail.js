@@ -1,8 +1,9 @@
 ﻿document.addEventListener("DOMContentLoaded", function () {
     setTimeout(() => {
-        if (typeof window.selectedEmailData !== 'undefined' && Object.keys(window.selectedEmailData).length > 0) {
-            const tableBody = document.querySelector("#subjectLinesTable tbody");
-            Object.values(window.selectedEmailData).forEach((email, index) => {
+        if (typeof window.inboxEmails !== 'undefined' && Object.keys(window.inboxEmails).length > 0) {
+            const tableBody = document.querySelector("#inboxTable tbody");
+            console.log(window.inboxEmails);
+            Object.values(window.inboxEmails).forEach((email, index) => {
                 const row = tableBody.insertRow();
                 const indexCell = row.insertCell(0);
                 const fromCell = row.insertCell(1);
@@ -15,9 +16,33 @@
                 receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
             });
         } else {
-            console.log("No data found in selectedEmailData.");
+            console.log("No data found in inbox.");
         }
-    }, 1000); // Delay of 1 second to ensure data is available
+    }, 100); // Delay of 1 second to ensure data is available
+
+    setTimeout(() => {
+        if (typeof window.sentEmails !== 'undefined' && Object.keys(window.sentEmails).length > 0) {
+            const tableBody = document.querySelector("#sentBoxTable tbody");
+            console.log(window.sentEmails);
+
+            Object.values(window.sentEmails).forEach((email, index) => {
+                const row = tableBody.insertRow();
+                const indexCell = row.insertCell(0);
+                const fromCell = row.insertCell(1);
+                const subjectCell = row.insertCell(2);
+                const receivedCell = row.insertCell(3);
+
+                indexCell.innerHTML = '<input type="checkbox" class="row-checkbox">';
+                fromCell.textContent = email.From.EmailAddress.Address;
+                subjectCell.textContent = email.Subject;
+                receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
+            });
+        } else {
+            console.log("No data found in sent box.");
+        }
+    }, 100); // Delay of 1 second to ensure data is available
+
+ 
 });
 
 
@@ -29,15 +54,29 @@ function toggleCheckboxes(boxId, isChecked) {
     });
 }
 
-// Function to handle the "Select All" checkbox change
-function handleSelectAllCheckbox(boxId) {
-    var selectAllCheckbox = document.querySelector('#' + boxId + ' .select-all-checkbox');
-    toggleCheckboxes(boxId, selectAllCheckbox.checked);
+// Function to handle the "Select All" or "Clear All" button click
+function handleSelectAllCheckbox(boxId, selectAll) {
+    toggleCheckboxes(boxId, selectAll);
 }
 
-// Function to handle the "Select All" button click
-function handleSelectAllButton(boxId) {
-    toggleCheckboxes(boxId, true);
-    var selectAllCheckbox = document.querySelector('#' + boxId + ' .select-all-checkbox');
-    selectAllCheckbox.checked = true;
-}
+
+
+// Example usage: Add event listener to "Select All" and "Clear All" buttons
+document.addEventListener('DOMContentLoaded', function () {
+    var selectAllButtons = document.querySelectorAll('.select-all-button');
+    selectAllButtons.forEach(function (selectAllButton) {
+        selectAllButton.addEventListener('click', function () {
+            var boxId = selectAllButton.closest('fieldset').querySelector('.box').id;
+            handleSelectAllCheckbox(boxId, true);
+        });
+    });
+
+    var clearAllButtons = document.querySelectorAll('.clear-all-button');
+    clearAllButtons.forEach(function (clearAllButton) {
+        clearAllButton.addEventListener('click', function () {
+            var boxId = clearAllButton.closest('fieldset').querySelector('.box').id;
+            handleSelectAllCheckbox(boxId, false);
+        });
+    });
+});
+

@@ -19,12 +19,12 @@
             <legend><h3>Inbound Emails</h3></legend>
             <div class="box-header">
                 <div class="button-container">
-                    <button class="select-all-button" onclick="handleSelectAllButton('box1')">Select All</button>
-                    <button class="clear-all-button" onclick="handleSelectAllButton('box1')">Clear All</button>
+                    <button class="select-all-button">Select All</button>
+                    <button class="clear-all-button">Clear All</button>
                 </div>
             </div>
             <div class="box" id="box1">
-                <table id="subjectLinesTable">
+                <table id="inboxTable">
                     <thead>
                         <tr>
                             <th>Choose</th>
@@ -34,23 +34,21 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Table body will be populated dynamically by JavaScript -->
                     </tbody>
                 </table>
             </div>
         </fieldset>
 
-        <!-- Repeat the same structure for other boxes -->
         <fieldset>
             <legend><h3>Outbound Emails</h3></legend>
             <div class="box-header">
                 <div class="button-container">
-                    <button class="select-all-button" onclick="handleSelectAllButton('box2')">Select All</button>
-                    <button class="clear-all-button" onclick="handleSelectAllButton('box2')">Clear All</button>
+                    <button class="select-all-button">Select All</button>
+                    <button class="clear-all-button">Clear All</button>
                 </div>
             </div>
             <div class="box" id="box2">
-                <table>
+                <table id="sentBoxTable">
                     <thead>
                         <tr>
                             <th>Choose</th>
@@ -60,24 +58,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><input type="checkbox" class="row-checkbox"></td>
-                            <td>John Doe</td>
-                            <td>30</td>
-                            <td>Developer</td>
-                        </tr>
-                        <tr>
-                            <td><input type="checkbox" class="row-checkbox"></td>
-                            <td>John Doe</td>
-                            <td>30</td>
-                            <td>Developer</td>
-                        </tr>
-                        <tr>
-                            <td><input type="checkbox" class="row-checkbox"></td>
-                            <td>John Doe</td>
-                            <td>30</td>
-                            <td>Developer</td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -89,4 +69,5 @@
         <button class="cancel-button">Cancel</button>
     </div>
 </body>
+
 </html>

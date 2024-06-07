@@ -14,7 +14,7 @@ $(document).ready(function () {
             $('#crm-url').val(data.crmUrl);
             $('#sent-flag-color').val(data.sentFlagColor);
             $('#skip-flag-color').val(data.skipFlagColor);
-            $('#days-to-sync').val(data.daysToSynch);
+            $('#days-to-sync').val(data.daysToSync);
         }
     }
 
@@ -160,7 +160,7 @@ $(document).ready(function () {
                     outboundDD.appendChild(option);
                 });
 
-                $('#inbound-trace-type').val(data.inboundPriority);
+                $('#inbound-trace-type').val(data.inboundTraceType);
                 $('#outbound-trace-type').val(data.outboundTraceType);
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
@@ -209,7 +209,7 @@ $(document).ready(function () {
             crmPassword: $("#crm-password").val(),
             sentFlagColor: $("#sent-flag-color").val(),
             skipFlagColor: $("#skip-flag-color").val(),
-            daysToSynch: $("#days-to-sync").val(),
+            daysToSync: $("#days-to-sync").val(),
             inboundTraceType: $("#inbound-trace-type").val(),
             outboundTraceType: $("#outbound-trace-type").val(),
             inboundPriority: $("#inbound-priority").val(),
