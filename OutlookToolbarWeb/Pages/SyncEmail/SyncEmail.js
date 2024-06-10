@@ -18,7 +18,7 @@
         } else {
             console.log("No data found in inbox.");
         }
-    }, 100); // Delay of 1 second to ensure data is available
+    }, 1000); // Delay of 1 second to ensure data is available
 
     setTimeout(() => {
         if (typeof window.sentEmails !== 'undefined' && Object.keys(window.sentEmails).length > 0) {

@@ -11,13 +11,46 @@
     GetGroupsByUserId(1);
     let contactList = [];
     // Function to append rows to the table
-    function populateTable(contactList) {
-        console.log("executing");
-        const $tableBody = $("#contactTable tbody");
-        $tableBody.empty(); // Clear any existing rows
+    checkAndPopulateTable();
+    //contactList = window.MatchedData;
+    // Populate the table with data
+    //populateTable(contactList);
+}
 
-        contactList.forEach(contact => {
-            const row = `
+function checkAndPopulateTable() {
+    let checkCount = 0;
+    let interval;
+
+    // Function to check and populate the table
+    function checkAndPopulate() {
+        contactList = window.MatchedData;
+        if (contactList && contactList.length > 0) {
+            clearInterval(interval); // Stop checking once data is available
+            populateTable(contactList);
+        } else {
+            checkCount++;
+            if (checkCount >= 5) { // Stop after 5 seconds
+                clearInterval(interval);
+                //contactList = [];
+                //populateTable(contactList);
+            }
+        }
+    }
+
+    // Execute immediately
+    checkAndPopulate();
+
+    // Set interval to execute every 1 second
+    interval = setInterval(checkAndPopulate, 1000);
+}
+
+function populateTable(contactList) {
+    console.log("executing");
+    const $tableBody = $("#contactTable tbody");
+    $tableBody.empty(); // Clear any existing rows
+
+    contactList.forEach(contact => {
+        const row = `
                 <tr>
                     <td>${contact.groupname}</td>
                     <td>${contact.fullname}</td>
@@ -27,18 +60,13 @@
                     <td>${contact.email}</td>
                 </tr>
             `;
-            $tableBody.append(row);
-        });
-        if (contactList.length === 0) {
-            $('body').append('<p>No data found</p>');
-        }
+        $tableBody.append(row);
+    });
+    if (contactList.length === 0) {
+        $tableBody.append('<p>No data found</p>');
     }
-    contactList = window.MatchedData;
-    // Populate the table with data
-    populateTable(contactList);
+    BindRowSelectFunction();
 }
-
-
 
 function GetAttachedToDDInfo() {
     const settings = {
@@ -270,6 +298,7 @@ function GetPriorityType() {
         });
 
 }
+
 function GetTaskTypes() {
     const settings = {
         url: "http://localhost:4000/api/cftags/outlook.cfc",
@@ -339,13 +368,34 @@ $(document).ready(function () {
     $('#skipit').on('click', () => {
         var id = $('#EmailId').val();
         console.log("Email id: " + id);
-        if (window.opener) {
-            // Call function in parent window
-            window.opener.setCategoryToEmail(id, "Blue category");
+        if (window.opener && !window.opener.closed) {
+            if (typeof window.opener.setCategoryToEmail === 'function') {
+                window.opener.setCategoryToEmail(id, false);
+                window.close(); // Optionally close the popup after sending data
+            } else {
+                console.error("Parent window method setCategoryToEmail is not defined.");
+            }
         } else {
-            console.error("No parent window found!");
+            console.error("Parent window is not available.");
         }
     });
+
+
+    $('#sendEmail').on('click', () => {
+        var id = $('#EmailId').val();
+        console.log("Email id: " + id);
+        if (window.opener && !window.opener.closed) {
+            if (typeof window.opener.setCategoryToEmail === 'function') {
+                window.opener.setCategoryToEmail(id, true);
+                window.close(); // Optionally close the popup after sending data
+            } else {
+                console.error("Parent window method setCategoryToEmail is not defined.");
+            }
+        } else {
+            console.error("Parent window is not available.");
+        }
+    });
+    
     //Intially hide the loader
     $('#loader').hide();
     $("#searchContacts").click(function () {
@@ -480,11 +530,16 @@ function BindClickOnRowForSearch() {
         console.log(rowData);
     });
 }
+
 $(document).ready(function () {
+    BindRowSelectFunction();
+});
+
+function BindRowSelectFunction() {
     $('#contactTable tbody tr').on('click', function () {
         $('#contactTable tbody tr').removeClass('selected');
         $(this).toggleClass('selected');
-
+        console.log("contact table row clicked");
         // Collect data from the selected row
         var rowData = {};
         var headers = $('#contactTable th');
@@ -501,8 +556,7 @@ $(document).ready(function () {
         // Log the row data to the console
         console.log(rowData);
     });
-
-});
+}
 
 function populateSearchTable(contactList) {
     console.log("executing");
@@ -610,6 +664,7 @@ function htmlToString(html) {
     tempDiv.innerHTML = html;
     return tempDiv.textContent || tempDiv.innerText || "";
 }
+
 function decodeHTMLEntities(text) {
     const entities = {
         '&amp;': '&',

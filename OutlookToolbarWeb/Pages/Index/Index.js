@@ -4,7 +4,54 @@ window.selectedEmailData = {}; // Global Variable to store the selected emails d
 window.inboxEmails = {};
 window.sentEmails = {};
 
-(function () {
+function setCategoryToEmail(emailId, isSentFlag) {
+    var resval = localStorage.getItem("CRM");
+    var data = {};
+    var categoryColor = 'Yellow category';
+    if (resval != null) {
+        data = decodeFromBase64(resval);
+        console.log(data);
+        if (data != null) {
+            if (isSentFlag) {
+                categoryColor = data.sentFlagColor;
+            }
+            else {
+                categoryColor = data.skipFlagColor;
+            }
+        }
+    }
+    Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
+        if (result.status === "succeeded") {
+            var accessToken = result.value;
+            var requestUrl = Office.context.mailbox.restUrl + '/v2.0/me/messages/' + emailId;
+
+            // Construct the payload to set the category
+            var categoryData = {
+                "Categories": [categoryColor]
+            };
+
+            // Make the PATCH request to update the email with the category
+            $.ajax({
+                url: requestUrl,
+                type: 'PATCH',
+                contentType: 'application/json',
+                headers: {
+                    'Authorization': 'Bearer ' + accessToken
+                },
+                data: JSON.stringify(categoryData)
+            }).done(function (response) {
+                console.log("Email category set successfully:", response);
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                console.error("Error setting category:", textStatus, errorThrown);
+                console.error("Response text:", jqXHR.responseText);
+            });
+        } else {
+            console.error("Error getting callback token:", result.error.message);
+        }
+    });
+}
+
+
     let popupQueue = []; // Queue to manage popups
     let isPopupOpen = false;
 
@@ -12,7 +59,7 @@ window.sentEmails = {};
         if (info.host === Office.HostType.Outlook) {
             $(document).ready(() => {
                 console.log("Document is Ready");
-                
+                $('#send-email-btn').prop('disabled', true);
                 attachClickEventHandlers();
                 fetchSelectedEmails();
                 Office.context.mailbox.addHandlerAsync(Office.EventType.SelectedItemsChanged, fetchSelectedEmails);
@@ -24,9 +71,9 @@ window.sentEmails = {};
                     data = decodeFromBase64(resval);
                     console.log(data);
                     if (data != null) {
-                        $('#sent-flag-color').val();
+                        $('#sent-flag-color').val(data.sentFlagColor);
                         $('#skip-flag-color').val(data.skipFlagColor);
-                        $('#days-to-sync').val();
+                        $('#days-to-sync').val(data.daysToSync);
                     }
                     fetchEmailsWithCategoryAndTimeFilter(true, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
                     fetchEmailsWithCategoryAndTimeFilter(false, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
@@ -45,6 +92,8 @@ window.sentEmails = {};
     // Attach click event handlers for buttons
     function attachClickEventHandlers() {
         $('#send-email-btn').on('click', () => {
+            console.log("send button cliked: ");
+            console.log(window.selectedEmailData);
             Object.keys(window.selectedEmailData).forEach((emailId, index) => {
                 popupQueue.push({
                     url: '../SendEmail/SendEmail.html',
@@ -60,7 +109,7 @@ window.sentEmails = {};
         });
 
         $('#settings-btn').on('click', () => {
-            openPopup('../Settings/Settings.html', 'Settings', 500, 550);
+            openPopup('../Settings/Settings.html', 'Settings', 1000, 800);
         });
     }
 
@@ -161,6 +210,7 @@ window.sentEmails = {};
                 }
 
                 window.MatchedData[msgId] = contactList;
+                $('#send-email-btn').prop('disabled', false);
                 console.log(window.MatchedData);
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
@@ -191,8 +241,11 @@ window.sentEmails = {};
     }
 
     // Open the next popup in the queue
-    function openNextPopup() {
-        if (popupQueue.length === 0 || isPopupOpen) {
+function openNextPopup() {
+
+    console.log("popupQueue.length" + popupQueue.length);
+    console.log("isPopupOpen" + isPopupOpen);
+        if (popupQueue.length === 0 ) {
             return;
         }
         const popupInfo = popupQueue.shift(); // Get the next popup info from the queue
@@ -220,7 +273,7 @@ window.sentEmails = {};
    
 
     // Open a generic popup
-    function openPopup(url, title, width = 800, height = 500, onloadCallback) {
+    function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
         const left = (window.screen.width / 2) - (width / 2);
         const top = (window.screen.height / 2) - (height / 2);
         const popup = window.open(url, title, `width=${width}, height=${height}, top=${top}, left=${left}`);
@@ -239,38 +292,6 @@ window.sentEmails = {};
                 return;
             }
             localStorage.setItem("CRM", btoa(event.data));
-        });
-    }
-    // Function to set the category of an email
-    function setCategoryToEmail(emailId, categoryColor) {
-        Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
-            if (result.status === "succeeded") {
-                var accessToken = result.value;
-                var requestUrl = Office.context.mailbox.restUrl + '/v2.0/me/messages/' + emailId;
-
-                // Construct the payload to set the category
-                var categoryData = {
-                    "Categories": [categoryColor]
-                };
-
-                // Make the PATCH request to update the email with the category
-                $.ajax({
-                    url: requestUrl,
-                    type: 'PATCH',
-                    contentType: 'application/json',
-                    headers: {
-                        'Authorization': 'Bearer ' + accessToken
-                    },
-                    data: JSON.stringify(categoryData)
-                }).done(function (response) {
-                    console.log("Email category set successfully:", response);
-                }).fail(function (jqXHR, textStatus, errorThrown) {
-                    console.error("Error setting category:", textStatus, errorThrown);
-                    console.error("Response text:", jqXHR.responseText);
-                });
-            } else {
-                console.error("Error getting callback token:", result.error.message);
-            }
         });
     }
 
@@ -338,4 +359,3 @@ window.sentEmails = {};
     }
    
 
-})();
