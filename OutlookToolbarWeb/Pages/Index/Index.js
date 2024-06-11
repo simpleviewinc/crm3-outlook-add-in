@@ -154,7 +154,7 @@ function setCategoryToEmail(emailId, isSentFlag) {
     function GetMatchingContactsData(email, userId, msgId) {
         email = "awilkins@americanhomeshield.com";
         const settings = {
-            url: "http://localhost:4000/api/cftags/outlook.cfc",
+            url: "https://3adc-13-84-216-53.ngrok-free.app/api/cftags/outlook.cfc",
             method: "POST",
             timeout: 0,
             headers: {

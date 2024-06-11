@@ -70,7 +70,7 @@ function populateTable(contactList) {
 
 function GetAttachedToDDInfo() {
     const settings = {
-        url: "http://localhost:4000/api/cftags/outlook.cfc",
+        url: "https://3adc-13-84-216-53.ngrok-free.app/api/cftags/outlook.cfc",
         method: "POST",
         timeout: 0,
         headers: {
@@ -237,7 +237,7 @@ function bindLeadDataToSelect(jsonData) {
 function GetPriorityType() {
 
     const settings = {
-        url: "http://localhost:4000/api/cftags/outlook.cfc",
+        url: "https://3adc-13-84-216-53.ngrok-free.app/api/cftags/outlook.cfc",
         method: "POST",
         timeout: 0,
         headers: {
@@ -301,7 +301,7 @@ function GetPriorityType() {
 
 function GetTaskTypes() {
     const settings = {
-        url: "http://localhost:4000/api/cftags/outlook.cfc",
+        url: "https://3adc-13-84-216-53.ngrok-free.app/api/cftags/outlook.cfc",
         method: "POST",
         timeout: 0,
         headers: {
@@ -437,7 +437,7 @@ function GetGroupsByUserId(userId) {
     console.log("Getting Groups");
     userId = 1127;
     const settings = {
-        url: "http://localhost:4000/api/cftags/outlook.cfc",
+        url: "https://3adc-13-84-216-53.ngrok-free.app/api/cftags/outlook.cfc",
         method: "POST",
         timeout: 0,
         headers: {
@@ -594,7 +594,7 @@ function GetSearchedResult() {
     console.log('Company Name:', companyName);
 
     const settings = {
-        url: "http://localhost:4000/api/cftags/outlook.cfc",
+        url: "https://3adc-13-84-216-53.ngrok-free.app/api/cftags/outlook.cfc",
         method: "POST",
         timeout: 0,
         headers: {

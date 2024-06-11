@@ -21,7 +21,7 @@ $(document).ready(function () {
     function GetPriorityType() {
        
         const settings = {
-            url: "http://localhost:4000/api/cftags/outlook.cfc",
+            url: "https://3adc-13-84-216-53.ngrok-free.app/api/cftags/outlook.cfc",
             method: "POST",
             timeout: 0,
             headers: {
@@ -95,7 +95,7 @@ $(document).ready(function () {
 
     function GetTaskTypes() {
         const settings = {
-            url: "http://localhost:4000/api/cftags/outlook.cfc",
+            url: "https://3adc-13-84-216-53.ngrok-free.app/api/cftags/outlook.cfc",
             method: "POST",
             timeout: 0,
             headers: {
