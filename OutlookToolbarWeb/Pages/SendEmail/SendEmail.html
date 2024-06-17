@@ -12,125 +12,194 @@
     <link rel="stylesheet" href="../Settings/Settings.css">
 </head>
 <body>
-    <div class="main-content">
-        <fieldset>
-            <legend><h3>Inbound Emails</h3></legend>
-            <div class="headings">
-                <input type="hidden" id="EmailId">
-                <div class="left-side">
-                    <h5>From: </h5>
-                    <h5>Subject: </h5>
-                </div>
-                <div class="right-side">
-                    <h5 id="received">Received: </h5>
-                </div>
-            </div>
-            <div id="grids">
-                <div class="toggle-buttons">
-                    <button class="active" id="showGrid1">Matching Contacts</button>
-                    <button id="showGrid2">Search for a Contact</button>
-                </div>
-
-                <div class="box grid active" id="box1">
-                    <table id="contactTable">
-                        <thead>
-                            <tr>
-                                <th>Group</th>
-                                <th>Contact Name</th>
-                                <th>Company Event</th>
-                                <th>Type</th>
-                                <th>Address</th>
-                                <th>Email Address</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
-
-
-                <div class="box grid" id="box2">
-                    <div class="input-container">
-                        <label for="group-name">Group :</label>
-                        <select id="group-name" name="group-name"></select>
-                        <label for="name">Contact Name :</label>
-                        <input type="text" id="name" name="name" maxlength="50" placeholder="Enter Contact Name">
+    <div id="sendEmailUI">
+        <div class="main-content">
+            <fieldset>
+                <legend><h3>Inbound Emails</h3></legend>
+                <div class="headings">
+                    <input type="hidden" id="EmailId">
+                    <div class="left-side">
+                        <h5>From: </h5>
+                        <h5>Subject: </h5>
                     </div>
-                    <div class="input-container">
-                        <label for="company">Company :</label>
-                        <input type="text" id="company" name="company" maxlength="50" placeholder="Enter Company Name">
-                        <button id="searchContacts">Search for Contacts</button>
+                    <div class="right-side">
+                        <h5 id="received">Received: </h5>
                     </div>
-                    <div class="box grid active" id="box3">
-                        <div id="loader" class="loader"></div>
-                        <table id="searchTable">
+                </div>
+                <div id="grids">
+                    <div class="toggle-buttons">
+                        <button class="active" id="showGrid1">Matching Contacts</button>
+                        <button id="showGrid2">Search for a Contact</button>
+                    </div>
+
+                    <div class="box grid active" id="box1">
+                        <table id="contactTable">
                             <thead>
                                 <tr>
+                                    <th>Group</th>
                                     <th>Contact Name</th>
-                                    <th>Company</th>
+                                    <th>Company Event</th>
                                     <th>Type</th>
                                     <th>Address</th>
                                     <th>Email Address</th>
                                 </tr>
                             </thead>
-                            <tbody></tbody>
+                            <tbody>
+                            </tbody>
                         </table>
                     </div>
+
+
+                    <div class="box grid" id="box2">
+                        <div class="input-container">
+                            <label for="group-name">Group :</label>
+                            <select id="group-name" name="group-name"></select>
+                            <label for="name">Contact Name :</label>
+                            <input type="text" id="name" name="name" maxlength="50" placeholder="Enter Contact Name">
+                        </div>
+                        <div class="input-container">
+                            <label for="company">Company :</label>
+                            <input type="text" id="company" name="company" maxlength="50" placeholder="Enter Company Name">
+                            <button id="searchContacts">Search for Contacts</button>
+                        </div>
+                        <div class="box grid active" id="box3">
+                            <div id="loader" class="loader"></div>
+                            <table id="searchTable">
+                                <thead>
+                                    <tr>
+                                        <th>Contact Name</th>
+                                        <th>Company</th>
+                                        <th>Type</th>
+                                        <th>Address</th>
+                                        <th>Email Address</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div id="selectContact" class="grid">
-                <fieldset>
-                    <legend>Trace Information</legend>
-                    <div class="input-container">
-                        <label for="priority">Priority :</label>
-                        <select id="priority" name="priority"></select>
-                        <label for="trace-type">Trace Type :</label>
-                        <select id="trace-type" name="trace-type"></select>
-                    </div>
-                </fieldset>
-                <fieldset>
-                    <legend>Attached To: </legend>
-                    <div class="input-container block">
-                        <label class="bold">Group :</label>
-                        <label id="groupLbl"></label>
-                        <label class="bold ml">Contact :</label>
-                        <label id="contactLbl"></label>
-                    </div>
-                    <div class="input-container block">
-                        <label class="bold">Company/Event:</label>
-                        <label id="companyLbl"></label>
-                    </div>
-                    <div class="input-container">
-                        <label>Lead:</label>
-                        <select id="lead"></select>
-                    </div>
-                    <div class="input-container">
-                        <label>Profile:</label>
-                        <select id="profile"></select>
-                    </div>
-                    <div class="input-container">
-                        <label>Service Request:</label>
-                        <select id="request"></select>
-                    </div>
-                    <div class="input-container">
-                        <label>Planner Account:</label>
-                        <select id="plannerAct"></select>
-                    </div>
-                    <div class="input-container">
-                        <label>Planner Contact:</label>
-                        <select id="plannerContact"></select>
-                    </div>
-                </fieldset>
-            </div>
-        </fieldset>
+                <div id="selectContact" class="grid">
+                    <fieldset>
+                        <legend>Trace Information</legend>
+                        <div class="input-container">
+                            <label for="priority">Priority :</label>
+                            <select id="priority" name="priority"></select>
+                            <label for="trace-type">Trace Type :</label>
+                            <select id="trace-type" name="trace-type"></select>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Attached To: </legend>
+                        <div class="input-container block">
+                            <label class="bold">Group :</label>
+                            <label id="groupLbl"></label>
+                            <label class="bold ml">Contact :</label>
+                            <label id="contactLbl"></label>
+                        </div>
+                        <div class="input-container block">
+                            <label class="bold">Company/Event:</label>
+                            <label id="companyLbl"></label>
+                        </div>
+                        <div class="input-container">
+                            <label>Lead:</label>
+                            <select id="lead"></select>
+                        </div>
+                        <div class="input-container">
+                            <label>Profile:</label>
+                            <select id="profile"></select>
+                        </div>
+                        <div class="input-container">
+                            <label>Service Request:</label>
+                            <select id="request"></select>
+                        </div>
+                        <div class="input-container">
+                            <label>Planner Account:</label>
+                            <select id="plannerAct"></select>
+                        </div>
+                        <div class="input-container">
+                            <label>Planner Contact:</label>
+                            <select id="plannerContact"></select>
+                        </div>
+                    </fieldset>
+                </div>
+            </fieldset>
+        </div>
+        <!-- Buttons at the bottom right corner -->
+        <div class="bottom-right-buttons">
+            <button id="sendEmail" class="ok-button hide">Send Email</button>
+            <button id="diffContact" class="ok-button hide">Choose Different Contact</button>
+            <button id="selectBtn" class="ok-button">Select Contact</button>
+            <button id="skipit" class="skip-button">Skip</button>
+            <button onclick="window.close();" class="cancel-button">Cancel</button>
+        </div>
     </div>
-    <!-- Buttons at the bottom right corner -->
-    <div class="bottom-right-buttons">
-        <button id="sendEmail" class="ok-button hide">Send Email</button>
-        <button id="diffContact" class="ok-button hide">Choose Different Contact</button>
-        <button id="selectBtn" class="ok-button">Select Contact</button>
-        <button id="skipit" class="skip-button">Skip</button>
-        <button onclick="window.close();" class="cancel-button">Cancel</button>
+
+    <div id="syncEmailUI">
+        <div class="content-container">
+            <div id="syncGrid">
+
+                <fieldset>
+                    <legend><h3>Sync Emails</h3></legend>
+                    <div class="toggle-buttons">
+                        <button class="active" id="showGrid3">Inbox</button>
+                        <button id="showGrid4">Outbox</button>
+                    </div>
+                    <div class="grid active mt" id="SyncBox1">
+                        <div class="box-header">
+                            <div class="button-container">
+                                <button class="select-all-button">Select All</button>
+                                <button class="clear-all-button">Clear All</button>
+                            </div>
+                        </div>
+
+                        <div class="box">
+                            <table id="inboxTable" class="fixTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width:55px;">Choose</th>
+                                        <th>From</th>
+                                        <th>Subject</th>
+                                        <th>Received</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="grid mt"  id="SyncBox2">
+                        <div class="box-header">
+                            <div class="button-container">
+                                <button class="select-all-button">Select All</button>
+                                <button class="clear-all-button">Clear All</button>
+                            </div>
+                        </div>
+
+                        <div class="box">
+                            <table id="sentBoxTable" class="fixTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width:55px;">Choose</th>
+                                        <th>From</th>
+                                        <th>Subject</th>
+                                        <th>Received</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+        <!-- Buttons at the bottom right corner -->
+        <div class="bottom-right-buttons">
+            <button id="SyncOk" class="ok-button">OK</button>
+            <button class="cancel-button">Cancel</button>
+        </div>
     </div>
 </body>
 </html>

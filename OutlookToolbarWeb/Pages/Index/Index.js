@@ -3,14 +3,14 @@ window.MatchedData = {};
 window.selectedEmailData = {}; // Global Variable to store the selected emails data
 window.inboxEmails = {};
 window.sentEmails = {};
+window.ApiUrlVal = '';
 
 function setCategoryToEmail(emailId, isSentFlag) {
     var resval = localStorage.getItem("CRM");
     var data = {};
-    var categoryColor = 'Yellow category';
+    var categoryColor = 'Yellow category'; // initialized with some valid value 
     if (resval != null) {
         data = decodeFromBase64(resval);
-        console.log(data);
         if (data != null) {
             if (isSentFlag) {
                 categoryColor = data.sentFlagColor;
@@ -24,7 +24,7 @@ function setCategoryToEmail(emailId, isSentFlag) {
         if (result.status === "succeeded") {
             var accessToken = result.value;
             var requestUrl = Office.context.mailbox.restUrl + '/v2.0/me/messages/' + emailId;
-
+            
             // Construct the payload to set the category
             var categoryData = {
                 "Categories": [categoryColor]
@@ -58,17 +58,19 @@ function setCategoryToEmail(emailId, isSentFlag) {
     Office.onReady((info) => {
         if (info.host === Office.HostType.Outlook) {
             $(document).ready(() => {
-                console.log("Document is Ready");
+                console.log("office is ready1");
+                
+                
                 $('#send-email-btn').prop('disabled', true);
                 attachClickEventHandlers();
                 fetchSelectedEmails();
                 Office.context.mailbox.addHandlerAsync(Office.EventType.SelectedItemsChanged, fetchSelectedEmails);
-                //setCategoryToEmail('"AAMkADQ4NWE4NzJhLTM0NDUtNGI5OC05YjlmLTNhODRjNDk4MjYzNABGAAAAAADWNcrcUMgwTrq4zhmXgLdCBwBCNBs43cjoTrvh_eRfcXxoAAAAAAEMAABCNBs43cjoTrvh_eRfcXxoAAPjQwFhAAA="', 'Blue category');
-
-                var resval = localStorage.getItem("CRM");
-                var data = {};
-                if (resval != null) {
-                    data = decodeFromBase64(resval);
+                
+                var data = GetDataFromLocalStorage();
+                ApiUrlVal = ApiUrl;
+                console.log("Value" + ApiUrlVal);
+                if (data != null) {
+                   // data = decodeFromBase64(resval);
                     console.log(data);
                     if (data != null) {
                         $('#sent-flag-color').val(data.sentFlagColor);
@@ -105,7 +107,7 @@ function setCategoryToEmail(emailId, isSentFlag) {
         });
 
         $('#sync-email-btn').on('click', () => {
-            openPopup('../SyncEmail/SyncEmail.html', 'Synchronize Email with CRM');
+            openPopup('../SendEmail/SendEmail.html', 'Synchronize Email with CRM');
         });
 
         $('#settings-btn').on('click', () => {
@@ -122,39 +124,45 @@ function setCategoryToEmail(emailId, isSentFlag) {
             }
             
             asyncResult.value.forEach((item, index) => {
+                console.log("item---------");
+                console.log(item);
                 getSpecificEmailDetails(item.itemId, index);
             });
         });
     }
 
-    // Get email details of selected emails
-    function getSpecificEmailDetails(id, index) {
-        Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
-            if (result.status === "succeeded") {
-                const accessToken = result.value;
-                const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${id}`;
-                $.ajax({
-                    url: requestUrl,
-                    dataType: 'json',
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                }).done((emailData) => {
-                    window.selectedEmailData[id] = emailData;
-                    GetMatchingContactsData(emailData.From.EmailAddress.Address, 1124, id);
-                   
-                    console.log("Email Data:", emailData);
-                }).fail((error) => {
-                    console.error("Error fetching email data:", error);
-                });
-            } else {
-                console.error(`Error getting callback token: ${result.error.message}`);
-            }
-        });
-    }
+function getSpecificEmailDetails(id, index) {
+    Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
+        if (result.status === "succeeded") {
+            const accessToken = result.value;
+            var newId = id.replace(/\//g, '+');
+            const encodedId = encodeURIComponent(newId);
+            const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${encodedId}`;
+            
+            $.ajax({
+                url: requestUrl,
+                dataType: 'json',
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            }).done((emailData) => {
+                window.selectedEmailData[id] = emailData;
+                GetMatchingContactsData(emailData.From.EmailAddress.Address, 1124, id);
+                console.log("Email Data:", emailData);
+            }).fail((error) => {
+                console.error("Error fetching email data:", error);
+            });
+        } else {
+            console.error(`Error getting callback token: ${result.error.message}`);
+        }
+    });
+}
 
-    function GetMatchingContactsData(email, userId, msgId) {
+
+function GetMatchingContactsData(email, userId, msgId) {
+    console.log("Api Url");
+    console.log(ApiUrl);
         email = "awilkins@americanhomeshield.com";
         const settings = {
-            url: "https://3adc-13-84-216-53.ngrok-free.app/api/cftags/outlook.cfc",
+            url: ApiUrl +"/api/cftags/outlook.cfc",
             method: "POST",
             timeout: 0,
             headers: {
@@ -217,7 +225,8 @@ function setCategoryToEmail(emailId, isSentFlag) {
                 console.error('Error:', textStatus, errorThrown);
             });
 
-    }
+}
+
     function htmlToString(html) {
         const tempDiv = document.createElement("div");
         tempDiv.innerHTML = html;
@@ -259,8 +268,9 @@ function openNextPopup() {
             popup.window.MatchedData = window.MatchedData[emailId];
             popup.window.inboxEmails = window.inboxEmails;
             popup.window.sentEmails = window.sentEmails;
+            popup.window.ApiUrl = window.ApiUrlVal;
             if (typeof popup.window.initPopup === 'function') {
-                popup.window.initPopup(); // Initialize the popup with data
+                popup.window.initPopup(false); // Initialize the popup with data
             }
             popup.onunload = () => {
                 isPopupOpen = false;
@@ -278,10 +288,22 @@ function openNextPopup() {
         const top = (window.screen.height / 2) - (height / 2);
         const popup = window.open(url, title, `width=${width}, height=${height}, top=${top}, left=${left}`);
         popup.onload = () => {
+            popup.postMessage(ApiUrl, '*');
             popup.window.selectedEmailData = popup.opener.selectedEmailData;
             popup.window.MatchedData = popup.opener.MatchedData;
             popup.window.inboxEmails = popup.opener.inboxEmails
             popup.window.sentEmails = popup.opener.sentEmails;
+            popup.window.ApiUrl = popup.opener.ApiUrlVal;
+            console.log("Openning " + title);
+            if (typeof popup.window.initPopup === 'function' && title == 'Synchronize Email with CRM') {
+                popup.window.initPopup(true); // Initialize the popup with data
+            }
+            //else if (typeof popup.window.initPopup === 'function') {
+            //    console.log(popup.window.selectedEmailData+ "data check");
+            //    popup.window.initPopup(false); 
+            //}
+           
+            console.log(popup.window.ApiUrl);
             if (onloadCallback) {
                 onloadCallback(popup);
             }
@@ -298,9 +320,7 @@ function openNextPopup() {
 
 
     function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryColor, skipCategoryColor) {
-        console.log(daysToSync);
-        console.log(sentCategoryColor);
-        console.log(skipCategoryColor);
+        
 
         Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
             if (result.status === "succeeded") {
@@ -312,8 +332,7 @@ function openNextPopup() {
                 var now = new Date();
                 var startDate = new Date(now.getTime() - (daysToSync + 1) * 24 * 60 * 60 * 1000);
                 var startDateISOString = startDate.toISOString();
-                console.log("date" + startDateISOString);
-
+                
                 // Construct the query to filter emails within the selected timeframe,
                 // excluding those with the skip or sent categories
                 var filterQuery = `?$filter=receivedDateTime ge ${startDateISOString}` +

@@ -23,7 +23,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-top:-15px;
+    margin-top: -15px;
 }
 
 .left-side {
@@ -52,6 +52,7 @@ th, td {
     border: 1px solid #000;
     padding: 5px;
     text-align: left;
+    word-wrap: break-word;
 }
 
 th {
@@ -73,7 +74,7 @@ th {
 .skip-button {
     padding: 5px 10px;
     cursor: pointer;
-    margin:0px 5px;
+    margin: 0px 5px;
 }
 
 .button-container {
@@ -96,6 +97,7 @@ fieldset {
 tr:hover {
     background-color: #89CFF0;
 }
+
 tr.selected {
     background-color: #89CFF0;
 }
@@ -104,14 +106,15 @@ tr.selected {
     display: none;
 }
 
-.grid.active {
-    display: block;
-}
+    .grid.active {
+        display: block;
+    }
 
 button.active {
     background-color: #f2f2f2 !important;
-    color: black; 
+    color: black;
 }
+
 tr:hover {
     cursor: pointer;
 }
@@ -123,35 +126,52 @@ tr:hover {
     border-bottom: none;
     border-radius: 2px;
     margin-right: -4px;
-    cursor:pointer;
-    margin-top:0px;
-    margin-left:0px;
+    cursor: pointer;
+    margin-top: 0px;
+    margin-left: 0px;
 }
 
-input, select, option{
-    flex:none !important;
-    width:220px;
+input, select, option {
+    flex: none !important;
+    width: 220px;
 }
+
+#inboxTable input,
+#inboxTable select,
+#inboxTable option {
+    width: 50px;
+}
+
+#sentBoxTable input,
+#sentBoxTable select,
+#sentBoxTable option {
+    width: 50px;
+}
+
+
 .input-container label {
     margin-right: 0px !important;
     margin-left: 10px;
 }
+
 .hide {
     display: none;
 }
-.show{
-    display:block;
+
+.show {
+    display: block;
 }
 
-.bold{
-    font-weight:600;
+.bold {
+    font-weight: 600;
 }
+
 .block {
-    display:block !important;
+    display: block !important;
 }
 
-.ml{
-    margin-left:190px !important;
+.ml {
+    margin-left: 190px !important;
 }
 
 
@@ -178,4 +198,12 @@ input, select, option{
     100% {
         transform: rotate(360deg);
     }
+}
+
+.mt{
+    margin-top:-37px;
+}
+
+.fixTable{
+    table-layout:fixed;
 }

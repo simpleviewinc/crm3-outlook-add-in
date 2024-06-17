@@ -1,7 +1,18 @@
-﻿
+﻿var ApiUrl = '';
 $(document).ready(function () {
+    function handleDataFromIndexPage(event) {
+        const receivedData = event.data;
+        console.log('Data received in popup:', receivedData);
+        ApiUrl = receivedData;
+        GetTaskTypes(); GetPriorityType();
+    }
+
+    // Add an event listener to receive messages
+    window.addEventListener('message', handleDataFromIndexPage, false);
+
+
     // Get and set dropdown data
-     GetTaskTypes();  GetPriorityType();
+     
 
     var resval = localStorage.getItem("crm");
     var data = {};
@@ -21,7 +32,7 @@ $(document).ready(function () {
     function GetPriorityType() {
        
         const settings = {
-            url: "https://3adc-13-84-216-53.ngrok-free.app/api/cftags/outlook.cfc",
+            url: ApiUrl+"/api/cftags/outlook.cfc",
             method: "POST",
             timeout: 0,
             headers: {
@@ -95,7 +106,7 @@ $(document).ready(function () {
 
     function GetTaskTypes() {
         const settings = {
-            url: "https://3adc-13-84-216-53.ngrok-free.app/api/cftags/outlook.cfc",
+            url: ApiUrl+"/api/cftags/outlook.cfc",
             method: "POST",
             timeout: 0,
             headers: {
@@ -219,6 +230,6 @@ $(document).ready(function () {
         const formDataString = JSON.stringify(formData);
         localStorage.setItem("crm", encodeToBase64(formDataString));
         window.opener.postMessage(formDataString, window.location.origin);
-        alert("Settings Updated !!");
+        alert("Settings Updated !");
     });
 });

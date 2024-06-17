@@ -111,6 +111,7 @@
     <Content Include="Functions\FunctionFile.html" />
     <Content Include="Functions\FunctionFile.js" />
     <Content Include="Images\Close.png" />
+    <Content Include="Images\icon-logo.svg" />
     <Content Include="Images\icon-send.svg" />
     <Content Include="Images\icon-settings.svg" />
     <Content Include="Images\icon-sync.svg" />
@@ -131,6 +132,7 @@
     <Content Include="Pages\SyncEmail\SyncEmail.css" />
     <Content Include="Pages\SyncEmail\SyncEmail.html" />
     <Content Include="Pages\SyncEmail\SyncEmail.js" />
+    <Content Include="Scripts\Common\Common.js" />
     <Content Include="Scripts\jquery-3.6.0.js" />
     <Content Include="Scripts\jquery-3.6.0.min.js" />
     <Content Include="Scripts\jquery-3.6.0.slim.js" />

@@ -19,7 +19,7 @@
   <!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
   <DisplayName DefaultValue="OutlookToolbar" />
   <Description DefaultValue="OutlookToolbar"/>
-  <IconUrl DefaultValue="https://localhost:3000/Images/logo.ico"/>
+  <IconUrl DefaultValue="https://localhost:3000/Images/icon-logo.svg"/>
 
   <SupportUrl DefaultValue="http://www.contoso.com" />
   <!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
