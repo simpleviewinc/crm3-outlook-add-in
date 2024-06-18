@@ -10,7 +10,7 @@
 </head>
 <body>
     <div class="content-container">
-        <fieldset>
+        <fieldset id="creds">
             <legend><h3>CRM Settings</h3></legend>
             <div class="input-container">
                 <label for="crm-url">CRM URL:</label>
@@ -24,12 +24,12 @@
                 <label for="crm-password">CRM Password:</label>
                 <input type="password" id="crm-password" maxlength="50" name="crm-password" placeholder="Enter CRM Password">
             </div>
+            <div class="button-container">
+                <button id="Save" class="select-contact">Save</button>
+            </div>
         </fieldset>
-    </div>
 
-
-    <div class="content-container">
-        <fieldset>
+        <fieldset id="emailSettings">
             <legend><h3>Email Settings</h3></legend>
             <div class="input-container">
                 <label for="sent-flag-color">Sent Flag Color:</label>
@@ -84,14 +84,13 @@
                 <label for="outbound-priority">Outbound Priority:</label>
                 <select id="outbound-priority" name="outbound-priority"></select>
             </div>
+            <div class="button-container">
+                <button id="okSettings" onclick="window.close();" class="select-contact">Ok</button>
+                <button class="skip" onclick="window.close();">Cancel</button>
+            </div>
         </fieldset>
     </div>
 
-    <div class="button-container">
-        <button id="okButton" onclick="window.close();" class="select-contact">Ok</button>
-        <button class="skip" onclick="window.close();">Cancel</button>
-        <button id="applyButton">Apply</button>
-    </div>
-    <!--onclick="window.close();"-->
+    
 </body>
 </html>

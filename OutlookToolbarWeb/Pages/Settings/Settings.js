@@ -1,18 +1,15 @@
-﻿var ApiUrl = '';
+﻿let ApiUrl = '', UserId = '';
+
 $(document).ready(function () {
     function handleDataFromIndexPage(event) {
         const receivedData = event.data;
         console.log('Data received in popup:', receivedData);
         ApiUrl = receivedData;
-        GetTaskTypes(); GetPriorityType();
+        if (typeof ApiUrl === 'string' && ApiUrl.startsWith('http')) {
+            GetTaskTypes(); GetPriorityType();
+        }
     }
-
-    // Add an event listener to receive messages
     window.addEventListener('message', handleDataFromIndexPage, false);
-
-
-    // Get and set dropdown data
-     
 
     var resval = localStorage.getItem("crm");
     var data = {};
@@ -20,8 +17,14 @@ $(document).ready(function () {
          data = decodeFromBase64(resval);
         console.log(data);
         if (data != null) {
+            if (data.userId != null && data.userId != undefined && data.userId != '') {
+                $('#emailSettings').show();
+                $('#Save').hide();
+            }
+            else {
+                $('#emailSettings').hide();
+            }
             $('#crm-login').val(data.crmLogin);
-            $('#crm-password').val(data.crmPassword);
             $('#crm-url').val(data.crmUrl);
             $('#sent-flag-color').val(data.sentFlagColor);
             $('#skip-flag-color').val(data.skipFlagColor);
@@ -29,8 +32,53 @@ $(document).ready(function () {
         }
     }
 
+
+    function GetUserIdByLogin(url, email, password) {
+        if (url == "https://demo.simpleviewcrm.com")
+            url = "http://localhost:4000";
+        const settings = {
+            url: url + "/api/cftags/outlook.cfc",
+            method: "POST",
+            timeout: 0,
+            headers: {
+                "Content-Type": "text/xml; charset=utf-8",
+                "SOAPAction": ""
+            },
+            data: `<?xml version="1.0" encoding="utf-8"?>
+                    <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                      <soap:Body>
+                        <checkLogin>
+                          <email>`+ email +`</email>
+                          <password>`+ password +`</password>
+                          <version></version>
+                        </checkLogin>
+                      </soap:Body>
+                    </soap:Envelope>`
+        };
+
+        $.ajax(settings)
+            .done(function (response) {
+                const parser = new DOMParser();
+                let getMatchesReturn = response.getElementsByTagName("checkLoginReturn");
+                const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
+                console.log(decodedString);
+                if (decodedString == '-1.0') {
+                    alert("Credentials not valid !");
+                }
+                else {
+                    alert("Login Successful !");
+                    UserId = parseInt(decodedString);
+                    $('#emailSettings').show();
+                    $('#Save').hide();
+                }
+            })
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                alert("Url or credentials not valid !");
+                console.error('Error:', textStatus, errorThrown);
+            });
+    }
+
     function GetPriorityType() {
-       
         const settings = {
             url: ApiUrl+"/api/cftags/outlook.cfc",
             method: "POST",
@@ -196,6 +244,7 @@ $(document).ready(function () {
         tempDiv.innerHTML = html;
         return tempDiv.textContent || tempDiv.innerText || "";
     }
+
     function decodeHTMLEntities(text) {
         const entities = {
             '&amp;': '&',
@@ -212,12 +261,17 @@ $(document).ready(function () {
             return entities[match] || match;
         });
     }
-    $("#applyButton").click(function () {
+
+    $("#Save").click(function () {
+        GetUserIdByLogin($("#crm-url").val(), $("#crm-login").val(), $("#crm-password").val());
+    });
+
+    $("#okSettings").click(function () {
         // Capture form data
         const formData = {
             crmUrl: $("#crm-url").val(),
             crmLogin: $("#crm-login").val(),
-            crmPassword: $("#crm-password").val(),
+            userId: UserId,
             sentFlagColor: $("#sent-flag-color").val(),
             skipFlagColor: $("#skip-flag-color").val(),
             daysToSync: $("#days-to-sync").val(),
