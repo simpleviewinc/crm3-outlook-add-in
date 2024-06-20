@@ -1,4 +1,21 @@
-﻿var ApiUrl = '';
+﻿let messageObject = {
+    groupid: '',
+    userid: '',
+    acctid: '',
+    contactid: '',
+    duedate: '',
+    typeid: '',
+    priorityid: '',
+    subject: '',
+    body: '',
+    attachment: '',
+    attachmentcontent: '',
+    tblid: '',
+    recid: '',
+    relflds: '',
+    relfldvals: ''
+}, ApiUrl = '';
+ 
 
 function initPopup(isSyncEmail) {
     console.log("init popup" + isSyncEmail);
@@ -22,6 +39,10 @@ function initPopup(isSyncEmail) {
             $('.headings h5:nth-child(2)').text('Subject: ' + emailData.Subject);
             $('#received').text('Received: ' + new Date(emailData.ReceivedDateTime).toLocaleString());
             $('#EmailId').val(emailData.Id);
+            messageObject.subject = emailData.Subject;
+            messageObject.body = emailData.BodyPreview;
+            messageObject.attachment = emailData.HasAttachments;
+            messageObject.duedate = new Date().toLocaleDateString();
         } else {
             console.log(emailData);
             console.log('One or more required fields in emailData are empty.');
@@ -32,7 +53,10 @@ function initPopup(isSyncEmail) {
 }
 
 function populateTable(contactList) {
-    console.log("executing");
+    if (!Array.isArray(contactList)) {
+        console.log('contactList is not an array');
+        return; // Exit the function
+    }
     const $tableBody = $("#contactTable tbody");
     $tableBody.empty(); // Clear any existing rows
 
@@ -45,14 +69,79 @@ function populateTable(contactList) {
                     <td>${contact.contacttype}</td>
                     <td>${contact.address}</td>
                     <td>${contact.email}</td>
+                    <td class='hidden'>${contact.groupID}</td>
+                    <td class='hidden'>${contact.acctID}</td>
+                    <td class='hidden'>${contact.contactID}</td>
                 </tr>
             `;
         $tableBody.append(row);
     });
     if (contactList.length === 0) {
-        $tableBody.append('<p>No data found</p>');
+        const colCount = $('table thead tr th').length; // Get the number of columns
+        $tableBody.append(`
+      <tr>
+        <td colspan="${colCount}" style="text-align: center;">No data found</td>
+      </tr>
+    `);
     }
     BindRowSelectFunction();
+}
+
+function decodeFromBase64(base64Str) {
+    const jsonString = atob(base64Str);
+    return JSON.parse(jsonString);
+}
+
+function SendTheEmail() {
+    $("#sendEmailLoader").show();
+    console.log("whole data for email:- ");
+    console.log(messageObject);
+    const settings = {
+        url: ApiUrl + "/api/cftags/outlook.cfc",
+        method: "POST",
+        timeout: 0,
+        headers: {
+            "Content-Type": "text/xml; charset=utf-8",
+            "SOAPAction": ""
+        },
+        data: `<?xml version="1.0" encoding="utf-8"?>
+                    <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                      <soap:Body>
+                        <sendEmail>
+                          <groupid>`+ messageObject.groupid + `</groupid>
+                          <userid>`+ messageObject.userid + `</userid>
+                          <acctid>`+ messageObject.acctid + `</acctid>
+                          <contactid>`+ messageObject.contactid + `</contactid>
+                          <duedate>`+ messageObject.duedate + `</duedate>
+                          <typeid>`+ messageObject.typeid + `</typeid>
+                          <priorityid>`+ messageObject.priorityid + `</priorityid>
+                          <subject>`+ messageObject.subject + `</subject>
+                          <body>`+ messageObject.body + `</body>
+                          <attachment>`+ messageObject.attachment + `</attachment>
+                          <attachmentcontent>`+ messageObject.attachmentcontent + `</attachmentcontent>
+                          <tblid>`+ messageObject.tblid + `</tblid>
+                          <recid>`+ messageObject.recid + `</recid>
+                          <relflds>`+ messageObject.relflds + `</relflds>
+                          <relfldvals>`+ messageObject.relfldvals +`</relfldvals>
+                        </sendEmail>
+                      </soap:Body>
+                    </soap:Envelope>`
+    };
+
+    $.ajax(settings)
+        .done(function (response) {
+            let getMatchesReturn = response.getElementsByTagName("sendEmailReturn");
+            const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
+            $("#sendEmailLoader").hide();
+            alert("Email Send with trace id: " + parseInt(decodedString));
+            window.close(); 
+        })
+        .fail(function (jqXHR, textStatus, errorThrown) {
+            console.error('Error:', textStatus, errorThrown);
+            $("#sendEmailLoader").hide();
+            window.close(); 
+        });
+
 }
 
 function GetAttachedToDDInfo() {
@@ -68,10 +157,10 @@ function GetAttachedToDDInfo() {
                 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
                   <soap:Body>
                     <getRelOpts>
-                      <userid>1124</userid>
-                      <groupid>3</groupid>
-                      <acctid>35746</acctid>
-                      <contactid>81103</contactid>
+                      <userid>`+ messageObject.userid + `</userid>
+                      <groupid>`+ messageObject.groupid + `</groupid>
+                      <acctid>`+ messageObject.acctid + `</acctid>
+                      <contactid>`+ messageObject.contactid + `</contactid>
                     </getRelOpts>
                   </soap:Body>
                 </soap:Envelope>`
@@ -79,22 +168,11 @@ function GetAttachedToDDInfo() {
 
     $.ajax(settings)
         .done(function (response) {
-
-            // Parse the outer SOAP response
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(response, "application/xml");
-
             // Extract the inner XML string
             let getMatchesReturn = response.getElementsByTagName("getRelOptsReturn");
-
             const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
             // Decode the inner XML string
             const decodedInnerXML = decodeHTMLEntities(decodedString);
-
-            // Parse the decoded inner XML string
-            const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
-            const opts = innerXmlDoc.getElementsByTagName("opts");
-            console.log("Check...........");
             //console.log(decodedInnerXML);
             parseXmlToJson(decodedInnerXML);
         })
@@ -149,6 +227,7 @@ function parseXmlToJson(xmlStr) {
 
 function bindLeadDataToSelect(jsonData) {
     jsonData = JSON.parse(jsonData);
+    console.log("extra data");
     console.log(jsonData);
     const leadData = jsonData.opts.rels.rel.find(rel => rel.title["#text"] === "Lead");
     if (leadData) {
@@ -177,9 +256,7 @@ function bindLeadDataToSelect(jsonData) {
     const requestData = jsonData.opts.rels.rel.find(rel => rel.title["#text"] === "Service Request");
     if (requestData) {
         const requestSelect = document.getElementById("request");
-        console.log(requestData);
-        console.log(requestData.data.row);
-        if (Array.isArray(requestData.data.row)) {
+           if (Array.isArray(requestData.data.row)) {
             requestData.data.row.forEach(row => {
                 const option = document.createElement("option");
                 option.value = row.ID["#text"];
@@ -219,6 +296,10 @@ function bindLeadDataToSelect(jsonData) {
             plannerContactSelect.appendChild(option);
         });
     }
+    messageObject.tblid = jsonData.opts.tblid["#text"];
+    messageObject.recid = jsonData.opts.recid["#text"];
+    messageObject.relflds = jsonData.opts.hiddenrel["#text"];
+    messageObject.relfldvals = jsonData.opts.hiddenrelval["#text"];
 }
 
 function GetPriorityType() {
@@ -268,8 +349,6 @@ function GetPriorityType() {
                 };
                 priorityList.push(priObj);
             }
-            console.log("kevin");
-            console.log(priorityList);
             const inboundPrt = document.getElementById('priority');
 
             // populate the dropdown
@@ -334,8 +413,6 @@ function GetTaskTypes() {
                 };
                 typeList.push(typeObj);
             }
-            console.log("Hello");
-            console.log(typeList);
             const inboundDD = document.getElementById('trace-type');
             // Populate the dropdown
             typeList.forEach(item => {
@@ -352,14 +429,25 @@ function GetTaskTypes() {
 }
 
 $(document).ready(function () {
+    $("#sendEmailLoader").hide();
     function handleDataFromIndexPage(event) {
         const receivedData = event.data;
         console.log('Data received in popup:', receivedData);
+        var resval = localStorage.getItem("crm");
+        var data = {};
+        if (resval != null) {
+            data = decodeFromBase64(resval);
+            if (data != null) {
+                if (data.userId != null && data.userId != undefined && data.userId != '') {
+                    messageObject.userid = data.userId;
+                }
+            }
+        }
         ApiUrl = receivedData;
         if (typeof ApiUrl === 'string') {
             GetTaskTypes(); GetPriorityType();
-            GetGroupsByUserId(1);
-            GetAttachedToDDInfo();
+            GetGroupsByUserId();
+            
         }
     }
 
@@ -368,7 +456,6 @@ $(document).ready(function () {
 
     $('#skipit').on('click', () => {
         var id = $('#EmailId').val();
-        console.log("Email id: " + id);
         if (window.opener && !window.opener.closed) {
             if (typeof window.opener.setCategoryToEmail === 'function') {
                 window.opener.setCategoryToEmail(id, false);
@@ -382,13 +469,24 @@ $(document).ready(function () {
     });
 
 
+    $('#priority').on('change', function () {
+        var selectedValue = $(this).val();
+        messageObject.priorityid = selectedValue;
+    });
+    $('#trace-type').on('change', function () {
+        var selectedValue = $(this).val();
+        messageObject.typeid = selectedValue;
+    });
+
     $('#sendEmail').on('click', () => {
         var id = $('#EmailId').val();
-        console.log("Email id: " + id);
+        messageObject.priorityid = $("#priority").val();
+        messageObject.typeid = $("#trace-type").val();
         if (window.opener && !window.opener.closed) {
             if (typeof window.opener.setCategoryToEmail === 'function') {
                 window.opener.setCategoryToEmail(id, true);
-                window.close(); // Optionally close the popup after sending data
+                SendTheEmail();
+                
             } else {
                 console.error("Parent window method setCategoryToEmail is not defined.");
             }
@@ -436,27 +534,23 @@ $(document).ready(function () {
         return selectedRowsData;
     }
 
-
-    //Intially hide the loader
     $('#loader').hide();
     $("#searchContacts").click(function () {
         GetSearchedResult(); 
-        
     });
-   // GetTaskTypes(); GetPriorityType();
+
     $('#SyncOk').on('click', function () {
         var data = getSelectedRowsData();
-        console.log("selected rows:- ");
-        console.log(data);
         $('#syncEmailUI').hide(); $('#sendEmailUI').show();
         $('.headings h5:nth-child(1)').text('From: ' + data[0].fromEmail);
         $('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
         $('#received').text('Received: ' + new Date(data[0].receivedDate).toLocaleString());
         $('#EmailId').val(data[0].id);
-        GetMatchingContactsData(data.fromEmail, 1124, data.id);
+        GetMatchingContactsData(data.fromEmail, UserID, data.id);
     });
 
     $('#selectBtn').on('click', function () {
+        GetAttachedToDDInfo();
         $('#grids').addClass('grid');
         $('#selectContact').addClass('active');
         $('#sendEmail').addClass('show');
@@ -499,9 +593,7 @@ $(document).ready(function () {
     });
 });
 
-function GetGroupsByUserId(userId) {
-    console.log("Getting Groups");
-    userId = 1127;
+function GetGroupsByUserId() {
     const settings = {
         url: ApiUrl+"/api/cftags/outlook.cfc",
         method: "POST",
@@ -514,7 +606,7 @@ function GetGroupsByUserId(userId) {
                 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
                   <soap:Body>
                     <getGroups>
-                      <userid>`+ userId + `</userid>
+                      <userid>`+ messageObject.userid + `</userid>
                     </getGroups>
                   </soap:Body>
                 </soap:Envelope>
@@ -566,16 +658,11 @@ function GetGroupsByUserId(userId) {
         });
 
 }
-//$(document).ready(function () {
-//    console.log("document ready");
-//    BindClickOnRowForSearch();
-//});
 
 function BindClickOnRowForSearch() {
     $('#searchTable tbody tr').on('click', function () {
         $('#searchTable tbody tr').removeClass('selected');
         $(this).toggleClass('selected');
-        console.log("call came");
         // Collect data from the selected row
         var rowData = {};
         var headers = $('#searchTable th');
@@ -585,7 +672,6 @@ function BindClickOnRowForSearch() {
             var value = $(this).text();
             rowData[key] = value;
         });
-        console.log(headers);
         var selectedText = $('#group-name option:selected').text();
 
         $('#groupLbl').text(selectedText);
@@ -594,8 +680,12 @@ function BindClickOnRowForSearch() {
 
         // Log the row data to the console
         console.log(rowData);
+        messageObject.groupid = rowData["GroupId"];
+        messageObject.acctid = rowData["ActId"];
+        messageObject.contactid = rowData["ContId"];
     });
 }
+
 
 $(document).ready(function () {
     BindRowSelectFunction();
@@ -621,11 +711,15 @@ function BindRowSelectFunction() {
 
         // Log the row data to the console
         console.log(rowData);
+        messageObject.groupid = rowData["GroupId"];
+        messageObject.acctid = rowData["ActId"];
+        messageObject.contactid = rowData["ContId"];
     });
 }
 
 function populateSearchTable(contactList) {
-    console.log("executing");
+    console.log("populateSearchTable executing");
+    console.log(contactList);
     const $tableBody = $("#searchTable tbody");
     $tableBody.empty(); // Clear any existing rows
 
@@ -637,12 +731,20 @@ function populateSearchTable(contactList) {
                     <td>${contact.contacttype}</td>
                     <td>${contact.address}</td>
                     <td>${contact.email}</td>
+                    <td class='hidden'>${contact.groupID}</td>
+                    <td class='hidden'>${contact.acctID}</td>
+                    <td class='hidden'>${contact.contactID}</td>
                 </tr>
             `;
         $tableBody.append(row);
     });
     if (contactList.length === 0) {
-        $tableBody.append('<p>No data found</p>');
+        const colCount = $('table thead tr th').length; // Get the number of columns
+        $tableBody.append(`
+      <tr>
+        <td colspan="${colCount}" style="text-align: center;">No data found</td>
+      </tr>
+    `);
     }
     $('#loader').hide();
 
@@ -654,11 +756,7 @@ function GetSearchedResult() {
     var groupId = $('#group-name').val();
     var contactName = $('#name').val();
     var companyName = $('#company').val();
-    var userId = 1127;
-    console.log('Group Name:', groupId);
-    console.log('Contact Name:', contactName);
-    console.log('Company Name:', companyName);
-
+    
     const settings = {
         url: ApiUrl+"/api/cftags/outlook.cfc",
         method: "POST",
@@ -671,7 +769,7 @@ function GetSearchedResult() {
         <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
           <soap:Body>
             <getSearch>
-              <userid>`+ userId + `</userid>
+              <userid>`+ messageObject.userid + `</userid>
               <groupid>`+ groupId + `</groupid>
               <fullname>`+ contactName + `</fullname>
               <company>`+ companyName + `</company>
@@ -749,22 +847,16 @@ function GetMatchingContactsData(email, userId, msgId) {
 
     $.ajax(settings)
         .done(function (response) {
-
             // Parse the outer SOAP response
             const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(response, "application/xml");
-
             // Extract the inner XML string
             let getMatchesReturn = response.getElementsByTagName("getMatchesReturn");
-
             const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
             // Decode the inner XML string
             const decodedInnerXML = decodeHTMLEntities(decodedString);
-
             // Parse the decoded inner XML string
             const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
             const contacts = innerXmlDoc.getElementsByTagName("contact");
-
             // Convert the extracted contact information into an array of objects
             const contactList = [];
 

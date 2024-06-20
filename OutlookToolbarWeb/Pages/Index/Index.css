@@ -79,3 +79,9 @@ p {
         margin: 0;
         font-size: 15px;
     }
+
+button.disabled {
+    background-color: lightgray;
+    color: black;
+    cursor: not-allowed;
+}

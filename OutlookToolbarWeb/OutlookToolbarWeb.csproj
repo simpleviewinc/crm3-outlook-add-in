@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\Button.css" />
+    <Content Include="Content\Common\Outlook-CRM-AddOn.css" />
     <Content Include="Content\fabric-9.6.0.scoped.css" />
     <Content Include="Content\fabric-9.6.0.scoped.min.css" />
     <Content Include="Content\fabric.css" />

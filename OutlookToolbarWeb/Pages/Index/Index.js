@@ -4,6 +4,8 @@ window.selectedEmailData = {}; // Global Variable to store the selected emails d
 window.inboxEmails = {};
 window.sentEmails = {};
 window.ApiUrlVal = '';
+window.ApiUrl = '';
+
 
 function setCategoryToEmail(emailId, isSentFlag) {
     var resval = localStorage.getItem("CRM");
@@ -55,13 +57,26 @@ function setCategoryToEmail(emailId, isSentFlag) {
     let popupQueue = []; // Queue to manage popups
     let isPopupOpen = false;
 
-    Office.onReady((info) => {
+Office.onReady((info) => {
         if (info.host === Office.HostType.Outlook) {
             $(document).ready(() => {
-                console.log("office is ready1");
+                console.log("office is ready");
                 
-                
+                $('#send-email-btn').addClass('disabled');
                 $('#send-email-btn').prop('disabled', true);
+                $('#sync-email-btn').addClass('disabled');
+                $('#sync-email-btn').prop('disabled', true);
+                var resval = localStorage.getItem("crm");
+                var data = {};
+                if (resval != null) {
+                    data = decodeFromBase64(resval);
+                    console.log(data);
+                    if (data != null) {
+                        if (data.userId != null && data.userId != undefined && data.userId != '') {
+                           
+                        }
+                    }
+                }
                 attachClickEventHandlers();
                 fetchSelectedEmails();
                 Office.context.mailbox.addHandlerAsync(Office.EventType.SelectedItemsChanged, fetchSelectedEmails);
@@ -84,6 +99,10 @@ function setCategoryToEmail(emailId, isSentFlag) {
             });
         }
     });
+
+function CloseTheTaskPane() {
+    Office.context.ui.closeContainer();
+}
 
     function decodeFromBase64(base64Str) {
         const jsonString = atob(base64Str);
@@ -124,31 +143,41 @@ function setCategoryToEmail(emailId, isSentFlag) {
             }
             
             asyncResult.value.forEach((item, index) => {
-                console.log("item---------");
-                console.log(item);
+                
                 getSpecificEmailDetails(item.itemId, index);
             });
         });
     }
-
 function getSpecificEmailDetails(id, index) {
     Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
         if (result.status === "succeeded") {
+            console.log("Actual Id:", id);
+
             const accessToken = result.value;
-            var newId = id.replace(/\//g, '+');
-            const encodedId = encodeURIComponent(newId);
+            let correctedId = id.replace(/\//g, '-').replace(/\+/g, '_'); // This might not be needed
+            const encodedId = encodeURIComponent(correctedId); // URL encode the corrected ID
             const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${encodedId}`;
-            
+
+            console.log("Corrected Id:", correctedId);
+            console.log("Encoded Id:", encodedId);
+            console.log("Request URL:", requestUrl);
+
             $.ajax({
                 url: requestUrl,
                 dataType: 'json',
-                headers: { 'Authorization': `Bearer ${accessToken}` }
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Accept': 'application/json'
+                }
             }).done((emailData) => {
                 window.selectedEmailData[id] = emailData;
                 GetMatchingContactsData(emailData.From.EmailAddress.Address, 1124, id);
                 console.log("Email Data:", emailData);
             }).fail((error) => {
                 console.error("Error fetching email data:", error);
+                if (error.responseJSON) {
+                    console.error("Error details:", error.responseJSON);
+                }
             });
         } else {
             console.error(`Error getting callback token: ${result.error.message}`);
@@ -157,10 +186,11 @@ function getSpecificEmailDetails(id, index) {
 }
 
 
+
 function GetMatchingContactsData(email, userId, msgId) {
     console.log("Api Url");
     console.log(ApiUrl);
-        email = "awilkins@americanhomeshield.com";
+        //email = "awilkins@americanhomeshield.com";
         const settings = {
             url: ApiUrl +"/api/cftags/outlook.cfc",
             method: "POST",
@@ -219,6 +249,7 @@ function GetMatchingContactsData(email, userId, msgId) {
 
                 window.MatchedData[msgId] = contactList;
                 $('#send-email-btn').prop('disabled', false);
+                $('#send-email-btn').removeClass('disabled');
                 console.log(window.MatchedData);
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
@@ -319,9 +350,8 @@ function openNextPopup() {
 
 
 
-    function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryColor, skipCategoryColor) {
+function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryColor, skipCategoryColor) {
         
-
         Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
             if (result.status === "succeeded") {
                 var accessToken = result.value;
@@ -358,15 +388,20 @@ function openNextPopup() {
                                 window.inboxEmails = allEmails;
                                 console.log("Inbox emails from the selected timeframe:");
                                 console.log(window.inboxEmails);
+                               
                             } else {
                                 window.sentEmails = allEmails;
                                 console.log("Sent emails from the selected timeframe:");
                                 console.log(window.sentEmails);
                             }
+                            $('#sync-email-btn').removeClass('disabled');
+                            $('#sync-email-btn').prop('disabled', false);
                         }
                     }).fail(function (jqXHR, textStatus, errorThrown) {
                         console.error("Error fetching emails:", textStatus, errorThrown);
                         console.error("Response text:", jqXHR.responseText);
+                        $('#sync-email-btn').removeClass('disabled');
+                        $('#sync-email-btn').prop('disabled', false);
                     });
                 }
 

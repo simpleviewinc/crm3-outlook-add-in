@@ -6,12 +6,13 @@
     <script src="../../Scripts/jquery-3.6.0.js" type="text/javascript"></script>
     <script src="../../Scripts/Common/Common.js" type="text/javascript"></script>
     <script src="Settings.js" type="text/javascript"></script>
-    <link rel="stylesheet" href="Settings.css">
+    <link rel="stylesheet" href="../../Content/Common/Outlook-CRM-AddOn.css">
 </head>
 <body>
-    <div class="content-container">
+    <div class="content-container overflowY">
         <fieldset id="creds">
             <legend><h3>CRM Settings</h3></legend>
+            <div id="settingLoader" class="loader"></div>
             <div class="input-container">
                 <label for="crm-url">CRM URL:</label>
                 <input type="text" id="crm-url" name="crm-url" maxlength="100" placeholder="Enter CRM URL">

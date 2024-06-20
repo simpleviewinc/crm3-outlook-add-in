@@ -2,6 +2,7 @@
 
 $(document).ready(function () {
     function handleDataFromIndexPage(event) {
+        $("#settingLoader").hide();
         const receivedData = event.data;
         console.log('Data received in popup:', receivedData);
         ApiUrl = receivedData;
@@ -14,12 +15,13 @@ $(document).ready(function () {
     var resval = localStorage.getItem("crm");
     var data = {};
     if (resval != null) {
-         data = decodeFromBase64(resval);
+        data = decodeFromBase64(resval);
         console.log(data);
         if (data != null) {
             if (data.userId != null && data.userId != undefined && data.userId != '') {
                 $('#emailSettings').show();
                 $('#Save').hide();
+                UserId = data.userId;
             }
             else {
                 $('#emailSettings').hide();
@@ -31,11 +33,19 @@ $(document).ready(function () {
             $('#days-to-sync').val(data.daysToSync);
         }
     }
+    else {
+        $('#emailSettings').hide();
+    }
 
 
     function GetUserIdByLogin(url, email, password) {
-        if (url == "https://demo.simpleviewcrm.com")
+        if (url == "https://demo.simpleviewcrm.com" || url == "https://demo.simpleviewcrm.com/")
             url = "http://localhost:4000";
+        else {
+            alert("Url not valid");
+            return;
+        }
+        $("#settingLoader").show();
         const settings = {
             url: url + "/api/cftags/outlook.cfc",
             method: "POST",
@@ -58,7 +68,6 @@ $(document).ready(function () {
 
         $.ajax(settings)
             .done(function (response) {
-                const parser = new DOMParser();
                 let getMatchesReturn = response.getElementsByTagName("checkLoginReturn");
                 const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
                 console.log(decodedString);
@@ -66,15 +75,19 @@ $(document).ready(function () {
                     alert("Credentials not valid !");
                 }
                 else {
+                    $("#settingLoader").hide();
                     alert("Login Successful !");
                     UserId = parseInt(decodedString);
                     $('#emailSettings').show();
                     $('#Save').hide();
+                    ApiUrl = url;
+                    GetTaskTypes(); GetPriorityType();
                 }
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
                 alert("Url or credentials not valid !");
                 console.error('Error:', textStatus, errorThrown);
+                $("#settingLoader").hide();
             });
     }
 
@@ -285,5 +298,15 @@ $(document).ready(function () {
         localStorage.setItem("crm", encodeToBase64(formDataString));
         window.opener.postMessage(formDataString, window.location.origin);
         alert("Settings Updated !");
+        if (window.opener && !window.opener.closed) {
+            if (typeof window.opener.CloseTheTaskPane === 'function') {
+                window.opener.CloseTheTaskPane();
+                window.close(); // Optionally close the popup after sending data
+            } else {
+                console.error("Parent window method setCategoryToEmail is not defined.");
+            }
+        } else {
+            console.error("Parent window is not available.");
+        }
     });
 });
