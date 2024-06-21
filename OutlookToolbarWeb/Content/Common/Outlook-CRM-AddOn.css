@@ -72,9 +72,9 @@ p {
     cursor:pointer;
     color: #ffffff;
 }
-.btnIndex:hover {
+/*.btnIndex:hover {
     background: #00a4f0;
-}
+}*/
 .btnIndex p {
     margin:0;
     font-size: 15px;
@@ -132,9 +132,9 @@ button {
     cursor:pointer;
     color: #ffffff;
 }
-button:hover {
+/*button:hover {
     background: #00a4f0;
-}
+}*/
 
 fieldset {
     border: solid 1px #BEBEBE;
@@ -393,9 +393,6 @@ button {
     border: 1px solid #3e8ff9;
     cursor:pointer;
     color: #ffffff;
-}
-button:hover {
-    background: #00a4f0;
 }
 
 

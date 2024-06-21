@@ -72,6 +72,7 @@ $(document).ready(function () {
                 const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
                 console.log(decodedString);
                 if (decodedString == '-1.0') {
+                    $("#settingLoader").hide();
                     alert("Credentials not valid !");
                 }
                 else {
@@ -85,9 +86,9 @@ $(document).ready(function () {
                 }
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
-                alert("Url or credentials not valid !");
-                console.error('Error:', textStatus, errorThrown);
                 $("#settingLoader").hide();
+                alert("Url or credentials not valid !");
+                console.error('Error:', textStatus, errorThrown);               
             });
     }
 

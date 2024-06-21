@@ -801,16 +801,24 @@ function GetSearchedResult() {
 
             for (let i = 0; i < contacts.length; i++) {
                 const contact = contacts[i];
-                const contactObj = {
-                    groupID: contact.getElementsByTagName("groupID")[0].textContent,
-                    acctID: contact.getElementsByTagName("acctID")[0].textContent,
-                    contactID: contact.getElementsByTagName("contactID")[0].textContent,
-                    fullname: contact.getElementsByTagName("fullname")[0].textContent,
-                    company: contact.getElementsByTagName("company")[0].textContent,
-                    contacttype: contact.getElementsByTagName("contacttype")[0].textContent,
-                    address: contact.getElementsByTagName("address")[0].textContent,
-                    email: (contact.getElementsByTagName("email")[0] != undefined) ? contact.getElementsByTagName("email")[0].textContent : ""
+
+                // Helper function to safely get text content of the first element with a tag name
+                const getTextContent = (tagName) => {
+                    const elements = contact.getElementsByTagName(tagName);
+                    return (elements.length > 0 && elements[0]) ? elements[0].textContent : "";
                 };
+
+                const contactObj = {
+                    groupID: getTextContent("groupID"),
+                    acctID: getTextContent("acctID"),
+                    contactID: getTextContent("contactID"),
+                    fullname: getTextContent("fullname"),
+                    company: getTextContent("company"),
+                    contacttype: getTextContent("contacttype"),
+                    address: getTextContent("address"),
+                    email: getTextContent("email")
+                };
+
                 contactList.push(contactObj);
             }
             console.log(contactList);
