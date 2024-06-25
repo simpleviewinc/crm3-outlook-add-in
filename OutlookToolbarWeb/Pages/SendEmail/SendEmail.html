@@ -14,7 +14,7 @@
     <div id="sendEmailUI" class="overflowY">
         <div class="main-content">
             <fieldset>
-                <legend><h3>Inbound Emails</h3></legend>
+                <legend><h3 id="inboundHeading">Inbound Emails</h3></legend>
                 <div class="headings">
                     <input type="hidden" id="EmailId">
                     <div class="left-side">
@@ -32,6 +32,7 @@
                     </div>
 
                     <div class="box grid active" id="box1">
+                        <div id="matchContactLoader" class="loader"></div>
                         <table id="contactTable">
                             <thead>
                                 <tr>
@@ -137,7 +138,7 @@
             <button id="diffContact" class="ok-button hide">Choose Different Contact</button>
             <button id="selectBtn" class="ok-button">Select Contact</button>
             <button id="skipit" class="skip-button">Skip</button>
-            <button onclick="window.close();" class="cancel-button">Cancel</button>
+            <button id="SendCancel" class="cancel-button">Cancel</button>
         </div>
     </div>
 
@@ -154,8 +155,8 @@
                     <div class="grid active mt" id="SyncBox1">
                         <div class="box-header">
                             <div class="button-container">
-                                <button class="select-all-button">Select All</button>
-                                <button class="clear-all-button">Clear All</button>
+                                <button class="select-all-button" data-target="#inboxTable">Select All</button>
+                                <button class="clear-all-button" data-target="#inboxTable">Clear All</button>
                             </div>
                         </div>
 
@@ -178,8 +179,8 @@
                     <div class="grid mt"  id="SyncBox2">
                         <div class="box-header">
                             <div class="button-container">
-                                <button class="select-all-button">Select All</button>
-                                <button class="clear-all-button">Clear All</button>
+                                <button class="select-all-button" data-target="#sentBoxTable">Select All</button>
+                                <button class="clear-all-button" data-target="#sentBoxTable">Clear All</button>
                             </div>
                         </div>
 
@@ -204,7 +205,7 @@
         <!-- Buttons at the bottom right corner -->
         <div class="bottom-right-buttons">
             <button id="SyncOk" class="ok-button">OK</button>
-            <button class="cancel-button" onclick="window.close();">Cancel</button>
+            <button id="SyncCancel" onclick="window.close();" class="cancel-button">Cancel</button>
         </div>
     </div>
 </body>

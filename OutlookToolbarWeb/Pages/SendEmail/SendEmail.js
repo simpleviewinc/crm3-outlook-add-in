@@ -14,7 +14,7 @@
     recid: '',
     relflds: '',
     relfldvals: ''
-}, ApiUrl = '';
+}, ApiUrl = '', currentSelectedData = [];
  
 
 function initPopup(isSyncEmail) {
@@ -430,6 +430,8 @@ function GetTaskTypes() {
 
 $(document).ready(function () {
     $("#sendEmailLoader").hide();
+    $("#matchContactLoader").hide();
+    
     function handleDataFromIndexPage(event) {
         const receivedData = event.data;
         console.log('Data received in popup:', receivedData);
@@ -443,11 +445,13 @@ $(document).ready(function () {
                 }
             }
         }
-        ApiUrl = receivedData;
-        if (typeof ApiUrl === 'string') {
+        if (typeof receivedData === 'string') {
+            ApiUrl = receivedData;
             GetTaskTypes(); GetPriorityType();
             GetGroupsByUserId();
-            
+        }
+        else {
+            ApiUrl = data.crmUrl;
         }
     }
 
@@ -539,16 +543,26 @@ $(document).ready(function () {
         GetSearchedResult(); 
     });
 
-    $('#SyncOk').on('click', function () {
-        var data = getSelectedRowsData();
+    let index = 1;
+    function ProcessSelectedData(data) {
+        var count = currentSelectedData.length + index - 1;
+        $('#inboundHeading').text("Inbound Email " + index + " of " + count);
+        index++;
         $('#syncEmailUI').hide(); $('#sendEmailUI').show();
         $('.headings h5:nth-child(1)').text('From: ' + data[0].fromEmail);
         $('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
         $('#received').text('Received: ' + new Date(data[0].receivedDate).toLocaleString());
         $('#EmailId').val(data[0].id);
-        GetMatchingContactsData(data.fromEmail, UserID, data.id);
+        GetMatchingDataForSync(data[0].fromEmail, messageObject.userid, data[0].id);
+    }
+    let isSelectButtonClicked = false;
+    $('#SyncOk').on('click', function () {
+        isSelectButtonClicked = true;
+        console.log("ok  clicked !!");
+        currentSelectedData = getSelectedRowsData();
+        ProcessSelectedData(currentSelectedData);
     });
-
+   
     $('#selectBtn').on('click', function () {
         GetAttachedToDDInfo();
         $('#grids').addClass('grid');
@@ -557,6 +571,24 @@ $(document).ready(function () {
         $('#diffContact').addClass('show');
         $('#selectBtn').addClass('hide');
     });
+    $('#SendCancel').on('click', function () {
+        console.log(isSelectButtonClicked);
+        if (!isSelectButtonClicked) {
+            window.close();
+            return;
+        }
+        removeFirstItem(currentSelectedData);
+        if (currentSelectedData && currentSelectedData.length > 0)
+            ProcessSelectedData(currentSelectedData);
+        else {
+            window.close();
+        }
+    });
+    function removeFirstItem(obj) {
+        if (obj && Array.isArray(obj)) {
+            obj.shift();
+        }
+    }
     $('#diffContact').on('click', function () {
         $('#grids').removeClass('grid');
         $('#selectContact').removeClass('active');
@@ -830,10 +862,19 @@ function GetSearchedResult() {
 
 }
 
-function GetMatchingContactsData(email, userId, msgId) {
+
+function GetMatchingDataForSync(email, userId, msgId) {
     console.log("Api Url");
     console.log(ApiUrl);
-    email = "awilkins@americanhomeshield.com";
+    console.log("email" + email);
+    if (!email || !userId)
+        return;
+    $("#matchContactLoader").show();
+
+    if (email == "dallaslacross@members.birthcenters.org") {
+        email = "awilkins@americanhomeshield.com";
+    }
+
     const settings = {
         url: ApiUrl + "/api/cftags/outlook.cfc",
         method: "POST",
@@ -884,12 +925,11 @@ function GetMatchingContactsData(email, userId, msgId) {
                 contactList.push(contactObj);
             }
             populateTable(contactList);
-            window.MatchedData[msgId] = contactList;
-            $('#send-email-btn').prop('disabled', false);
-            console.log(window.MatchedData);
+            $("#matchContactLoader").hide();
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
             console.error('Error:', textStatus, errorThrown);
+            $("#matchContactLoader").hide();
         });
 
 }
@@ -969,38 +1009,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
-
 // Function to toggle the state of all checkboxes in a box
-function toggleCheckboxes(boxId, isChecked) {
-    var checkboxes = document.querySelectorAll('#' + boxId + ' .row-checkbox');
-    checkboxes.forEach(function (checkbox) {
-        checkbox.checked = isChecked;
-    });
-}
-
-// Function to handle the "Select All" or "Clear All" button click
-function handleSelectAllCheckbox(boxId, selectAll) {
-    toggleCheckboxes(boxId, selectAll);
-}
-
-
-
-// Example usage: Add event listener to "Select All" and "Clear All" buttons
-document.addEventListener('DOMContentLoaded', function () {
-    var selectAllButtons = document.querySelectorAll('.select-all-button');
-    selectAllButtons.forEach(function (selectAllButton) {
-        selectAllButton.addEventListener('click', function () {
-            var boxId = selectAllButton.closest('fieldset').querySelector('.box').id;
-            handleSelectAllCheckbox(boxId, true);
-        });
+$(document).ready(function () {
+    $('.select-all-button').click(function () {
+        var targetTable = $(this).data('target');
+        $(targetTable).find('input[type="checkbox"]').prop('checked', true).closest('tr').addClass('selected');
     });
 
-    var clearAllButtons = document.querySelectorAll('.clear-all-button');
-    clearAllButtons.forEach(function (clearAllButton) {
-        clearAllButton.addEventListener('click', function () {
-            var boxId = clearAllButton.closest('fieldset').querySelector('.box').id;
-            handleSelectAllCheckbox(boxId, false);
-        });
+    $('.clear-all-button').click(function () {
+        var targetTable = $(this).data('target');
+        $(targetTable).find('input[type="checkbox"]').prop('checked', false).closest('tr').removeClass('selected');
     });
 });
-

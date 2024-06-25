@@ -5,6 +5,7 @@ window.inboxEmails = {};
 window.sentEmails = {};
 window.ApiUrlVal = '';
 window.ApiUrl = '';
+window.userId = '';
 
 
 function setCategoryToEmail(emailId, isSentFlag) {
@@ -73,7 +74,7 @@ Office.onReady((info) => {
                     console.log(data);
                     if (data != null) {
                         if (data.userId != null && data.userId != undefined && data.userId != '') {
-                           
+                            userId = data.userId;
                         }
                     }
                 }
@@ -141,9 +142,7 @@ function CloseTheTaskPane() {
                 console.error(`Error getting selected items: ${asyncResult.error.message}`);
                 return;
             }
-            
             asyncResult.value.forEach((item, index) => {
-                
                 getSpecificEmailDetails(item.itemId, index);
             });
         });
@@ -171,7 +170,8 @@ function getSpecificEmailDetails(id, index) {
                 }
             }).done((emailData) => {
                 window.selectedEmailData[id] = emailData;
-                GetMatchingContactsData(emailData.From.EmailAddress.Address, 1124, id);
+                if (userId != '')
+                    GetMatchingContactsData(emailData.From.EmailAddress.Address, userId, id);
                 console.log("Email Data:", emailData);
             }).fail((error) => {
                 console.error("Error fetching email data:", error);
@@ -212,23 +212,12 @@ function GetMatchingContactsData(email, userId, msgId) {
 
         $.ajax(settings)
             .done(function (response) {
-                
-                // Parse the outer SOAP response
                 const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(response, "application/xml");
-              
-                // Extract the inner XML string
                 let getMatchesReturn = response.getElementsByTagName("getMatchesReturn");
-               
                 const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-                // Decode the inner XML string
                 const decodedInnerXML = decodeHTMLEntities(decodedString);
-                
-                // Parse the decoded inner XML string
                 const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
                 const contacts = innerXmlDoc.getElementsByTagName("contact");
-                
-                // Convert the extracted contact information into an array of objects
                 const contactList = [];
 
                 for (let i = 0; i < contacts.length; i++) {
@@ -311,44 +300,43 @@ function openNextPopup() {
         isPopupOpen = true;
     }
 
-   
-
-    // Open a generic popup
-    function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
-        const left = (window.screen.width / 2) - (width / 2);
-        const top = (window.screen.height / 2) - (height / 2);
-        const popup = window.open(url, title, `width=${width}, height=${height}, top=${top}, left=${left}`);
-        popup.onload = () => {
-            popup.postMessage(ApiUrl, '*');
-            popup.window.selectedEmailData = popup.opener.selectedEmailData;
-            popup.window.MatchedData = popup.opener.MatchedData;
-            popup.window.inboxEmails = popup.opener.inboxEmails
-            popup.window.sentEmails = popup.opener.sentEmails;
-            popup.window.ApiUrl = popup.opener.ApiUrlVal;
-            console.log("Openning " + title);
-            if (typeof popup.window.initPopup === 'function' && title == 'Synchronize Email with CRM') {
-                popup.window.initPopup(true); // Initialize the popup with data
-            }
-            //else if (typeof popup.window.initPopup === 'function') {
-            //    console.log(popup.window.selectedEmailData+ "data check");
-            //    popup.window.initPopup(false); 
-            //}
-           
-            console.log(popup.window.ApiUrl);
-            if (onloadCallback) {
-                onloadCallback(popup);
-            }
-        };
-        window.addEventListener('message', function (event) {
-            if (event.origin !== window.location.origin) {
-                // Ignore messages from different origins
-                return;
-            }
-            localStorage.setItem("CRM", btoa(event.data));
-        });
+let popupWindow = null;
+// Open a generic popup
+function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
+    // Close the existing popup if it's open
+    if (popupWindow && !popupWindow.closed) {
+        popupWindow.close();
     }
 
+    const left = (window.screen.width / 2) - (width / 2);
+    const top = (window.screen.height / 2) - (height / 2);
+    popupWindow = window.open(url, title, `width=${width}, height=${height}, top=${top}, left=${left}`);
 
+    popupWindow.onload = () => {
+        popupWindow.postMessage(ApiUrl, '*');
+        popupWindow.window.selectedEmailData = popupWindow.opener.selectedEmailData;
+        popupWindow.window.MatchedData = popupWindow.opener.MatchedData;
+        popupWindow.window.inboxEmails = popupWindow.opener.inboxEmails;
+        popupWindow.window.sentEmails = popupWindow.opener.sentEmails;
+        popupWindow.window.ApiUrl = popupWindow.opener.ApiUrlVal;
+        console.log("Opening " + title);
+        if (typeof popupWindow.window.initPopup === 'function' && title === 'Synchronize Email with CRM') {
+            popupWindow.window.initPopup(true); // Initialize the popup with data
+        }
+        console.log(popupWindow.window.ApiUrl);
+        if (onloadCallback) {
+            onloadCallback(popupWindow);
+        }
+    };
+
+    window.addEventListener('message', function (event) {
+        if (event.origin !== window.location.origin) {
+            // Ignore messages from different origins
+            return;
+        }
+        localStorage.setItem("CRM", btoa(event.data));
+    });
+}
 
 function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryColor, skipCategoryColor) {
         

@@ -27,8 +27,8 @@ html, body {
 
 .button-container {
     display: flex;
-/*    background-color: #ADD8E6;*/ /* Light blue background */
-    padding:5px;
+    /*    background-color: #ADD8E6;*/ /* Light blue background */
+    padding: 5px;
 }
 
 .ms-Button {
@@ -69,16 +69,16 @@ p {
     background: #3e8ff9;
     margin-top: 20px;
     border: 1px solid #3e8ff9;
-    cursor:pointer;
+    cursor: pointer;
     color: #ffffff;
 }
-/*.btnIndex:hover {
+    /*.btnIndex:hover {
     background: #00a4f0;
 }*/
-.btnIndex p {
-    margin:0;
-    font-size: 15px;
-}
+    .btnIndex p {
+        margin: 0;
+        font-size: 15px;
+    }
 
 button.disabled {
     background-color: lightgray;
@@ -88,14 +88,19 @@ button.disabled {
 
 /*========== SETTINGS ==========*/
 
+.content-container {
+    width: 96%;
+    padding: 0 15px 15px 15px;
+}
+
 h3 {
     font-weight: 700;
     padding: 10px;
     border: solid 1px #BEBEBE;
     background: #CCEDFC;
     color: #1A1A1A;
-    text-transform: uppercase;
- }
+    text-transform: capitalize;
+}
 
 .input-container {
     display: flex; /* Use a flexbox layout */
@@ -104,12 +109,12 @@ h3 {
 }
 
     .input-container label {
-        flex: 0 0 120px; /* Don't grow, don't shrink, start at 120px */
+        flex: 0 0 150px; /* Don't grow, don't shrink, start at 120px */
         margin-right: 10px; /* Add some space between the label and the input */
         font-weight: 700;
     }
 
-input, select, option{
+input, select, option {
     flex: 1; /* Grow to occupy the rest of the space */
     padding: 8px;
     margin: 6px 0;
@@ -124,12 +129,12 @@ input, select, option{
 
 button {
     font-size: 15px;
-    border-radius:10px;
+    border-radius: 10px;
     padding: 10px 20px;
     margin-left: 10px; /* Space between buttons */
     background: #3e8ff9;
     border: 1px solid #3e8ff9;
-    cursor:pointer;
+    cursor: pointer;
     color: #ffffff;
 }
 /*button:hover {
@@ -143,6 +148,10 @@ fieldset {
 }
 
 /*========== SEND EMAIL ==========*/
+
+#sendEmailUI {
+    width: 96%;
+}
 
 .box {
     border: 1px solid #000;
@@ -179,8 +188,9 @@ fieldset {
     margin-left: 20px; /* Add some margin to separate it from the left-side content */
     margin-bottom: 10px;
 }
+
     .right-side h5 {
-        font-size:14px;
+        font-size: 14px;
     }
 
 
@@ -203,8 +213,8 @@ th {
 .box-header {
     display: flex;
     justify-content: flex-end; /* Aligns children to the right */
-    align-items: center;
-    margin-bottom: 10px;
+    align-items: flex-end;
+    background: #F5F5F0;
 }
 
 .button-container {
@@ -215,7 +225,6 @@ th {
 .bottom-right-buttons {
     padding: 5px 10px;
     cursor: pointer;
-    margin-top: 20px;
     display: flex;
     justify-content: flex-end; /* Align buttons to the right */
 }
@@ -241,30 +250,30 @@ tr.selected {
         background: #fff;
     }
 
-/*button.active {
-    background-color: #f2f2f2 !important;
-    color: black;
-}*/
-
 tr:hover {
     cursor: pointer;
 }
 
-.toggle-buttons button {
-    padding: 10px 15px;
-    color: #fff;
-    background-color: #BEBEBE;
-    border: 1px solid;
-    border-bottom: none;
-    border-radius: 2px;
-    margin-right: -4px;
-    cursor: pointer;
-    margin-top: 0px;
-    margin-left: 0px;
+.toggle-buttons {
+    background: #F5F5F0;
 }
-.toggle-buttons button.active {
-    background:#3e8ff9;
-}
+
+    .toggle-buttons button {
+        padding: 10px 15px;
+        color: #fff;
+        background-color: #BEBEBE;
+        border: 1px solid;
+        border-bottom: none;
+        border-radius: 2px;
+        margin-right: -4px;
+        cursor: pointer;
+        margin-top: 0px;
+        margin-left: 0px;
+    }
+
+        .toggle-buttons button.active {
+            background: #3e8ff9;
+        }
 
 
 input, select, option {
@@ -335,12 +344,12 @@ input, select, option {
     }
 }
 
-.mt{
-    margin-top:-37px;
+.mt {
+    margin-top: -50px;
 }
 
-.fixTable{
-    table-layout:fixed;
+.fixTable {
+    table-layout: fixed;
 }
 
 
@@ -350,6 +359,10 @@ input, select, option {
 
 /*========== SYNC EMAIL ==========*/
 
+#syncEmailUI {
+    width: 96%;
+}
+
 h3 {
     font-weight: 700;
     padding: 10px;
@@ -357,7 +370,7 @@ h3 {
     background: #CCEDFC;
     color: #1A1A1A;
     text-transform: uppercase;
- }
+}
 
 .input-container {
     display: flex; /* Use a flexbox layout */
@@ -366,12 +379,12 @@ h3 {
 }
 
     .input-container label {
-        flex: 0 0 120px; /* Don't grow, don't shrink, start at 120px */
+        flex: 0 0 150px; /* Don't grow, don't shrink, start at 120px */
         margin-right: 10px; /* Add some space between the label and the input */
         font-weight: 700;
     }
 
-input, select, option{
+input, select, option {
     flex: 1; /* Grow to occupy the rest of the space */
     padding: 8px;
     margin: 6px 0;
@@ -386,20 +399,16 @@ input, select, option{
 
 button {
     font-size: 15px;
-    border-radius:10px;
+    border-radius: 10px;
     padding: 10px 20px;
     margin-left: 10px; /* Space between buttons */
     background: #3e8ff9;
     border: 1px solid #3e8ff9;
-    cursor:pointer;
+    cursor: pointer;
     color: #ffffff;
 }
 
 
-.overflowY{
-    overflow-y:auto;
-}
-
-#sendEmailUI{
-    width:850px;
+.overflowY {
+    overflow-y: auto;
 }
