@@ -14,10 +14,11 @@
     recid: '',
     relflds: '',
     relfldvals: ''
-}, ApiUrl = '', currentSelectedData = [];
+}, ApiUrl = 'http://localhost:4000', currentSelectedData = [],
+    isSelectButtonClicked = false;;
  
 
-function initPopup(isSyncEmail) {
+function initPopup(isSyncEmail, selectedEmails) {
     console.log("init popup" + isSyncEmail);
     if (isSyncEmail) {
         $("#syncEmailUI").show();
@@ -27,29 +28,36 @@ function initPopup(isSyncEmail) {
         $("#syncEmailUI").hide();
         $("#sendEmailUI").show();
     }
-    var emailData = window.selectedEmailData; // Get the passed email data
+    var emailData = selectedEmails; // Get the passed email data
+    console.log(emailData);
     // Update the HTML elements with the email data
-    if (emailData != null && emailData != undefined) {
-        if (emailData.From && emailData.From.EmailAddress && emailData.From.EmailAddress.Address &&
-            emailData.Subject &&
-            emailData.ReceivedDateTime &&
-            emailData.Id) {
-
-            $('.headings h5:nth-child(1)').text('From: ' + emailData.From.EmailAddress.Address);
-            $('.headings h5:nth-child(2)').text('Subject: ' + emailData.Subject);
-            $('#received').text('Received: ' + new Date(emailData.ReceivedDateTime).toLocaleString());
-            $('#EmailId').val(emailData.Id);
-            messageObject.subject = emailData.Subject;
-            messageObject.body = emailData.BodyPreview;
-            messageObject.attachment = emailData.HasAttachments;
-            messageObject.duedate = new Date().toLocaleDateString();
-        } else {
-            console.log(emailData);
-            console.log('One or more required fields in emailData are empty.');
+    if (emailData != null && emailData != undefined && !isSyncEmail) {
+        currentSelectedData = emailData;
+        if (currentSelectedData && currentSelectedData.length > 0) {
+            isSelectButtonClicked = true;
+            ProcessSelectedData(currentSelectedData);
         }
     }
-    if (window.MatchedData != null && window.MatchedData != undefined)
-        populateTable(window.MatchedData);
+}
+let isInboxTabClicked = true;
+let index = 1;
+function ProcessSelectedData(data) {
+    console.log(data);
+    console.log("----------proces---------------------");
+    var count = currentSelectedData.length + index - 1;
+    if (isInboxTabClicked) {
+        $('#inboundHeading').text("Inbound Email " + index + " of " + count);
+    }
+    else {
+        $('#inboundHeading').text("Outbound Email " + index + " of " + count);
+    }
+    index++;
+    $('#syncEmailUI').hide(); $('#sendEmailUI').show();
+    $('.headings h5:nth-child(1)').text('From: ' + data[0].fromEmail);
+    $('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
+    $('#received').text('Received: ' + new Date(data[0].receivedDate).toLocaleString());
+    $('#EmailId').val(data[0].id);
+    GetMatchingDataForSync(data[0].fromEmail, messageObject.userid);
 }
 
 function populateTable(contactList) {
@@ -134,14 +142,31 @@ function SendTheEmail() {
             const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
             $("#sendEmailLoader").hide();
             alert("Email Send with trace id: " + parseInt(decodedString));
-            window.close(); 
+            removeFirstItem(currentSelectedData);
+            if (currentSelectedData && currentSelectedData.length > 0)
+                ProcessSelectedData(currentSelectedData);
+            else
+                CloseAll();
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
             console.error('Error:', textStatus, errorThrown);
             $("#sendEmailLoader").hide();
-            window.close(); 
+            CloseAll();
         });
 
+}
+
+function CloseAll() {
+    if (window.opener && !window.opener.closed) {
+        if (typeof window.opener.CloseTheTaskPane === 'function') {
+            window.opener.CloseTheTaskPane();
+            window.close(); // Optionally close the popup after sending data
+        } else {
+            console.error("Parent window method setCategoryToEmail is not defined.");
+        }
+    } else {
+        console.error("Parent window is not available.");
+    }
 }
 
 function GetAttachedToDDInfo() {
@@ -428,6 +453,12 @@ function GetTaskTypes() {
 
 }
 
+function removeFirstItem(obj) {
+    if (obj && Array.isArray(obj)) {
+        obj.shift();
+    }
+}
+
 $(document).ready(function () {
     $("#sendEmailLoader").hide();
     $("#matchContactLoader").hide();
@@ -446,12 +477,12 @@ $(document).ready(function () {
             }
         }
         if (typeof receivedData === 'string') {
-            ApiUrl = receivedData;
+            //ApiUrl = receivedData;
             GetTaskTypes(); GetPriorityType();
             GetGroupsByUserId();
         }
         else {
-            ApiUrl = data.crmUrl;
+           // ApiUrl = data.crmUrl;
         }
     }
 
@@ -462,8 +493,13 @@ $(document).ready(function () {
         var id = $('#EmailId').val();
         if (window.opener && !window.opener.closed) {
             if (typeof window.opener.setCategoryToEmail === 'function') {
+                console.log("Email Id: " + id);
                 window.opener.setCategoryToEmail(id, false);
-                window.close(); // Optionally close the popup after sending data
+                removeFirstItem(currentSelectedData);
+                if (currentSelectedData && currentSelectedData.length > 0)
+                    ProcessSelectedData(currentSelectedData);
+                else
+                    CloseAll(); 
             } else {
                 console.error("Parent window method setCategoryToEmail is not defined.");
             }
@@ -499,12 +535,15 @@ $(document).ready(function () {
         }
     });
 
-    function getSelectedRowsData() {
+    function getSelectedRowsData(isInbox) {
         // Create an array to hold the selected row data
         const selectedRowsData = [];
 
-        // Select all the checkboxes with the class 'row-checkbox'
-        const checkboxes = document.querySelectorAll('.row-checkbox');
+        // Determine the table to target based on the boolean flag
+        const tableId = isInbox ? '#inboxTable' : '#sentBoxTable';
+
+        // Select all the checkboxes with the class 'row-checkbox' within the specified table
+        const checkboxes = document.querySelectorAll(`${tableId} .row-checkbox`);
 
         // Loop through each checkbox
         checkboxes.forEach(checkbox => {
@@ -538,28 +577,17 @@ $(document).ready(function () {
         return selectedRowsData;
     }
 
+
     $('#loader').hide();
     $("#searchContacts").click(function () {
         GetSearchedResult(); 
     });
 
-    let index = 1;
-    function ProcessSelectedData(data) {
-        var count = currentSelectedData.length + index - 1;
-        $('#inboundHeading').text("Inbound Email " + index + " of " + count);
-        index++;
-        $('#syncEmailUI').hide(); $('#sendEmailUI').show();
-        $('.headings h5:nth-child(1)').text('From: ' + data[0].fromEmail);
-        $('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
-        $('#received').text('Received: ' + new Date(data[0].receivedDate).toLocaleString());
-        $('#EmailId').val(data[0].id);
-        GetMatchingDataForSync(data[0].fromEmail, messageObject.userid, data[0].id);
-    }
-    let isSelectButtonClicked = false;
+   
     $('#SyncOk').on('click', function () {
         isSelectButtonClicked = true;
         console.log("ok  clicked !!");
-        currentSelectedData = getSelectedRowsData();
+        currentSelectedData = getSelectedRowsData(isInboxTabClicked);
         ProcessSelectedData(currentSelectedData);
     });
    
@@ -572,23 +600,9 @@ $(document).ready(function () {
         $('#selectBtn').addClass('hide');
     });
     $('#SendCancel').on('click', function () {
-        console.log(isSelectButtonClicked);
-        if (!isSelectButtonClicked) {
-            window.close();
-            return;
-        }
-        removeFirstItem(currentSelectedData);
-        if (currentSelectedData && currentSelectedData.length > 0)
-            ProcessSelectedData(currentSelectedData);
-        else {
-            window.close();
-        }
+        window.close();
     });
-    function removeFirstItem(obj) {
-        if (obj && Array.isArray(obj)) {
-            obj.shift();
-        }
-    }
+   
     $('#diffContact').on('click', function () {
         $('#grids').removeClass('grid');
         $('#selectContact').removeClass('active');
@@ -615,6 +629,7 @@ $(document).ready(function () {
         $('#SyncBox2').removeClass('active');
         $('#showGrid3').addClass('active');
         $('#showGrid4').removeClass('active');
+        isInboxTabClicked = true;
     });
 
     $('#showGrid4').on('click', function () {
@@ -622,6 +637,7 @@ $(document).ready(function () {
         $('#SyncBox2').addClass('active');
         $('#showGrid3').removeClass('active');
         $('#showGrid4').addClass('active');
+        isInboxTabClicked = false;
     });
 });
 
@@ -779,12 +795,26 @@ function populateSearchTable(contactList) {
     `);
     }
     $('#loader').hide();
-
+    EnableButtonById("#searchContacts");
+    EnableButtonById("#selectBtn");
+    EnableButtonById("#skipit");
     BindClickOnRowForSearch();
+}
+
+function DisableButtonById(id) {
+    $(id).addClass('disabled');
+    $(id).prop('disabled', true);
+}
+function EnableButtonById(id) {
+    $(id).removeClass('disabled');
+    $(id).prop('disabled', false);
 }
 
 function GetSearchedResult() {
     $('#loader').show();
+    DisableButtonById("#searchContacts");
+    DisableButtonById("#selectBtn");
+    DisableButtonById("#skipit");
     var groupId = $('#group-name').val();
     var contactName = $('#name').val();
     var companyName = $('#company').val();
@@ -813,33 +843,19 @@ function GetSearchedResult() {
 
     $.ajax(settings)
         .done(function (response) {
-
-            // Parse the outer SOAP response
             const parser = new DOMParser();
-
-            // Extract the inner XML string
             let getMatchesReturn = response.getElementsByTagName("getSearchReturn");
-
             const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-            // Decode the inner XML string
             const decodedInnerXML = decodeHTMLEntities(decodedString);
-
-            // Parse the decoded inner XML string
             const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
             const contacts = innerXmlDoc.getElementsByTagName("contact");
-
-            // Convert the extracted contact information into an array of objects
             const contactList = [];
-
             for (let i = 0; i < contacts.length; i++) {
                 const contact = contacts[i];
-
-                // Helper function to safely get text content of the first element with a tag name
                 const getTextContent = (tagName) => {
                     const elements = contact.getElementsByTagName(tagName);
                     return (elements.length > 0 && elements[0]) ? elements[0].textContent : "";
                 };
-
                 const contactObj = {
                     groupID: getTextContent("groupID"),
                     acctID: getTextContent("acctID"),
@@ -863,7 +879,7 @@ function GetSearchedResult() {
 }
 
 
-function GetMatchingDataForSync(email, userId, msgId) {
+function GetMatchingDataForSync(email, userId) {
     console.log("Api Url");
     console.log(ApiUrl);
     console.log("email" + email);
@@ -995,8 +1011,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const fromCell = row.insertCell(1);
                 const subjectCell = row.insertCell(2);
                 const receivedCell = row.insertCell(3);
-
-                indexCell.innerHTML = '<input type="checkbox" class="row-checkbox">';
+                indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
                 fromCell.textContent = email.From.EmailAddress.Address;
                 subjectCell.textContent = email.Subject;
                 receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format

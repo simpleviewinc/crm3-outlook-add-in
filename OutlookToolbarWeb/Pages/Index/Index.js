@@ -27,7 +27,7 @@ function setCategoryToEmail(emailId, isSentFlag) {
         if (result.status === "succeeded") {
             var accessToken = result.value;
             var requestUrl = Office.context.mailbox.restUrl + '/v2.0/me/messages/' + emailId;
-            
+
             // Construct the payload to set the category
             var categoryData = {
                 "Categories": [categoryColor]
@@ -55,99 +55,113 @@ function setCategoryToEmail(emailId, isSentFlag) {
 }
 
 
-    let popupQueue = []; // Queue to manage popups
-    let isPopupOpen = false;
+let popupQueue = []; // Queue to manage popups
+let isPopupOpen = false;
 
 Office.onReady((info) => {
-        if (info.host === Office.HostType.Outlook) {
-            $(document).ready(() => {
-                console.log("office is ready");
-                
-                $('#send-email-btn').addClass('disabled');
-                $('#send-email-btn').prop('disabled', true);
-                $('#sync-email-btn').addClass('disabled');
-                $('#sync-email-btn').prop('disabled', true);
-                var resval = localStorage.getItem("crm");
-                var data = {};
-                if (resval != null) {
-                    data = decodeFromBase64(resval);
-                    console.log(data);
-                    if (data != null) {
-                        if (data.userId != null && data.userId != undefined && data.userId != '') {
-                            userId = data.userId;
-                        }
-                    }
-                }
-                attachClickEventHandlers();
-                fetchSelectedEmails();
-                Office.context.mailbox.addHandlerAsync(Office.EventType.SelectedItemsChanged, fetchSelectedEmails);
-                
-                var data = GetDataFromLocalStorage();
-                ApiUrlVal = ApiUrl;
-                console.log("Value" + ApiUrlVal);
+    if (info.host === Office.HostType.Outlook) {
+        $(document).ready(() => {
+            console.log("office is ready");
+
+            $('#send-email-btn').addClass('disabled');
+            $('#send-email-btn').prop('disabled', true);
+            $('#sync-email-btn').addClass('disabled');
+            $('#sync-email-btn').prop('disabled', true);
+            var resval = localStorage.getItem("crm");
+            var data = {};
+            if (resval != null) {
+                data = decodeFromBase64(resval);
+                console.log(data);
                 if (data != null) {
-                   // data = decodeFromBase64(resval);
-                    console.log(data);
-                    if (data != null) {
-                        $('#sent-flag-color').val(data.sentFlagColor);
-                        $('#skip-flag-color').val(data.skipFlagColor);
-                        $('#days-to-sync').val(data.daysToSync);
+                    if (data.userId != null && data.userId != undefined && data.userId != '') {
+                        userId = data.userId;
                     }
-                    fetchEmailsWithCategoryAndTimeFilter(true, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
-                    fetchEmailsWithCategoryAndTimeFilter(false, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
                 }
-               
-            });
-        }
-    });
+            }
+            attachClickEventHandlers();
+            fetchSelectedEmails(false);
+            Office.context.mailbox.addHandlerAsync(Office.EventType.SelectedItemsChanged, () => fetchSelectedEmails(true));
+
+            var data = GetDataFromLocalStorage();
+            ApiUrlVal = ApiUrl;
+            console.log("Value" + ApiUrlVal);
+            if (data != null) {
+                // data = decodeFromBase64(resval);
+                console.log(data);
+                if (data != null) {
+                    $('#sent-flag-color').val(data.sentFlagColor);
+                    $('#skip-flag-color').val(data.skipFlagColor);
+                    $('#days-to-sync').val(data.daysToSync);
+                }
+                console.log("going to be called....");
+                fetchEmailsWithCategoryAndTimeFilter(true, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
+                fetchEmailsWithCategoryAndTimeFilter(false, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
+            }
+
+        });
+    }
+});
 
 function CloseTheTaskPane() {
     Office.context.ui.closeContainer();
 }
 
-    function decodeFromBase64(base64Str) {
-        const jsonString = atob(base64Str);
+function decodeFromBase64(base64Str) {
+    const jsonString = atob(base64Str);
 
-        // Parse the JSON string into an object
-        return JSON.parse(jsonString);
-    }
-    // Attach click event handlers for buttons
-    function attachClickEventHandlers() {
-        $('#send-email-btn').on('click', () => {
-            console.log("send button cliked: ");
-            console.log(window.selectedEmailData);
-            Object.keys(window.selectedEmailData).forEach((emailId, index) => {
-                popupQueue.push({
-                    url: '../SendEmail/SendEmail.html',
-                    title: `Send Email(s) to CRM ${index + 1}`,
-                    emailId: emailId
-                });
-            });
-            openNextPopup(); // Start opening popups
-        });
+    // Parse the JSON string into an object
+    return JSON.parse(jsonString);
+}
+// Attach click event handlers for buttons
+function attachClickEventHandlers() {
+    //$('#send-email-btn').on('click', () => {
+    //    console.log("send button cliked: ");
+    //    console.log(window.selectedemaildata);
+    //    object.keys(window.selectedemaildata).foreach((emailid, index) => {
+    //        popupqueue.push({
+    //            url: '../sendemail/sendemail.html',
+    //            title: `send email(s) to crm ${index + 1}`,
+    //            emailid: emailid
+    //        });
+    //    });
+    //    openNextPopup(); // Start opening popups
+    //});
 
-        $('#sync-email-btn').on('click', () => {
-            openPopup('../SendEmail/SendEmail.html', 'Synchronize Email with CRM');
-        });
+    $('#send-email-btn').on('click', () => {
+        openPopup('../SendEmail/SendEmail.html', 'Send Email');
+    });
 
-        $('#settings-btn').on('click', () => {
-            openPopup('../Settings/Settings.html', 'Settings', 1000, 800);
-        });
-    }
+    $('#sync-email-btn').on('click', () => {
+        openPopup('../SendEmail/SendEmail.html', 'Synchronize Email with CRM');
+    });
 
-    // Fetch selected emails
-    function fetchSelectedEmails() {
-        Office.context.mailbox.getSelectedItemsAsync((asyncResult) => {
-            if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-                console.error(`Error getting selected items: ${asyncResult.error.message}`);
-                return;
-            }
-            asyncResult.value.forEach((item, index) => {
-                getSpecificEmailDetails(item.itemId, index);
-            });
+    $('#settings-btn').on('click', () => {
+        openPopup('../Settings/Settings.html', 'Settings', 1000, 800);
+    });
+}
+
+let selectedEmails = [];
+// Fetch selected emails
+function fetchSelectedEmails(refresh) {
+    if (refresh)
+        selectedEmails = [];
+    Office.context.mailbox.getSelectedItemsAsync((asyncResult) => {
+        if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+            console.error(`Error getting selected items: ${asyncResult.error.message}`);
+            return;
+        }
+
+        asyncResult.value.forEach((item) => {
+            getSpecificEmailDetails(item.itemId);
         });
-    }
-function getSpecificEmailDetails(id, index) {
+        console.log("new emails");
+        console.log(selectedEmails);
+        $('#send-email-btn').prop('disabled', false);
+        $('#send-email-btn').removeClass('disabled');
+    });
+}
+
+function getSpecificEmailDetails(id) {
     Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
         if (result.status === "succeeded") {
             console.log("Actual Id:", id);
@@ -156,10 +170,6 @@ function getSpecificEmailDetails(id, index) {
             let correctedId = id.replace(/\//g, '-').replace(/\+/g, '_'); // This might not be needed
             const encodedId = encodeURIComponent(correctedId); // URL encode the corrected ID
             const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${encodedId}`;
-
-            console.log("Corrected Id:", correctedId);
-            console.log("Encoded Id:", encodedId);
-            console.log("Request URL:", requestUrl);
 
             $.ajax({
                 url: requestUrl,
@@ -170,9 +180,19 @@ function getSpecificEmailDetails(id, index) {
                 }
             }).done((emailData) => {
                 window.selectedEmailData[id] = emailData;
-                if (userId != '')
-                    GetMatchingContactsData(emailData.From.EmailAddress.Address, userId, id);
-                console.log("Email Data:", emailData);
+                console.log("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+
+                const rowData = {
+                    id: emailData.Id,
+                    fromEmail: emailData.From.EmailAddress.Address,
+                    subject: emailData.Subject,
+                    receivedDate: new Date(emailData.ReceivedDateTime).toLocaleString()
+                };
+                console.log(rowData);
+                const exists = selectedEmails.some(email => email.id === rowData.id);
+                if (!exists) {
+                    selectedEmails.push(rowData);
+                }
             }).fail((error) => {
                 console.error("Error fetching email data:", error);
                 if (error.responseJSON) {
@@ -185,120 +205,6 @@ function getSpecificEmailDetails(id, index) {
     });
 }
 
-
-
-function GetMatchingContactsData(email, userId, msgId) {
-    console.log("Api Url");
-    console.log(ApiUrl);
-        //email = "awilkins@americanhomeshield.com";
-        const settings = {
-            url: ApiUrl +"/api/cftags/outlook.cfc",
-            method: "POST",
-            timeout: 0,
-            headers: {
-                "Content-Type": "text/xml; charset=utf-8",
-                "SOAPAction": ""
-            },
-            data: `<?xml version="1.0" encoding="utf-8"?>
-              <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-                <soap:Body>
-                  <getMatches>
-                    <userid>`+ userId +`</userid>
-                    <email>`+ email +`</email>
-                  </getMatches>
-                </soap:Body>
-              </soap:Envelope>`
-        };
-
-        $.ajax(settings)
-            .done(function (response) {
-                const parser = new DOMParser();
-                let getMatchesReturn = response.getElementsByTagName("getMatchesReturn");
-                const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-                const decodedInnerXML = decodeHTMLEntities(decodedString);
-                const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
-                const contacts = innerXmlDoc.getElementsByTagName("contact");
-                const contactList = [];
-
-                for (let i = 0; i < contacts.length; i++) {
-                    const contact = contacts[i];
-                    const contactObj = {
-                        groupID: contact.getElementsByTagName("groupID")[0].textContent,
-                        acctID: contact.getElementsByTagName("acctID")[0].textContent,
-                        contactID: contact.getElementsByTagName("contactID")[0].textContent,
-                        groupname: contact.getElementsByTagName("groupname")[0].textContent,
-                        fullname: contact.getElementsByTagName("fullname")[0].textContent,
-                        company: contact.getElementsByTagName("company")[0].textContent,
-                        contacttype: contact.getElementsByTagName("contacttype")[0].textContent,
-                        address: contact.getElementsByTagName("address")[0].textContent,
-                        email: contact.getElementsByTagName("email")[0].textContent
-                    };
-                    contactList.push(contactObj);
-                }
-
-                window.MatchedData[msgId] = contactList;
-                $('#send-email-btn').prop('disabled', false);
-                $('#send-email-btn').removeClass('disabled');
-                console.log(window.MatchedData);
-            })
-            .fail(function (jqXHR, textStatus, errorThrown) {
-                console.error('Error:', textStatus, errorThrown);
-            });
-
-}
-
-    function htmlToString(html) {
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = html;
-        return tempDiv.textContent || tempDiv.innerText || "";
-    }
-    function decodeHTMLEntities(text) {
-        const entities = {
-            '&amp;': '&',
-            '&lt;': '<',
-            '&gt;': '>',
-            '&quot;': '"',
-            '&#x27;': "'",
-            '&#x2F;': '/',
-            '&#x60;': '`',
-            '&#x3D;': '=',
-            '&#xE9;': 'é'
-        };
-        return text.replace(/&[a-zA-Z0-9#x]+;/g, function (match) {
-            return entities[match] || match;
-        });
-    }
-
-    // Open the next popup in the queue
-function openNextPopup() {
-
-    console.log("popupQueue.length" + popupQueue.length);
-    console.log("isPopupOpen" + isPopupOpen);
-        if (popupQueue.length === 0 ) {
-            return;
-        }
-        const popupInfo = popupQueue.shift(); // Get the next popup info from the queue
-        openPopupForSendEmail(popupInfo.url, popupInfo.title, popupInfo.emailId);
-    }
-
-    // Open popup for sending email
-    function openPopupForSendEmail(url, title, emailId) {
-        openPopup(url, title, 1000, 800, (popup) => {
-            popup.window.selectedEmailData = window.selectedEmailData[emailId];
-            popup.window.MatchedData = window.MatchedData[emailId];
-            popup.window.inboxEmails = window.inboxEmails;
-            popup.window.sentEmails = window.sentEmails;
-            popup.window.ApiUrl = window.ApiUrlVal;
-            if (typeof popup.window.initPopup === 'function') {
-                popup.window.initPopup(false); // Initialize the popup with data
-            }
-            popup.onunload = () => {
-                isPopupOpen = false;
-                openNextPopup();
-            };
-        });
-        isPopupOpen = true;
-    }
 
 let popupWindow = null;
 // Open a generic popup
@@ -314,14 +220,15 @@ function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
 
     popupWindow.onload = () => {
         popupWindow.postMessage(ApiUrl, '*');
-        popupWindow.window.selectedEmailData = popupWindow.opener.selectedEmailData;
-        popupWindow.window.MatchedData = popupWindow.opener.MatchedData;
         popupWindow.window.inboxEmails = popupWindow.opener.inboxEmails;
         popupWindow.window.sentEmails = popupWindow.opener.sentEmails;
         popupWindow.window.ApiUrl = popupWindow.opener.ApiUrlVal;
         console.log("Opening " + title);
         if (typeof popupWindow.window.initPopup === 'function' && title === 'Synchronize Email with CRM') {
-            popupWindow.window.initPopup(true); // Initialize the popup with data
+            popupWindow.window.initPopup(true, selectedEmails); // Initialize the popup with data
+        }
+        else if (typeof popupWindow.window.initPopup === 'function') {
+            popupWindow.window.initPopup(false, selectedEmails);
         }
         console.log(popupWindow.window.ApiUrl);
         if (onloadCallback) {
@@ -339,65 +246,65 @@ function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
 }
 
 function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryColor, skipCategoryColor) {
-        
-        Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
-            if (result.status === "succeeded") {
-                var accessToken = result.value;
-                var mailFolder = isInbox ? 'inbox' : 'sentitems';
-                var requestUrl = Office.context.mailbox.restUrl + `/v2.0/me/mailfolders/${mailFolder}/messages`;
+    console.log("fetchEmailsWithCategoryAndTimeFilter called....");
+    Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
+        if (result.status === "succeeded") {
+            var accessToken = result.value;
+            var mailFolder = isInbox ? 'inbox' : 'sentitems';
+            var requestUrl = Office.context.mailbox.restUrl + `/v2.0/me/mailfolders/${mailFolder}/messages`;
 
-                // Get selected days to sync
-                var now = new Date();
-                var startDate = new Date(now.getTime() - (daysToSync + 1) * 24 * 60 * 60 * 1000);
-                var startDateISOString = startDate.toISOString();
-                
-                // Construct the query to filter emails within the selected timeframe,
-                // excluding those with the skip or sent categories
-                var filterQuery = `?$filter=receivedDateTime ge ${startDateISOString}` +
-                    ` and not(categories/any(c:c eq '${sentCategoryColor}'))` +
-                    ` and not(categories/any(c:c eq '${skipCategoryColor}'))`;
+            // Get selected days to sync
+            var now = new Date();
+            var startDate = new Date(now.getTime() - (daysToSync + 1) * 24 * 60 * 60 * 1000);
+            var startDateISOString = startDate.toISOString();
 
-                // Function to fetch emails with pagination
-                function fetchEmails(url, allEmails = []) {
-                    $.ajax({
-                        url: url,
-                        type: 'GET',
-                        contentType: 'application/json',
-                        headers: {
-                            'Authorization': 'Bearer ' + accessToken
-                        }
-                    }).done(function (response) {
-                        allEmails = allEmails.concat(response.value);
+            // Construct the query to filter emails within the selected timeframe,
+            // excluding those with the skip or sent categories
+            var filterQuery = `?$filter=receivedDateTime ge ${startDateISOString}` +
+                ` and not(categories/any(c:c eq '${sentCategoryColor}'))` +
+                ` and not(categories/any(c:c eq '${skipCategoryColor}'))`;
 
-                        if (response['@odata.nextLink']) {
-                            fetchEmails(response['@odata.nextLink'], allEmails);
+            // Function to fetch emails with pagination
+            function fetchEmails(url, allEmails = []) {
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    contentType: 'application/json',
+                    headers: {
+                        'Authorization': 'Bearer ' + accessToken
+                    }
+                }).done(function (response) {
+                    allEmails = allEmails.concat(response.value);
+
+                    if (response['@odata.nextLink']) {
+                        fetchEmails(response['@odata.nextLink'], allEmails);
+                    } else {
+                        if (isInbox) {
+                            window.inboxEmails = allEmails;
+                            console.log("Inbox emails from the selected timeframe:");
+                            console.log(window.inboxEmails);
+
                         } else {
-                            if (isInbox) {
-                                window.inboxEmails = allEmails;
-                                console.log("Inbox emails from the selected timeframe:");
-                                console.log(window.inboxEmails);
-                               
-                            } else {
-                                window.sentEmails = allEmails;
-                                console.log("Sent emails from the selected timeframe:");
-                                console.log(window.sentEmails);
-                            }
-                            $('#sync-email-btn').removeClass('disabled');
-                            $('#sync-email-btn').prop('disabled', false);
+                            window.sentEmails = allEmails;
+                            console.log("Sent emails from the selected timeframe:");
+                            console.log(window.sentEmails);
                         }
-                    }).fail(function (jqXHR, textStatus, errorThrown) {
-                        console.error("Error fetching emails:", textStatus, errorThrown);
-                        console.error("Response text:", jqXHR.responseText);
                         $('#sync-email-btn').removeClass('disabled');
                         $('#sync-email-btn').prop('disabled', false);
-                    });
-                }
-
-                fetchEmails(requestUrl + filterQuery);
-            } else {
-                console.error("Error getting callback token:", result.error.message);
+                    }
+                }).fail(function (jqXHR, textStatus, errorThrown) {
+                    console.error("Error fetching emails:", textStatus, errorThrown);
+                    console.error("Response text:", jqXHR.responseText);
+                    $('#sync-email-btn').removeClass('disabled');
+                    $('#sync-email-btn').prop('disabled', false);
+                });
             }
-        });
-    }
-   
+
+            fetchEmails(requestUrl + filterQuery);
+        } else {
+            console.error("Error getting callback token:", result.error.message);
+        }
+    });
+}
+
 
