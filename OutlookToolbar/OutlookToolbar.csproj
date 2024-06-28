@@ -42,6 +42,8 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="OutlookToolbarManifest\Simpleview CRM DEV.xml" />
+    <Content Include="OutlookToolbarManifest\Simpleview CRM.xml" />
     <None Include="OutlookToolbarManifest\SharePointProjectItem.spdata">
       <SharePointProjectItemId>{f2302f4f-30cb-44e3-b5db-ec39bb2dd57b}</SharePointProjectItemId>
     </None>
