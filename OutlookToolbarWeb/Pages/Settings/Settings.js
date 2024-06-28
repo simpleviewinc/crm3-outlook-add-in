@@ -57,9 +57,13 @@ $(document).ready(function () {
 
 
     function GetUserIdByLogin(url, email, password) {
-        if (url == "https://demo.simpleviewcrm.com" || url == "https://demo.simpleviewcrm.com/")
-            url = "https://271f-13-84-216-53.ngrok-free.app";
-        else {
+        if (url == "https://demo.simpleviewcrm.com" || url == "https://demo.simpleviewcrm.com/") {
+            if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
+                url = "http://localhost:4000";
+            } else {
+                url = "https://271f-13-84-216-53.ngrok-free.app";
+            }
+        } else {
             alert("Url not valid");
             return;
         }
