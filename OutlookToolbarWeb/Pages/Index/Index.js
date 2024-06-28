@@ -62,7 +62,7 @@ Office.onReady((info) => {
     if (info.host === Office.HostType.Outlook) {
         $(document).ready(() => {
             console.log("office is ready");
-
+            console.log('loaded index.js version DEV 1.5');
             $('#send-email-btn').addClass('disabled');
             $('#send-email-btn').prop('disabled', true);
             $('#sync-email-btn').addClass('disabled');
@@ -229,6 +229,9 @@ function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
         }
         else if (typeof popupWindow.window.initPopup === 'function') {
             popupWindow.window.initPopup(false, selectedEmails);
+        }
+        else if (typeof popupWindow.window.initSettings === 'function') {
+            popupWindow.window.initSettings(popupWindow.opener.ApiUrlVal);
         }
         console.log(popupWindow.window.ApiUrl);
         if (onloadCallback) {

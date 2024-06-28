@@ -1,13 +1,30 @@
-﻿let ApiUrl = '', UserId = '';
+﻿let ApiUrl = '', UserId = '', isLoaded = false;
+
+function initSettings(ApiUrlVal) {
+    console.log("init initSettings " + ApiUrlVal);
+    ApiUrl = ApiUrlVal;
+}
 
 $(document).ready(function () {
-    console.log('loaded settings.js version DEV 1.3');
+    console.log('loaded settings.js version DEV 1.6');
+    console.log('ApiUrl');
+    console.log(ApiUrl);
+
+    if (typeof ApiUrl === 'string' && ApiUrl.startsWith('http') && isLoaded == false) {
+        isLoaded = true;
+        GetTaskTypes(); GetPriorityType();
+    }
+
     function handleDataFromIndexPage(event) {
         $("#settingLoader").hide();
         const receivedData = event.data;
         console.log('Data received in popup:', receivedData);
-        ApiUrl = receivedData;
-        if (typeof ApiUrl === 'string' && ApiUrl.startsWith('http')) {
+        console.log('ApiUrl');
+        console.log(ApiUrl);
+
+        //ApiUrl = receivedData;
+        if (typeof ApiUrl === 'string' && ApiUrl.startsWith('http') && isLoaded == false) {
+            isLoaded = true;
             GetTaskTypes(); GetPriorityType();
         }
     }
@@ -41,7 +58,7 @@ $(document).ready(function () {
 
     function GetUserIdByLogin(url, email, password) {
         if (url == "https://demo.simpleviewcrm.com" || url == "https://demo.simpleviewcrm.com/")
-            url = "http://localhost:4000";
+            url = "https://271f-13-84-216-53.ngrok-free.app";
         else {
             alert("Url not valid");
             return;
