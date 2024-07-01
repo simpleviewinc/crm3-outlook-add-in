@@ -9,11 +9,16 @@ window.userId = '';
 
 
 function setCategoryToEmail(emailId, isSentFlag) {
+    console.log("Call came to set category: ");
     var resval = localStorage.getItem("CRM");
     var data = {};
     var categoryColor = 'Yellow category'; // initialized with some valid value 
     if (resval != null) {
         data = decodeFromBase64(resval);
+        console.log(data);
+        console.log(isSentFlag);
+        console.log(data.skipFlagColor);
+        console.log(emailId);
         if (data != null) {
             if (isSentFlag) {
                 categoryColor = data.sentFlagColor;
@@ -263,7 +268,8 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
             var filterQuery = `?$filter=receivedDateTime ge ${startDateISOString}` +
                 ` and not(categories/any(c:c eq '${sentCategoryColor}'))` +
                 ` and not(categories/any(c:c eq '${skipCategoryColor}'))`;
-
+            console.log("query------");
+            console.log(filterQuery);
             // Function to fetch emails with pagination
             function fetchEmails(url, allEmails = []) {
                 $.ajax({

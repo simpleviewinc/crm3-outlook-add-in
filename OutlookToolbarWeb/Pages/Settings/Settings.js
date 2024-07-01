@@ -37,8 +37,18 @@ $(document).ready(function () {
         $('#emailSettings').hide();
     }
 
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
 
     function GetUserIdByLogin(url, email, password) {
+        password = escapeHtml(password);
         if (url == "https://demo.simpleviewcrm.com" || url == "https://demo.simpleviewcrm.com/")
             url = "http://localhost:4000";
         else {
