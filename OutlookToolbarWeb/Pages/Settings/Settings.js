@@ -1,12 +1,30 @@
-﻿let ApiUrl = '', UserId = '';
+﻿let ApiUrl = '', UserId = '', isLoaded = false;
+
+function initSettings(ApiUrlVal) {
+    console.log("init initSettings " + ApiUrlVal);
+    ApiUrl = ApiUrlVal;
+}
 
 $(document).ready(function () {
+    console.log('loaded settings.js version DEV 1.6');
+    console.log('ApiUrl');
+    console.log(ApiUrl);
+
+    if (typeof ApiUrl === 'string' && ApiUrl.startsWith('http') && isLoaded == false) {
+        isLoaded = true;
+        GetTaskTypes(); GetPriorityType();
+    }
+
     function handleDataFromIndexPage(event) {
         $("#settingLoader").hide();
         const receivedData = event.data;
         console.log('Data received in popup:', receivedData);
-        ApiUrl = receivedData;
-        if (typeof ApiUrl === 'string' && ApiUrl.startsWith('http')) {
+        console.log('ApiUrl');
+        console.log(ApiUrl);
+
+        //ApiUrl = receivedData;
+        if (typeof ApiUrl === 'string' && ApiUrl.startsWith('http') && isLoaded == false) {
+            isLoaded = true;
             GetTaskTypes(); GetPriorityType();
         }
     }
@@ -37,21 +55,15 @@ $(document).ready(function () {
         $('#emailSettings').hide();
     }
 
-    function escapeHtml(unsafe) {
-        return unsafe
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
-
 
     function GetUserIdByLogin(url, email, password) {
-        password = escapeHtml(password);
-        if (url == "https://demo.simpleviewcrm.com" || url == "https://demo.simpleviewcrm.com/")
-            url = "http://localhost:4000";
-        else {
+        if (url == "https://demo.simpleviewcrm.com" || url == "https://demo.simpleviewcrm.com/") {
+            if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
+                url = "http://localhost:4000";
+            } else {
+                url = "https://271f-13-84-216-53.ngrok-free.app";
+            }
+        } else {
             alert("Url not valid");
             return;
         }
@@ -68,8 +80,8 @@ $(document).ready(function () {
                     <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
                       <soap:Body>
                         <checkLogin>
-                          <email>`+ email +`</email>
-                          <password>`+ password +`</password>
+                          <email>`+ email + `</email>
+                          <password>`+ password + `</password>
                           <version></version>
                         </checkLogin>
                       </soap:Body>
@@ -98,13 +110,13 @@ $(document).ready(function () {
             .fail(function (jqXHR, textStatus, errorThrown) {
                 $("#settingLoader").hide();
                 alert("Url or credentials not valid !");
-                console.error('Error:', textStatus, errorThrown);               
+                console.error('Error:', textStatus, errorThrown);
             });
     }
 
     function GetPriorityType() {
         const settings = {
-            url: ApiUrl+"/api/cftags/outlook.cfc",
+            url: ApiUrl + "/api/cftags/outlook.cfc",
             method: "POST",
             timeout: 0,
             headers: {
@@ -148,7 +160,7 @@ $(document).ready(function () {
                     };
                     priorityList.push(priObj);
                 }
-                console.log("kevin");
+                console.log("priorityList");
                 console.log(priorityList);
                 const inboundPrt = document.getElementById('inbound-priority');
                 const outboundPrt = document.getElementById('outbound-priority');
@@ -178,7 +190,7 @@ $(document).ready(function () {
 
     function GetTaskTypes() {
         const settings = {
-            url: ApiUrl+"/api/cftags/outlook.cfc",
+            url: ApiUrl + "/api/cftags/outlook.cfc",
             method: "POST",
             timeout: 0,
             headers: {
@@ -292,6 +304,7 @@ $(document).ready(function () {
 
     $("#okSettings").click(function () {
         // Capture form data
+        console.log('Capture form data');
         const formData = {
             crmUrl: $("#crm-url").val(),
             crmLogin: $("#crm-login").val(),
@@ -304,15 +317,31 @@ $(document).ready(function () {
             inboundPriority: $("#inbound-priority").val(),
             outboundPriority: $("#outbound-priority").val()
         };
-
+        console.log('formData');
+        console.log(formData);
         const formDataString = JSON.stringify(formData);
-        localStorage.setItem("crm", encodeToBase64(formDataString));
-        window.opener.postMessage(formDataString, window.location.origin);
+        console.log('formDataString');
+        console.log(formDataString);
+
+        const formDataEncodeString = encodeToBase64(formDataString);
+        console.log('formDataEncodeString');
+        console.log(formDataEncodeString);
+
+        console.log('setting localStorage');
+        localStorage.setItem("crm", formDataEncodeString);
+        try {
+            console.log('window.opener.postMessage');
+            window.opener.postMessage(formDataString, window.location.origin);
+        } catch (error) {
+            console.log('window.opener.postMessage error');
+            console.log(error);
+        }
         alert("Settings Updated !");
         if (window.opener && !window.opener.closed) {
             if (typeof window.opener.CloseTheTaskPane === 'function') {
+                console.log('window.opener.CloseTheTaskPane');
                 window.opener.CloseTheTaskPane();
-                window.close(); // Optionally close the popup after sending data
+                //window.close(); // Optionally close the popup after sending data
             } else {
                 console.error("Parent window method setCategoryToEmail is not defined.");
             }
