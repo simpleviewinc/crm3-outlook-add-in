@@ -3,7 +3,7 @@
     userid: '',
     acctid: '',
     contactid: '',
-    duedate: '',
+    duedate: formatDate(new Date()),
     typeid: '',
     priorityid: '',
     subject: '',
@@ -15,8 +15,14 @@
     relflds: '',
     relfldvals: ''
 }, ApiUrl = 'http://localhost:4000', currentSelectedData = [],
-    isSelectButtonClicked = false;;
- 
+    isSelectButtonClicked = false;
+
+function formatDate(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // January is 0!
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+}
 
 function initPopup(isSyncEmail, selectedEmails) {
     console.log("init popup" + isSyncEmail);
@@ -29,7 +35,6 @@ function initPopup(isSyncEmail, selectedEmails) {
         $("#sendEmailUI").show();
     }
     var emailData = selectedEmails; // Get the passed email data
-    console.log(emailData);
     // Update the HTML elements with the email data
     if (emailData != null && emailData != undefined && !isSyncEmail) {
         currentSelectedData = emailData;
@@ -42,8 +47,6 @@ function initPopup(isSyncEmail, selectedEmails) {
 let isInboxTabClicked = true;
 let index = 1;
 function ProcessSelectedData(data) {
-    console.log(data);
-    console.log("----------proces---------------------");
     var count = currentSelectedData.length + index - 1;
     if (isInboxTabClicked) {
         $('#inboundHeading').text("Inbound Email " + index + " of " + count);
@@ -57,6 +60,8 @@ function ProcessSelectedData(data) {
     $('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
     $('#received').text('Received: ' + new Date(data[0].receivedDate).toLocaleString());
     $('#EmailId').val(data[0].id);
+    messageObject.body = data[0].body;
+    messageObject.subject = data[0].subject;
     GetMatchingDataForSync(data[0].fromEmail, messageObject.userid);
 }
 
@@ -67,7 +72,7 @@ function populateTable(contactList) {
     }
     const $tableBody = $("#contactTable tbody");
     $tableBody.empty(); // Clear any existing rows
-
+    EnableButtonById("#selectBtn");
     contactList.forEach(contact => {
         const row = `
                 <tr>
@@ -85,6 +90,7 @@ function populateTable(contactList) {
         $tableBody.append(row);
     });
     if (contactList.length === 0) {
+        DisableButtonById("#selectBtn");
         const colCount = $('table thead tr th').length; // Get the number of columns
         $tableBody.append(`
       <tr>
@@ -102,8 +108,6 @@ function decodeFromBase64(base64Str) {
 
 function SendTheEmail() {
     $("#sendEmailLoader").show();
-    console.log("whole data for email:- ");
-    console.log(messageObject);
     const settings = {
         url: ApiUrl + "/api/cftags/outlook.cfc",
         method: "POST",
@@ -130,7 +134,7 @@ function SendTheEmail() {
                           <tblid>`+ messageObject.tblid + `</tblid>
                           <recid>`+ messageObject.recid + `</recid>
                           <relflds>`+ messageObject.relflds + `</relflds>
-                          <relfldvals>`+ messageObject.relfldvals +`</relfldvals>
+                          <relfldvals>`+ messageObject.relfldvals + `</relfldvals>
                         </sendEmail>
                       </soap:Body>
                     </soap:Envelope>`
@@ -171,7 +175,7 @@ function CloseAll() {
 
 function GetAttachedToDDInfo() {
     const settings = {
-        url: ApiUrl+"/api/cftags/outlook.cfc",
+        url: ApiUrl + "/api/cftags/outlook.cfc",
         method: "POST",
         timeout: 0,
         headers: {
@@ -244,25 +248,23 @@ function parseXmlToJson(xmlStr) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlStr, "text/xml");
     const json = xmlToJson(xmlDoc);
-    //console.log(json);
-    //console.log(JSON.stringify(json, null, 2));
     bindLeadDataToSelect(JSON.stringify(json, null, 2));
     return json;
 }
 
 function bindLeadDataToSelect(jsonData) {
     jsonData = JSON.parse(jsonData);
-    console.log("extra data");
-    console.log(jsonData);
     const leadData = jsonData.opts.rels.rel.find(rel => rel.title["#text"] === "Lead");
     if (leadData) {
         const select = document.getElementById("lead");
 
         leadData.data.row.forEach(row => {
-            const option = document.createElement("option");
-            option.value = row.ID["#text"];
-            option.text = row.DISPLAY["#text"];
-            select.appendChild(option);
+            if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
+                const option = document.createElement("option");
+                option.value = row.ID["#text"];
+                option.text = row.DISPLAY["#text"];
+                select.appendChild(option);
+            }
         });
     }
 
@@ -271,30 +273,37 @@ function bindLeadDataToSelect(jsonData) {
         const profileSelect = document.getElementById("profile");
 
         profileData.data.row.forEach(row => {
-            const option = document.createElement("option");
-            option.value = row.ID["#text"];
-            option.text = row.DISPLAY["#text"];
-            profileSelect.appendChild(option);
+            if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
+                const option = document.createElement("option");
+                option.value = row.ID["#text"];
+                option.text = row.DISPLAY["#text"];
+                profileSelect.appendChild(option);
+            }
         });
     }
 
     const requestData = jsonData.opts.rels.rel.find(rel => rel.title["#text"] === "Service Request");
     if (requestData) {
         const requestSelect = document.getElementById("request");
-           if (Array.isArray(requestData.data.row)) {
+        if (Array.isArray(requestData.data.row)) {
             requestData.data.row.forEach(row => {
-                const option = document.createElement("option");
-                option.value = row.ID["#text"];
-                option.text = row.DISPLAY["#text"];
-                requestSelect.appendChild(option);
+                if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
+                    const option = document.createElement("option");
+                    option.value = row.ID["#text"];
+                    option.text = row.DISPLAY["#text"];
+                    requestSelect.appendChild(option);
+                }
             });
         }
         else {
             const row = requestData.data.row;
-            const option = document.createElement("option");
-            option.value = row.ID["#text"];
-            option.text = row.DISPLAY["#text"];
-            requestSelect.appendChild(option);
+            if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
+                
+                const option = document.createElement("option");
+                option.value = row.ID["#text"];
+                option.text = row.DISPLAY["#text"];
+                requestSelect.appendChild(option);
+            }
         }
     }
 
@@ -303,10 +312,12 @@ function bindLeadDataToSelect(jsonData) {
         const plannerSelect = document.getElementById("plannerAct");
 
         plannerActData.data.row.forEach(row => {
-            const option = document.createElement("option");
-            option.value = row.ID["#text"];
-            option.text = row.DISPLAY["#text"];
-            plannerSelect.appendChild(option);
+            if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
+                const option = document.createElement("option");
+                option.value = row.ID["#text"];
+                option.text = row.DISPLAY["#text"];
+                plannerSelect.appendChild(option);
+            }
         });
     }
 
@@ -315,10 +326,12 @@ function bindLeadDataToSelect(jsonData) {
         const plannerContactSelect = document.getElementById("plannerContact");
 
         plannerContact.data.row.forEach(row => {
-            const option = document.createElement("option");
-            option.value = row.ID["#text"];
-            option.text = row.DISPLAY["#text"];
-            plannerContactSelect.appendChild(option);
+            if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
+                const option = document.createElement("option");
+                option.value = row.ID["#text"];
+                option.text = row.DISPLAY["#text"];
+                plannerContactSelect.appendChild(option);
+            }
         });
     }
     messageObject.tblid = jsonData.opts.tblid["#text"];
@@ -327,10 +340,10 @@ function bindLeadDataToSelect(jsonData) {
     messageObject.relfldvals = jsonData.opts.hiddenrelval["#text"];
 }
 
-function GetPriorityType() {
+function GetPriorityType(selectedType) {
 
     const settings = {
-        url: ApiUrl+"/api/cftags/outlook.cfc",
+        url: ApiUrl + "/api/cftags/outlook.cfc",
         method: "POST",
         timeout: 0,
         headers: {
@@ -381,6 +394,9 @@ function GetPriorityType() {
                 const option = document.createElement('option');
                 option.value = item.priID;
                 option.textContent = item.priname;
+                if (item.priID === selectedType) {
+                    option.selected = true;
+                }
                 inboundPrt.appendChild(option);
             });
         })
@@ -390,9 +406,9 @@ function GetPriorityType() {
 
 }
 
-function GetTaskTypes() {
+function GetTaskTypes(selectedTask) {
     const settings = {
-        url: ApiUrl+"/api/cftags/outlook.cfc",
+        url: ApiUrl + "/api/cftags/outlook.cfc",
         method: "POST",
         timeout: 0,
         headers: {
@@ -439,13 +455,18 @@ function GetTaskTypes() {
                 typeList.push(typeObj);
             }
             const inboundDD = document.getElementById('trace-type');
+
             // Populate the dropdown
             typeList.forEach(item => {
                 const option = document.createElement('option');
                 option.value = item.typeID;
                 option.textContent = item.typename;
+                if (item.typeID === selectedTask) {
+                    option.selected = true;
+                }
                 inboundDD.appendChild(option);
             });
+
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
             console.error('Error:', textStatus, errorThrown);
@@ -462,7 +483,7 @@ function removeFirstItem(obj) {
 $(document).ready(function () {
     $("#sendEmailLoader").hide();
     $("#matchContactLoader").hide();
-    
+    DisableButtonById("#selectBtn");
     function handleDataFromIndexPage(event) {
         const receivedData = event.data;
         console.log('Data received in popup:', receivedData);
@@ -478,11 +499,11 @@ $(document).ready(function () {
         }
         if (typeof receivedData === 'string') {
             //ApiUrl = receivedData;
-            GetTaskTypes(); GetPriorityType();
+            GetTaskTypes(data.inboundTraceType); GetPriorityType(data.inboundPriority);
             GetGroupsByUserId();
         }
         else {
-           // ApiUrl = data.crmUrl;
+            // ApiUrl = data.crmUrl;
         }
     }
 
@@ -499,7 +520,7 @@ $(document).ready(function () {
                 if (currentSelectedData && currentSelectedData.length > 0)
                     ProcessSelectedData(currentSelectedData);
                 else
-                    CloseAll(); 
+                    CloseAll();
             } else {
                 console.error("Parent window method setCategoryToEmail is not defined.");
             }
@@ -522,11 +543,14 @@ $(document).ready(function () {
         var id = $('#EmailId').val();
         messageObject.priorityid = $("#priority").val();
         messageObject.typeid = $("#trace-type").val();
+        messageObject.tblid = $("#lead").val();
+        messageObject.recid = $("#profile").val();
+        console.log(messageObject);
         if (window.opener && !window.opener.closed) {
             if (typeof window.opener.setCategoryToEmail === 'function') {
                 window.opener.setCategoryToEmail(id, true);
                 SendTheEmail();
-                
+
             } else {
                 console.error("Parent window method setCategoryToEmail is not defined.");
             }
@@ -559,13 +583,15 @@ $(document).ready(function () {
                 const email = row.cells[1].textContent;
                 const subject = row.cells[2].textContent;
                 const date = row.cells[3].textContent;
+                const body = row.cells[4].textContent;
 
                 // Create an object with the row data
                 const rowData = {
                     id: checkboxValue,
                     fromEmail: email,
                     subject: subject,
-                    receivedDate: date
+                    receivedDate: date,
+                    body: body
                 };
 
                 // Add the row data object to the array
@@ -580,17 +606,30 @@ $(document).ready(function () {
 
     $('#loader').hide();
     $("#searchContacts").click(function () {
-        GetSearchedResult(); 
+        GetSearchedResult();
     });
 
-   
+
     $('#SyncOk').on('click', function () {
         isSelectButtonClicked = true;
         console.log("ok  clicked !!");
+        var resval = localStorage.getItem("crm");
+        var data = {};
+        if (resval != null && !isInboxTabClicked) {
+            data = decodeFromBase64(resval);
+            if (data != null) {
+                const outboundPrt = document.getElementById('priority');
+                outboundPrt.value = data.outboundPriority;
+                const outboundDD = document.getElementById('trace-type');
+                outboundDD.value = data.outboundTraceType;
+            }
+        }
         currentSelectedData = getSelectedRowsData(isInboxTabClicked);
+        console.log("Selected Rows Data:-  ");
+        console.log(currentSelectedData);
         ProcessSelectedData(currentSelectedData);
     });
-   
+
     $('#selectBtn').on('click', function () {
         GetAttachedToDDInfo();
         $('#grids').addClass('grid');
@@ -602,7 +641,7 @@ $(document).ready(function () {
     $('#SendCancel').on('click', function () {
         window.close();
     });
-   
+
     $('#diffContact').on('click', function () {
         $('#grids').removeClass('grid');
         $('#selectContact').removeClass('active');
@@ -643,7 +682,7 @@ $(document).ready(function () {
 
 function GetGroupsByUserId() {
     const settings = {
-        url: ApiUrl+"/api/cftags/outlook.cfc",
+        url: ApiUrl + "/api/cftags/outlook.cfc",
         method: "POST",
         timeout: 0,
         headers: {
@@ -708,7 +747,11 @@ function GetGroupsByUserId() {
 }
 
 function BindClickOnRowForSearch() {
+    
     $('#searchTable tbody tr').on('click', function () {
+        if ($(this).find('td').first().text().trim().toLowerCase() === "no data found") {
+            return;
+        }
         $('#searchTable tbody tr').removeClass('selected');
         $(this).toggleClass('selected');
         // Collect data from the selected row
@@ -741,6 +784,9 @@ $(document).ready(function () {
 
 function BindRowSelectFunction() {
     $('#contactTable tbody tr').on('click', function () {
+        if ($(this).find('td').first().text().trim().toLowerCase() === "no data found") {
+            return;
+        }
         $('#contactTable tbody tr').removeClass('selected');
         $(this).toggleClass('selected');
         console.log("contact table row clicked");
@@ -770,7 +816,7 @@ function populateSearchTable(contactList) {
     console.log(contactList);
     const $tableBody = $("#searchTable tbody");
     $tableBody.empty(); // Clear any existing rows
-
+    EnableButtonById("#selectBtn");
     contactList.forEach(contact => {
         const row = `
                 <tr>
@@ -787,6 +833,7 @@ function populateSearchTable(contactList) {
         $tableBody.append(row);
     });
     if (contactList.length === 0) {
+        DisableButtonById("#selectBtn");
         const colCount = $('table thead tr th').length; // Get the number of columns
         $tableBody.append(`
       <tr>
@@ -794,9 +841,11 @@ function populateSearchTable(contactList) {
       </tr>
     `);
     }
+    else
+        EnableButtonById("#selectBtn");
     $('#loader').hide();
     EnableButtonById("#searchContacts");
-    EnableButtonById("#selectBtn");
+    
     EnableButtonById("#skipit");
     BindClickOnRowForSearch();
 }
@@ -818,9 +867,9 @@ function GetSearchedResult() {
     var groupId = $('#group-name').val();
     var contactName = $('#name').val();
     var companyName = $('#company').val();
-    
+
     const settings = {
-        url: ApiUrl+"/api/cftags/outlook.cfc",
+        url: ApiUrl + "/api/cftags/outlook.cfc",
         method: "POST",
         timeout: 0,
         headers: {
@@ -989,13 +1038,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 const fromCell = row.insertCell(1);
                 const subjectCell = row.insertCell(2);
                 const receivedCell = row.insertCell(3);
+                const bodyCell = row.insertCell(4);
 
+                bodyCell.textContent = email.BodyPreview;
+                bodyCell.style.display = 'none';
                 indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
                 fromCell.textContent = email.From.EmailAddress.Address;
                 subjectCell.textContent = email.Subject;
                 receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
             });
         } else {
+            const tableBody = document.querySelector("#inboxTable tbody");
+            const row = tableBody.insertRow();
+            const indexCell = row.insertCell(0);
+            indexCell.textContent = "No data found";
+            indexCell.colSpan = 4; 
+            indexCell.style.textAlign = "center";
+            indexCell.style.padding = "10px";
             console.log("No data found in inbox.");
         }
     }, 1000); // Delay of 1 second to ensure data is available
@@ -1003,20 +1062,29 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(() => {
         if (typeof window.sentEmails !== 'undefined' && Object.keys(window.sentEmails).length > 0) {
             const tableBody = document.querySelector("#sentBoxTable tbody");
-            console.log(window.sentEmails);
-
             Object.values(window.sentEmails).forEach((email, index) => {
                 const row = tableBody.insertRow();
                 const indexCell = row.insertCell(0);
                 const fromCell = row.insertCell(1);
                 const subjectCell = row.insertCell(2);
                 const receivedCell = row.insertCell(3);
+                const bodyCell = row.insertCell(4);
+
+                bodyCell.textContent = email.BodyPreview;
+                bodyCell.style.display = 'none';
                 indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
                 fromCell.textContent = email.From.EmailAddress.Address;
                 subjectCell.textContent = email.Subject;
                 receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
             });
         } else {
+            const tableBody = document.querySelector("#sentBoxTable tbody");
+            const row = tableBody.insertRow();
+            const indexCell = row.insertCell(0);
+            indexCell.textContent = "No data found";
+            indexCell.colSpan = 4;
+            indexCell.style.textAlign = "center";
+            indexCell.style.padding = "10px";
             console.log("No data found in sent box.");
         }
     }, 100); // Delay of 1 second to ensure data is available

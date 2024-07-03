@@ -55,9 +55,21 @@ $(document).ready(function () {
         $('#emailSettings').hide();
     }
 
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
 
     function GetUserIdByLogin(url, email, password) {
-        if (url == "https://demo.simpleviewcrm.com" || url == "https://demo.simpleviewcrm.com/") {
+        if (url.endsWith('/')) {
+            url = url.slice(0, -1);
+        }
+        password = escapeHtml(password);
+        if (url == "https://demo.simpleviewcrm.com") {
             if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
                 url = "http://localhost:4000";
             } else {
@@ -95,11 +107,11 @@ $(document).ready(function () {
                 console.log(decodedString);
                 if (decodedString == '-1.0') {
                     $("#settingLoader").hide();
-                    alert("Credentials not valid !");
+                    alert("Credentials not valid.");
                 }
                 else {
                     $("#settingLoader").hide();
-                    alert("Login Successful !");
+                    alert("Login Successful.");
                     UserId = parseInt(decodedString);
                     $('#emailSettings').show();
                     $('#Save').hide();
@@ -109,7 +121,7 @@ $(document).ready(function () {
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
                 $("#settingLoader").hide();
-                alert("Url or credentials not valid !");
+                alert("Url or credentials not valid.");
                 console.error('Error:', textStatus, errorThrown);
             });
     }
@@ -336,7 +348,7 @@ $(document).ready(function () {
             console.log('window.opener.postMessage error');
             console.log(error);
         }
-        alert("Settings Updated !");
+        alert("Settings Updated.");
         if (window.opener && !window.opener.closed) {
             if (typeof window.opener.CloseTheTaskPane === 'function') {
                 console.log('window.opener.CloseTheTaskPane');
