@@ -90,8 +90,12 @@ button.disabled {
 
 .settingsUI {
     width: 96%;
-    padding: 0 15px 15px 15px;
+    padding: 15px;
 }
+
+    .settingsUI #creds {
+        margin-bottom: 15px;
+    }
 
 h3 {
     font-weight: 700;
@@ -99,8 +103,10 @@ h3 {
     border: solid 1px #BEBEBE;
     background: #CCEDFC;
     color: #1A1A1A;
-    text-transform: capitalize;
+    text-transform: uppercase;
+    margin: 0;
 }
+
 
 .input-container {
     display: flex; /* Use a flexbox layout */
@@ -151,10 +157,28 @@ fieldset {
 
 #sendEmailUI {
     width: 96%;
+    padding: 15px;
+}
+
+#selectContact.grid.active {
+    background: #F5F5F0;
+}
+
+#selectContact > fieldset > legend {
+    font-weight: 700;
+    padding: 10px;
+    border: solid 1px #BEBEBE;
+    background: #CCEDFC;
+    color: #1A1A1A;
+    text-transform: capitalize;
+}
+
+#selectContact > fieldset:first-child {
+    margin-bottom: 15px;
 }
 
 .box {
-    border: 1px solid #000;
+    border: 1px solid #BEBEBE;
     margin: 0px;
     padding: 10px;
     width: calc(100% - 15px); /* Full width minus margin and border */
@@ -167,7 +191,6 @@ fieldset {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-top: -15px;
 }
 
 .left-side {
@@ -227,10 +250,7 @@ th {
     cursor: pointer;
     display: flex;
     justify-content: flex-end; /* Align buttons to the right */
-}
-
-fieldset {
-    border: 1px solid #000;
+    margin-top: 15px;
 }
 
 tr:hover {
@@ -293,12 +313,12 @@ input, select, option {
     width: 50px;
 }
 
-
+/*
 .input-container label {
     margin-right: 0px !important;
     margin-left: 10px;
 }
-
+*/
 .hide {
     display: none;
 }
@@ -321,7 +341,7 @@ input, select, option {
 
 /* Hide the loader initially */
 .loader {
-    border: 16px solid #f3f3f3;
+    border: 16px solid #BEBEBE;
     border-radius: 50%;
     border-top: 16px solid #3498db;
     width: 60px;
@@ -362,28 +382,19 @@ input, select, option {
 #syncEmailUI {
     width: 96%;
 }
-
-h3 {
-    font-weight: 700;
-    padding: 10px;
-    border: solid 1px #BEBEBE;
-    background: #CCEDFC;
-    color: #1A1A1A;
-    text-transform: uppercase;
-}
-
+/*
 .input-container {
-    display: flex; /* Use a flexbox layout */
-    align-items: center; /* Align items vertically */
+    display: flex; 
+    align-items: center; 
     margin: 10px 0;
 }
 
     .input-container label {
-        flex: 0 0 150px; /* Don't grow, don't shrink, start at 120px */
-        margin-right: 10px; /* Add some space between the label and the input */
+        flex: 0 0 150px; 
+        margin-right: 10px; 
         font-weight: 700;
     }
-
+*/
 input, select, option {
     flex: 1; /* Grow to occupy the rest of the space */
     padding: 8px;

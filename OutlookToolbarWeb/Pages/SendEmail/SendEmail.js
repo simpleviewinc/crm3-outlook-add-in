@@ -24,44 +24,141 @@ function formatDate(date) {
     return `${month}/${day}/${year}`;
 }
 
-function initPopup(isSyncEmail, selectedEmails) {
-    console.log("init popup" + isSyncEmail);
+window.initPopup = function (isSyncEmail, selectedEmails) {
+    console.log("init popup: " + isSyncEmail);
+
     if (isSyncEmail) {
         $("#syncEmailUI").show();
         $("#sendEmailUI").hide();
-    }
-    else {
+        $(document).ready(function () {
+            setTimeout(() => {
+                if (typeof window.inboxEmails !== 'undefined' && Object.keys(window.inboxEmails).length > 0) {
+                    const tableBody = document.querySelector("#inboxTable tbody");
+                    console.log(window.inboxEmails);
+                    Object.values(window.inboxEmails).forEach((email, index) => {
+                        const row = tableBody.insertRow();
+                        const indexCell = row.insertCell(0);
+                        const fromCell = row.insertCell(1);
+                        const subjectCell = row.insertCell(2);
+                        const receivedCell = row.insertCell(3);
+                        const bodyCell = row.insertCell(4);
+
+                        bodyCell.textContent = email.BodyPreview;
+                        bodyCell.style.display = 'none';
+                        indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
+                        fromCell.textContent = email.From.EmailAddress.Address;
+                        subjectCell.textContent = email.Subject;
+                        receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
+                    });
+                } else {
+                    const tableBody = document.querySelector("#inboxTable tbody");
+                    const row = tableBody.insertRow();
+                    const indexCell = row.insertCell(0);
+                    indexCell.textContent = "No data found";
+                    indexCell.colSpan = 4;
+                    indexCell.style.textAlign = "center";
+                    indexCell.style.padding = "10px";
+                    console.log("No data found in inbox.");
+                }
+            }, 1000); // Delay of 1 second to ensure data is available
+
+            setTimeout(() => {
+                if (typeof window.sentEmails !== 'undefined' && Object.keys(window.sentEmails).length > 0) {
+                    const tableBody = document.querySelector("#sentBoxTable tbody");
+                    Object.values(window.sentEmails).forEach((email, index) => {
+                        const row = tableBody.insertRow();
+                        const indexCell = row.insertCell(0);
+                        const fromCell = row.insertCell(1);
+                        const subjectCell = row.insertCell(2);
+                        const receivedCell = row.insertCell(3);
+                        const bodyCell = row.insertCell(4);
+
+                        bodyCell.textContent = email.BodyPreview;
+                        bodyCell.style.display = 'none';
+                        indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
+                        fromCell.textContent = email.From.EmailAddress.Address;
+                        subjectCell.textContent = email.Subject;
+                        receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
+                    });
+                } else {
+                    const tableBody = document.querySelector("#sentBoxTable tbody");
+                    const row = tableBody.insertRow();
+                    const indexCell = row.insertCell(0);
+                    indexCell.textContent = "No data found";
+                    indexCell.colSpan = 4;
+                    indexCell.style.textAlign = "center";
+                    indexCell.style.padding = "10px";
+                    console.log("No data found in sent box.");
+                }
+            }, 1000); // Delay of 1 second to ensure data is available
+        });
+
+
+    } else {
         $("#syncEmailUI").hide();
         $("#sendEmailUI").show();
     }
+
     var emailData = selectedEmails; // Get the passed email data
+    console.log("email data in selected email:  ");
+    console.log(selectedEmails);
     // Update the HTML elements with the email data
-    if (emailData != null && emailData != undefined && !isSyncEmail) {
-        currentSelectedData = emailData;
-        if (currentSelectedData && currentSelectedData.length > 0) {
-            isSelectButtonClicked = true;
-            ProcessSelectedData(currentSelectedData);
-        }
-    }
-}
+    $(document).ready(function () {
+        setTimeout(function () {
+            if (emailData != null && emailData != undefined && !isSyncEmail) {
+                console.log("1");
+                currentSelectedData = emailData;
+                console.log(emailData);
+                if (emailData != null && emailData.length > 0) {
+                    console.log("2");
+                    isSelectButtonClicked = true;
+                    ProcessSelectedData(currentSelectedData);
+                }
+            }
+        }, 500);
+    });
+};
 let isInboxTabClicked = true;
 let index = 1;
+
 function ProcessSelectedData(data) {
+    console.log("Process method called:-- ");
     var count = currentSelectedData.length + index - 1;
-    if (isInboxTabClicked) {
-        $('#inboundHeading').text("Inbound Email " + index + " of " + count);
+    var resval = localStorage.getItem("crm");
+    var settings = {};
+    if (resval != null) {
+        settings = decodeFromBase64(resval);
     }
-    else {
+    console.log("3");
+    const outboundPrt = document.getElementById('priority');
+    const outboundDD = document.getElementById('trace-type');
+    if (data[0].isInbox) {
+        $('#inboundHeading').text("Inbound Email " + index + " of " + count);
+        if (settings != null) {
+            outboundPrt.value = settings.inboundPriority;
+            outboundDD.value = settings.inboundTraceType;
+        }
+    } else {
         $('#inboundHeading').text("Outbound Email " + index + " of " + count);
+        if (settings != null) {
+            setTimeout(() => {
+                outboundPrt.value = settings.outboundPriority;
+                outboundDD.value = settings.outboundTraceType;
+            }, 500);
+        }
     }
     index++;
-    $('#syncEmailUI').hide(); $('#sendEmailUI').show();
+    console.log("applying the value here:-----------------------");
+    console.log(data);
+    $('#syncEmailUI').hide();
+    $('#sendEmailUI').show();
     $('.headings h5:nth-child(1)').text('From: ' + data[0].fromEmail);
     $('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
     $('#received').text('Received: ' + new Date(data[0].receivedDate).toLocaleString());
     $('#EmailId').val(data[0].id);
     messageObject.body = data[0].body;
     messageObject.subject = data[0].subject;
+    messageObject.duedate = formatDate(new Date(data[0].receivedDate));
     GetMatchingDataForSync(data[0].fromEmail, messageObject.userid);
 }
 
@@ -155,6 +252,7 @@ function SendTheEmail() {
         .fail(function (jqXHR, textStatus, errorThrown) {
             console.error('Error:', textStatus, errorThrown);
             $("#sendEmailLoader").hide();
+            alert("Some error has occurred " + errorThrown);
             CloseAll();
         });
 
@@ -252,37 +350,55 @@ function parseXmlToJson(xmlStr) {
     return json;
 }
 
+function findRelByTitle(rels, title) {
+    if (Array.isArray(rels)) {
+        return rels.find(rel => rel.title["#text"] === title);
+    } else if (rels && typeof rels === 'object') {
+        const relArray = [rels];
+        return relArray.find(rel => rel.title["#text"] === title);
+    } else {
+        console.error(`Invalid data structure: rels is not an array or object for title: ${title}`);
+        return null;
+    }
+}
+
 function bindLeadDataToSelect(jsonData) {
     jsonData = JSON.parse(jsonData);
-    const leadData = jsonData.opts.rels.rel.find(rel => rel.title["#text"] === "Lead");
+
+    // Lead Data
+    const leadData = findRelByTitle(jsonData.opts.rels.rel, "Lead");
     if (leadData) {
         const select = document.getElementById("lead");
-
-        leadData.data.row.forEach(row => {
-            if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
-                const option = document.createElement("option");
-                option.value = row.ID["#text"];
-                option.text = row.DISPLAY["#text"];
-                select.appendChild(option);
-            }
-        });
+        if (Array.isArray(leadData.data.row)) {
+            leadData.data.row.forEach(row => {
+                if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
+                    const option = document.createElement("option");
+                    option.value = row.ID["#text"];
+                    option.text = row.DISPLAY["#text"];
+                    select.appendChild(option);
+                }
+            });
+        }
     }
 
-    const profileData = jsonData.opts.rels.rel.find(rel => rel.title["#text"] === "Profile");
+    // Profile Data
+    const profileData = findRelByTitle(jsonData.opts.rels.rel, "Profile");
     if (profileData) {
         const profileSelect = document.getElementById("profile");
-
-        profileData.data.row.forEach(row => {
-            if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
-                const option = document.createElement("option");
-                option.value = row.ID["#text"];
-                option.text = row.DISPLAY["#text"];
-                profileSelect.appendChild(option);
-            }
-        });
+        if (Array.isArray(profileData.data.row)) {
+            profileData.data.row.forEach(row => {
+                if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
+                    const option = document.createElement("option");
+                    option.value = row.ID["#text"];
+                    option.text = row.DISPLAY["#text"];
+                    profileSelect.appendChild(option);
+                }
+            });
+        }
     }
 
-    const requestData = jsonData.opts.rels.rel.find(rel => rel.title["#text"] === "Service Request");
+    // Service Request Data
+    const requestData = findRelByTitle(jsonData.opts.rels.rel, "Service Request");
     if (requestData) {
         const requestSelect = document.getElementById("request");
         if (Array.isArray(requestData.data.row)) {
@@ -294,11 +410,9 @@ function bindLeadDataToSelect(jsonData) {
                     requestSelect.appendChild(option);
                 }
             });
-        }
-        else {
+        } else if (requestData.data.row) {
             const row = requestData.data.row;
             if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
-                
                 const option = document.createElement("option");
                 option.value = row.ID["#text"];
                 option.text = row.DISPLAY["#text"];
@@ -307,38 +421,53 @@ function bindLeadDataToSelect(jsonData) {
         }
     }
 
-    const plannerActData = jsonData.opts.rels.rel.find(rel => rel.title["#text"] === "Planner Account");
+    // Planner Account Data
+    const plannerActData = findRelByTitle(jsonData.opts.rels.rel, "Planner Account");
     if (plannerActData) {
         const plannerSelect = document.getElementById("plannerAct");
-
-        plannerActData.data.row.forEach(row => {
-            if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
-                const option = document.createElement("option");
-                option.value = row.ID["#text"];
-                option.text = row.DISPLAY["#text"];
-                plannerSelect.appendChild(option);
-            }
-        });
+        if (Array.isArray(plannerActData.data.row)) {
+            plannerActData.data.row.forEach(row => {
+                if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
+                    const option = document.createElement("option");
+                    option.value = row.ID["#text"];
+                    option.text = row.DISPLAY["#text"];
+                    plannerSelect.appendChild(option);
+                }
+            });
+        }
     }
 
-    const plannerContact = jsonData.opts.rels.rel.find(rel => rel.title["#text"] === "Planner Contact");
+    // Planner Contact Data
+    const plannerContact = findRelByTitle(jsonData.opts.rels.rel, "Planner Contact");
     if (plannerContact) {
         const plannerContactSelect = document.getElementById("plannerContact");
-
-        plannerContact.data.row.forEach(row => {
-            if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
-                const option = document.createElement("option");
-                option.value = row.ID["#text"];
-                option.text = row.DISPLAY["#text"];
-                plannerContactSelect.appendChild(option);
-            }
-        });
+        if (Array.isArray(plannerContact.data.row)) {
+            plannerContact.data.row.forEach(row => {
+                if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
+                    const option = document.createElement("option");
+                    option.value = row.ID["#text"];
+                    option.text = row.DISPLAY["#text"];
+                    plannerContactSelect.appendChild(option);
+                }
+            });
+        }
     }
-    messageObject.tblid = jsonData.opts.tblid["#text"];
-    messageObject.recid = jsonData.opts.recid["#text"];
-    messageObject.relflds = jsonData.opts.hiddenrel["#text"];
-    messageObject.relfldvals = jsonData.opts.hiddenrelval["#text"];
+
+    // Bind messageObject properties
+    if (jsonData.opts.tblid && jsonData.opts.tblid["#text"]) {
+        messageObject.tblid = jsonData.opts.tblid["#text"];
+    }
+    if (jsonData.opts.recid && jsonData.opts.recid["#text"]) {
+        messageObject.recid = jsonData.opts.recid["#text"];
+    }
+    if (jsonData.opts.hiddenrel && jsonData.opts.hiddenrel["#text"]) {
+        messageObject.relflds = jsonData.opts.hiddenrel["#text"];
+    }
+    if (jsonData.opts.hiddenrelval && jsonData.opts.hiddenrelval["#text"]) {
+        messageObject.relfldvals = jsonData.opts.hiddenrelval["#text"];
+    }
 }
+
 
 function GetPriorityType(selectedType) {
 
@@ -486,7 +615,7 @@ $(document).ready(function () {
     DisableButtonById("#selectBtn");
     function handleDataFromIndexPage(event) {
         const receivedData = event.data;
-        console.log('Data received in popup:', receivedData);
+        console.log('Document ready and data from parent window is : ', receivedData);
         var resval = localStorage.getItem("crm");
         var data = {};
         if (resval != null) {
@@ -558,16 +687,18 @@ $(document).ready(function () {
             console.error("Parent window is not available.");
         }
     });
-
-    function getSelectedRowsData(isInbox) {
+    function getSelectedRowsData() {
         // Create an array to hold the selected row data
         const selectedRowsData = [];
 
-        // Determine the table to target based on the boolean flag
-        const tableId = isInbox ? '#inboxTable' : '#sentBoxTable';
+        const inboxCheckboxes = document.querySelectorAll('#inboxTable .row-checkbox:checked');
+        const sentBoxCheckboxes = document.querySelectorAll('#sentBoxTable .row-checkbox:checked');
 
-        // Select all the checkboxes with the class 'row-checkbox' within the specified table
-        const checkboxes = document.querySelectorAll(`${tableId} .row-checkbox`);
+        // Convert NodeLists to arrays and merge them
+        const checkboxes = [
+            ...Array.from(inboxCheckboxes),
+            ...Array.from(sentBoxCheckboxes)
+        ];
 
         // Loop through each checkbox
         checkboxes.forEach(checkbox => {
@@ -575,6 +706,9 @@ $(document).ready(function () {
             if (checkbox.checked) {
                 // Find the parent row (tr) of the checkbox
                 const row = checkbox.closest('tr');
+
+                // Check which table the row belongs to
+                const isInbox = row.closest('table').id === 'inboxTable';
 
                 // Get the value from the checkbox
                 const checkboxValue = checkbox.value;
@@ -591,7 +725,8 @@ $(document).ready(function () {
                     fromEmail: email,
                     subject: subject,
                     receivedDate: date,
-                    body: body
+                    body: body,
+                    isInbox: isInbox
                 };
 
                 // Add the row data object to the array
@@ -603,7 +738,6 @@ $(document).ready(function () {
         return selectedRowsData;
     }
 
-
     $('#loader').hide();
     $("#searchContacts").click(function () {
         GetSearchedResult();
@@ -613,17 +747,7 @@ $(document).ready(function () {
     $('#SyncOk').on('click', function () {
         isSelectButtonClicked = true;
         console.log("ok  clicked !!");
-        var resval = localStorage.getItem("crm");
-        var data = {};
-        if (resval != null && !isInboxTabClicked) {
-            data = decodeFromBase64(resval);
-            if (data != null) {
-                const outboundPrt = document.getElementById('priority');
-                outboundPrt.value = data.outboundPriority;
-                const outboundDD = document.getElementById('trace-type');
-                outboundDD.value = data.outboundTraceType;
-            }
-        }
+        
         currentSelectedData = getSelectedRowsData(isInboxTabClicked);
         console.log("Selected Rows Data:-  ");
         console.log(currentSelectedData);
@@ -1023,74 +1147,6 @@ function decodeHTMLEntities(text) {
 }
 
 
-
-// JS function used for sync Email functionality
-
-
-document.addEventListener("DOMContentLoaded", function () {
-    setTimeout(() => {
-        if (typeof window.inboxEmails !== 'undefined' && Object.keys(window.inboxEmails).length > 0) {
-            const tableBody = document.querySelector("#inboxTable tbody");
-            console.log(window.inboxEmails);
-            Object.values(window.inboxEmails).forEach((email, index) => {
-                const row = tableBody.insertRow();
-                const indexCell = row.insertCell(0);
-                const fromCell = row.insertCell(1);
-                const subjectCell = row.insertCell(2);
-                const receivedCell = row.insertCell(3);
-                const bodyCell = row.insertCell(4);
-
-                bodyCell.textContent = email.BodyPreview;
-                bodyCell.style.display = 'none';
-                indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
-                fromCell.textContent = email.From.EmailAddress.Address;
-                subjectCell.textContent = email.Subject;
-                receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
-            });
-        } else {
-            const tableBody = document.querySelector("#inboxTable tbody");
-            const row = tableBody.insertRow();
-            const indexCell = row.insertCell(0);
-            indexCell.textContent = "No data found";
-            indexCell.colSpan = 4; 
-            indexCell.style.textAlign = "center";
-            indexCell.style.padding = "10px";
-            console.log("No data found in inbox.");
-        }
-    }, 1000); // Delay of 1 second to ensure data is available
-
-    setTimeout(() => {
-        if (typeof window.sentEmails !== 'undefined' && Object.keys(window.sentEmails).length > 0) {
-            const tableBody = document.querySelector("#sentBoxTable tbody");
-            Object.values(window.sentEmails).forEach((email, index) => {
-                const row = tableBody.insertRow();
-                const indexCell = row.insertCell(0);
-                const fromCell = row.insertCell(1);
-                const subjectCell = row.insertCell(2);
-                const receivedCell = row.insertCell(3);
-                const bodyCell = row.insertCell(4);
-
-                bodyCell.textContent = email.BodyPreview;
-                bodyCell.style.display = 'none';
-                indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
-                fromCell.textContent = email.From.EmailAddress.Address;
-                subjectCell.textContent = email.Subject;
-                receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
-            });
-        } else {
-            const tableBody = document.querySelector("#sentBoxTable tbody");
-            const row = tableBody.insertRow();
-            const indexCell = row.insertCell(0);
-            indexCell.textContent = "No data found";
-            indexCell.colSpan = 4;
-            indexCell.style.textAlign = "center";
-            indexCell.style.padding = "10px";
-            console.log("No data found in sent box.");
-        }
-    }, 100); // Delay of 1 second to ensure data is available
-
-
-});
 
 // Function to toggle the state of all checkboxes in a box
 $(document).ready(function () {

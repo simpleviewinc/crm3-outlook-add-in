@@ -58,6 +58,22 @@ function setCategoryToEmail(emailId, isSentFlag) {
 
 let popupQueue = []; // Queue to manage popups
 let isPopupOpen = false;
+let settingsOk = false;
+
+function CheckSettings() {
+    var resval = localStorage.getItem("CRM");
+    var data = {};
+    if (resval != null) {
+        data = decodeFromBase64(resval);
+        console.log(data);
+        if (data != null) {
+            if (data.userId != null && data.userId != undefined && data.userId != '') {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 Office.onReady((info) => {
     if (info.host === Office.HostType.Outlook) {
@@ -68,17 +84,7 @@ Office.onReady((info) => {
             $('#send-email-btn').prop('disabled', true);
             $('#sync-email-btn').addClass('disabled');
             $('#sync-email-btn').prop('disabled', true);
-            var resval = localStorage.getItem("crm");
-            var data = {};
-            if (resval != null) {
-                data = decodeFromBase64(resval);
-                console.log(data);
-                if (data != null) {
-                    if (data.userId != null && data.userId != undefined && data.userId != '') {
-                        userId = data.userId;
-                    }
-                }
-            }
+           
             attachClickEventHandlers();
             fetchSelectedEmails(false);
             Office.context.mailbox.addHandlerAsync(Office.EventType.SelectedItemsChanged, () => fetchSelectedEmails(true));
@@ -128,6 +134,9 @@ function attachClickEventHandlers() {
 let selectedEmails = [];
 // Fetch selected emails
 function fetchSelectedEmails(refresh) {
+    console.log("Disabling----");
+    $('#send-email-btn').prop('disabled', true);
+    $('#send-email-btn').addClass('disabled');
     if (refresh)
         selectedEmails = [];
     Office.context.mailbox.getSelectedItemsAsync((asyncResult) => {
@@ -136,52 +145,93 @@ function fetchSelectedEmails(refresh) {
             return;
         }
 
-        asyncResult.value.forEach((item) => {
-            getSpecificEmailDetails(item.itemId);
+        const promises = asyncResult.value.map(item => getSpecificEmailDetails(item.itemId));
+        Promise.all(promises).then(() => {
+            if (CheckSettings()) {
+                console.log("Enabling----");
+                $('#send-email-btn').prop('disabled', false);
+                $('#send-email-btn').removeClass('disabled');
+            }
         });
-        $('#send-email-btn').prop('disabled', false);
-        $('#send-email-btn').removeClass('disabled');
     });
 }
-
 function getSpecificEmailDetails(id) {
-    Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
-        if (result.status === "succeeded") {
-            const accessToken = result.value;
-            let correctedId = id.replace(/\//g, '-').replace(/\+/g, '_'); // This might not be needed
-            const encodedId = encodeURIComponent(correctedId); // URL encode the corrected ID
-            const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${encodedId}`;
+    return new Promise((resolve, reject) => {
+        Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
+            if (result.status === "succeeded") {
+                const accessToken = result.value;
+                let correctedId = id.replace(/\//g, '-').replace(/\+/g, '_'); // This might not be needed
+                const encodedId = encodeURIComponent(correctedId); // URL encode the corrected ID
+                const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${encodedId}`;
 
-            $.ajax({
-                url: requestUrl,
-                dataType: 'json',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Accept': 'application/json'
-                }
-            }).done((emailData) => {
-                window.selectedEmailData[id] = emailData;
+                $.ajax({
+                    url: requestUrl,
+                    dataType: 'json',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Accept': 'application/json'
+                    }
+                }).done((emailData) => {
+                    window.selectedEmailData[id] = emailData;
 
-                const rowData = {
-                    id: emailData.Id,
-                    fromEmail: emailData.From.EmailAddress.Address,
-                    subject: emailData.Subject,
-                    receivedDate: new Date(emailData.ReceivedDateTime).toLocaleString(),
-                    body : emailData.BodyPreview
-                };
-                const exists = selectedEmails.some(email => email.id === rowData.id);
-                if (!exists) {
-                    selectedEmails.push(rowData);
-                }
-            }).fail((error) => {
-                console.error("Error fetching email data:", error);
-                if (error.responseJSON) {
-                    console.error("Error details:", error.responseJSON);
-                }
-            });
-        } else {
-            console.error(`Error getting callback token: ${result.error.message}`);
-        }
+                    // Extract ParentFolderId from emailData
+                    const parentFolderId = emailData.ParentFolderId;
+
+                    // URL to get the folder details
+                    const folderUrl = `${Office.context.mailbox.restUrl}/v2.0/me/mailFolders/${parentFolderId}`;
+
+                    // Fetch the folder details
+                    $.ajax({
+                        url: folderUrl,
+                        dataType: 'json',
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Accept': 'application/json'
+                        }
+                    }).done((folderData) => {
+                        const folderName = folderData.DisplayName;
+
+                        const rowData = {
+                            id: emailData.Id,
+                            fromEmail: emailData.From.EmailAddress.Address,
+                            subject: emailData.Subject,
+                            receivedDate: new Date(emailData.ReceivedDateTime).toLocaleString(),
+                            body: emailData.BodyPreview,
+                            isInbox: folderName == 'Inbox' // Adding the folder name to the rowData
+                        };
+
+                        const exists = selectedEmails.some(email => email.id === rowData.id);
+                        if (!exists) {
+                            selectedEmails.push(rowData);
+                        }
+
+                        // Log or handle the folder information
+                        console.log(`Email is in folder: ${folderName}`);
+                        resolve(); // Resolve the promise when folder details are successfully fetched
+                    }).fail((error) => {
+                        console.error("Error fetching folder data:", error);
+                        if (error.responseJSON) {
+                            console.error("Error details:", error.responseJSON);
+                        }
+                        reject(error); // Reject the promise on failure
+                    });
+                }).fail((error) => {
+                    console.error("Error fetching email data:", error);
+                    if (CheckSettings()) {
+                        console.log("Enabling----");
+                        $('#send-email-btn').prop('disabled', false);
+                        $('#send-email-btn').removeClass('disabled');
+                    }
+                    if (error.responseJSON) {
+                        console.error("Error details:", error.responseJSON);
+                    }
+                    reject(error); // Reject the promise on failure
+                });
+            } else {
+                console.error(`Error getting callback token: ${result.error.message}`);
+                reject(new Error(result.error.message)); // Reject the promise on failure
+            }
+        });
     });
 }
 
@@ -198,20 +248,20 @@ function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
     const top = (window.screen.height / 2) - (height / 2);
     popupWindow = window.open(url, title, `width=${width}, height=${height}, top=${top}, left=${left}`);
 
-    popupWindow.onload = () => {
+    popupWindow.onload = function () {
         popupWindow.postMessage(ApiUrl, '*');
         popupWindow.window.inboxEmails = popupWindow.opener.inboxEmails;
         popupWindow.window.sentEmails = popupWindow.opener.sentEmails;
         popupWindow.window.ApiUrl = popupWindow.opener.ApiUrlVal;
+
         if (typeof popupWindow.window.initPopup === 'function' && title === 'Synchronize Email with CRM') {
             popupWindow.window.initPopup(true, selectedEmails); // Initialize the popup with data
-        }
-        else if (typeof popupWindow.window.initPopup === 'function') {
+        } else if (typeof popupWindow.window.initPopup === 'function') {
             popupWindow.window.initPopup(false, selectedEmails);
-        }
-        else if (typeof popupWindow.window.initSettings === 'function') {
+        } else if (typeof popupWindow.window.initSettings === 'function') {
             popupWindow.window.initSettings(popupWindow.opener.ApiUrlVal);
         }
+
         if (onloadCallback) {
             onloadCallback(popupWindow);
         }
@@ -229,6 +279,7 @@ function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
 function parseDate(dateString) {
     return new Date(dateString); // Parse ISO 8601 format directly
 }
+
 
 function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryColor, skipCategoryColor) {
     Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
@@ -282,8 +333,10 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
                             console.log("Sent emails from the selected timeframe:");
                             console.log(window.sentEmails);
                         }
-                        $('#sync-email-btn').removeClass('disabled');
-                        $('#sync-email-btn').prop('disabled', false);
+                        if (CheckSettings()) {
+                            $('#sync-email-btn').removeClass('disabled');
+                            $('#sync-email-btn').prop('disabled', false);
+                        }
                     }
                 }).fail(function (jqXHR, textStatus, errorThrown) {
                     console.error("Error fetching emails:", textStatus, errorThrown);

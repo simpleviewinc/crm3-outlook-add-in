@@ -316,9 +316,12 @@ $(document).ready(function () {
 
     $("#okSettings").click(function () {
         // Capture form data
-        console.log('Capture form data');
+        var url = $("#crm-url").val();
+        if (url.endsWith('/')) {
+            url = url.slice(0, -1);
+        }
         const formData = {
-            crmUrl: $("#crm-url").val(),
+            crmUrl: url,
             crmLogin: $("#crm-login").val(),
             userId: UserId,
             sentFlagColor: $("#sent-flag-color").val(),
