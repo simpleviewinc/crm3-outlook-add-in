@@ -648,8 +648,12 @@ $(document).ready(function () {
                 removeFirstItem(currentSelectedData);
                 if (currentSelectedData && currentSelectedData.length > 0)
                     ProcessSelectedData(currentSelectedData);
-                else
-                    CloseAll();
+                else {
+                    setTimeout(function () {
+                        CloseAll();
+                    }, 1000); 
+                }
+                    
             } else {
                 console.error("Parent window method setCategoryToEmail is not defined.");
             }
