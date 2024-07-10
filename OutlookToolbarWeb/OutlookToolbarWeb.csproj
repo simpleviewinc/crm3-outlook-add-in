@@ -90,7 +90,6 @@
     <Content Include="Pages\Index\Index.js" />
     <Content Include="Pages\SendEmail\SendEmail.html" />
     <Content Include="Pages\SendEmail\SendEmail.js" />
-    <Content Include="Pages\Settings\Settings.css" />
     <Content Include="Pages\Settings\Settings.html" />
     <Content Include="Pages\Settings\Settings.js" />
     <Content Include="Scripts\Common\Common.js" />
