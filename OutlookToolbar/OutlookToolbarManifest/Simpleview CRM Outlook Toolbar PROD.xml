@@ -13,7 +13,7 @@
 	<Description DefaultValue="Simpleview CRM"/>
 	<IconUrl DefaultValue="https://outlook.simpleviewcrm.com/Images/sv-icon-64.png"/>
 	<HighResolutionIconUrl DefaultValue="https://outlook.simpleviewcrm.com/Images/sv-icon-128.png"/>
-	<SupportUrl DefaultValue="http://www.contoso.com"/>
+	<SupportUrl DefaultValue="https://www.simpleviewinc.com/products/simpleview-cms/"/>
 	<!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
 	<AppDomains>
 		<AppDomain>https://outlook.simpleviewcrm.com</AppDomain>
