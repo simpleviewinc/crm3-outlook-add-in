@@ -14,8 +14,9 @@
     recid: '',
     relflds: '',
     relfldvals: ''
-}, ApiUrl = 'http://localhost:4000', currentSelectedData = [],
+}, ApiUrl , currentSelectedData = [],
     isSelectButtonClicked = false;
+SetApiUrl();
 
 function formatDate(date) {
     const day = String(date.getDate()).padStart(2, '0');
@@ -609,36 +610,50 @@ function removeFirstItem(obj) {
     }
 }
 
+function SetApiUrl() {
+    var resval = localStorage.getItem("crm");
+    var data = {};
+    if (resval != null) {
+        data = decodeFromBase64(resval);
+        if (data != null) {
+            if (data.userId != null && data.userId != undefined && data.userId != '') {
+                var url = data.crmUrl;
+                // Temporary checks only for dev and local environment for proxy server
+                if (url == "https://demo.simpleviewcrm.com") {
+                    if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
+                        ApiUrl = "http://localhost:4000";
+                    } else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
+                        ApiUrl = "https://271f-13-84-216-53.ngrok-free.app";
+                    }
+                    else {
+                        ApiUrl = url;
+                    }
+                } else {
+                    alert("Url not valid");
+                    return;
+                }
+            }
+        }
+    }
+}
+
 $(document).ready(function () {
     $("#sendEmailLoader").hide();
     $("#matchContactLoader").hide();
     DisableButtonById("#selectBtn");
-    function handleDataFromIndexPage(event) {
-        const receivedData = event.data;
-        console.log('Document ready and data from parent window is : ', receivedData);
-        var resval = localStorage.getItem("crm");
-        var data = {};
-        if (resval != null) {
-            data = decodeFromBase64(resval);
-            if (data != null) {
-                if (data.userId != null && data.userId != undefined && data.userId != '') {
-                    messageObject.userid = data.userId;
-                }
+    var resval = localStorage.getItem("crm");
+    var data = {};
+    if (resval != null) {
+        data = decodeFromBase64(resval);
+        if (data != null) {
+            if (data.userId != null && data.userId != undefined && data.userId != '') {
+                messageObject.userid = data.userId;
+                GetTaskTypes(data.inboundTraceType); GetPriorityType(data.inboundPriority);
+                GetGroupsByUserId();
             }
         }
-        if (typeof receivedData === 'string') {
-            //ApiUrl = receivedData;
-            GetTaskTypes(data.inboundTraceType); GetPriorityType(data.inboundPriority);
-            GetGroupsByUserId();
-        }
-        else {
-            // ApiUrl = data.crmUrl;
-        }
     }
-
-    // Add an event listener to receive messages
-    window.addEventListener('message', handleDataFromIndexPage, false);
-
+    
     $('#skipit').on('click', () => {
         var id = $('#EmailId').val();
         if (window.opener && !window.opener.closed) {

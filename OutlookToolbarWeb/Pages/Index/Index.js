@@ -188,6 +188,10 @@ Office.onReady((info) => {
         $(document).ready(() => {
             console.log("office is ready");
             console.log('loaded index.js version DEV 1.5');
+             $('#indexLoader').hide();
+             $('#fetching').hide();
+             $('#noOfEmails').hide();
+             $('#errMsg').hide();
             $('#send-email-btn').addClass('disabled');
             $('#send-email-btn').prop('disabled', true);
             $('#sync-email-btn').addClass('disabled');
@@ -250,12 +254,10 @@ let selectedEmails = [];
 let processing = false;
 let refreshPending = false;
 
+
 // Fetch selected emails with retry logic
 function fetchSelectedEmails(refresh) {
     console.log("Disabling----");
-    $('#send-email-btn').prop('disabled', true);
-    $('#send-email-btn').addClass('disabled');
-
     // Queue the refresh if we're already processing
     if (processing) {
         refreshPending = refreshPending || refresh;
@@ -272,6 +274,12 @@ function fetchSelectedEmails(refresh) {
 
     // Function to attempt fetching selected items with retry
     function tryFetchSelectedItems() {
+        $('#send-email-btn').prop('disabled', true);
+        $('#send-email-btn').addClass('disabled');
+        $('#indexLoader').show();
+        $('#fetching').show();
+        $('#noOfEmails').hide();
+        $('#errMsg').hide();
         Office.context.mailbox.getSelectedItemsAsync((asyncResult) => {
             if (asyncResult.status === Office.AsyncResultStatus.Failed) {
                 console.error(`Error getting selected items: ${asyncResult.error.message}`);
@@ -286,6 +294,9 @@ function fetchSelectedEmails(refresh) {
                     console.error(`Max retries (${MAX_RETRIES}) exceeded. Unable to fetch selected items.`);
                     retryCount = 0; // Reset retry count for next attempt
                     // Handle failure (e.g., show error message)
+                    $('#indexLoader').hide();
+                    $('#fetching').hide();
+                    $('#errMsg').show();
                 }
 
                 return;
@@ -296,10 +307,13 @@ function fetchSelectedEmails(refresh) {
             Promise.all(promises).then(() => {
                 if (CheckSettings()) {
                     console.log("Enabling----");
-                    setTimeout(function () {
-                        $('#send-email-btn').prop('disabled', false);
-                        $('#send-email-btn').removeClass('disabled');
-                    }, 1000);
+                    updateEmailCount();
+                    $('#send-email-btn').prop('disabled', false);
+                    $('#send-email-btn').removeClass('disabled');
+                    $('#indexLoader').hide();
+                    $('#fetching').hide();
+                    $('#noOfEmails').show();
+                    $('#errMsg').hide();
                 }
                 processing = false;
                 // If there was a pending refresh while processing, call the function again
@@ -319,6 +333,15 @@ function fetchSelectedEmails(refresh) {
     }
 
     tryFetchSelectedItems(); // Initial attempt to fetch selected items
+}
+
+function updateEmailCount() {
+    var emailCount = selectedEmails.length;
+    if (emailCount === 1) {
+        $('#noOfEmails').text(emailCount + " email selected.");
+    } else {
+        $('#noOfEmails').text(emailCount + " emails selected.");
+    }
 }
 // Get specific email details
 function getSpecificEmailDetails(id) {
@@ -415,7 +438,6 @@ function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
     popupWindow = window.open(url, title, `width=${width}, height=${height}, top=${top}, left=${left}`);
 
     popupWindow.onload = function () {
-        popupWindow.postMessage(ApiUrl, '*');
         popupWindow.window.inboxEmails = popupWindow.opener.inboxEmails;
         popupWindow.window.sentEmails = popupWindow.opener.sentEmails;
         popupWindow.window.ApiUrl = popupWindow.opener.ApiUrlVal;

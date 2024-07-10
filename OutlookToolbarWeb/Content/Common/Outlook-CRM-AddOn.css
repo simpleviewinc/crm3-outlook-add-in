@@ -423,3 +423,19 @@ button {
 .overflowY {
     overflow-y: auto;
 }
+
+.statusMsg {
+    margin-top: 20px;
+    border-top: solid 1px #3e8ff9;
+    padding-top: 15px;
+    color: #1A1A1A;
+}
+
+#indexLoader {
+    top: 38%;
+    left: 33%;
+}
+
+#errMsg{
+    padding: 0 40px;
+}

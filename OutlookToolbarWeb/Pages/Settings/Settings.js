@@ -72,9 +72,9 @@ $(document).ready(function () {
         if (url == "https://demo.simpleviewcrm.com") {
             if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
                 url = "http://localhost:4000";
-            } else {
+            } else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
                 url = "https://271f-13-84-216-53.ngrok-free.app";
-            }
+            } // else use the actual url -- for PROD
         } else {
             alert("Url not valid");
             return;
