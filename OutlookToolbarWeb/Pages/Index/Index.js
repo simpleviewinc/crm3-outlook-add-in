@@ -39,15 +39,11 @@ function setCategoryToEmail(emailId, isSentFlag) {
 
             // Determine category color based on flag
             let categoryColor = 'Yellow category'; // initialized with some valid value 
-            const resval = localStorage.getItem("CRM");
-            let data = {};
-            if (resval != null) {
-                data = decodeFromBase64(resval);
+            var data = GetDataFromLocalStorage();
                 if (data != null) {
                     categoryColor = isSentFlag ? data.sentFlagColor : data.skipFlagColor;
                 }
-            }
-
+            
             // Construct the payload to set the category
             const categoryData = {
                 "Categories": [categoryColor]
@@ -85,11 +81,8 @@ function processQueue() {
     isProcessingQueue = true;
     const { emailId, isSentFlag } = emailQueue.shift();
 
-    var resval = localStorage.getItem("CRM");
-    var data = {};
     var categoryColor = 'Yellow category'; // initialized with some valid value 
-    if (resval != null) {
-        data = decodeFromBase64(resval);
+    var data = GetDataFromLocalStorage();
         if (data != null) {
             if (isSentFlag) {
                 categoryColor = data.sentFlagColor;
@@ -97,7 +90,7 @@ function processQueue() {
                 categoryColor = data.skipFlagColor;
             }
         }
-    }
+    
 
     Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
         if (result.status === "succeeded") {
@@ -169,17 +162,12 @@ let isPopupOpen = false;
 let settingsOk = false;
 
 function CheckSettings() {
-    var resval = localStorage.getItem("CRM");
-    var data = {};
-    if (resval != null) {
-        data = decodeFromBase64(resval);
-        console.log(data);
+    var data = GetDataFromLocalStorage();
         if (data != null) {
             if (data.userId != null && data.userId != undefined && data.userId != '') {
                 return true;
             }
         }
-    }
     return false;
 }
 
@@ -188,15 +176,15 @@ Office.onReady((info) => {
         $(document).ready(() => {
             console.log("office is ready");
             console.log('loaded index.js version DEV 1.5');
-             $('#indexLoader').hide();
-             $('#fetching').hide();
-             $('#noOfEmails').hide();
-             $('#errMsg').hide();
+            $('#indexLoader').hide();
+            $('#fetching').hide();
+            $('#noOfEmails').hide();
+            $('#errMsg').hide();
             $('#send-email-btn').addClass('disabled');
             $('#send-email-btn').prop('disabled', true);
             $('#sync-email-btn').addClass('disabled');
             $('#sync-email-btn').prop('disabled', true);
-           
+
             attachClickEventHandlers();
             fetchSelectedEmails(false);
             Office.context.mailbox.addHandlerAsync(Office.EventType.SelectedItemsChanged, () => fetchSelectedEmails(true));
@@ -220,6 +208,17 @@ Office.onReady((info) => {
 
 function CloseTheTaskPane() {
     Office.context.ui.closeContainer();
+}
+
+function SetLocalStorageItem(settings) {
+    localStorage.setItem("CRM", btoa(settings));
+}
+
+function ReloadTaskPane(isRemoveSettings) {
+    console.log("removed settings");
+    if (isRemoveSettings)
+        localStorage.removeItem('CRM');
+    window.location.reload(true);
 }
 
 function decodeFromBase64(base64Str) {
@@ -276,10 +275,18 @@ function fetchSelectedEmails(refresh) {
     function tryFetchSelectedItems() {
         $('#send-email-btn').prop('disabled', true);
         $('#send-email-btn').addClass('disabled');
+        var storage = GetDataFromLocalStorage();
+        if (storage == null || storage == undefined || Object.keys(storage).length === 0) {
+            return;
+        }
+        else {
+            $('#initialMsg').hide();
+        }
         $('#indexLoader').show();
         $('#fetching').show();
         $('#noOfEmails').hide();
         $('#errMsg').hide();
+        
         Office.context.mailbox.getSelectedItemsAsync((asyncResult) => {
             if (asyncResult.status === Office.AsyncResultStatus.Failed) {
                 console.error(`Error getting selected items: ${asyncResult.error.message}`);
@@ -331,8 +338,7 @@ function fetchSelectedEmails(refresh) {
             });
         });
     }
-
-    tryFetchSelectedItems(); // Initial attempt to fetch selected items
+     tryFetchSelectedItems(); // Initial attempt to fetch selected items
 }
 
 function updateEmailCount() {
@@ -460,7 +466,6 @@ function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
             // Ignore messages from different origins
             return;
         }
-        localStorage.setItem("CRM", btoa(event.data));
     });
 }
 
@@ -470,6 +475,10 @@ function parseDate(dateString) {
 
 
 function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryColor, skipCategoryColor) {
+    var storage = GetDataFromLocalStorage();
+    if (storage == null || storage == undefined || Object.keys(storage).length === 0) {
+        return;
+    }
     Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
         if (result.status === "succeeded") {
             var accessToken = result.value;
@@ -486,7 +495,7 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
             var filterQuery = `?$filter=receivedDateTime ge ${startDateISOString}` +
                 ` and not(categories/any(c:c eq '${sentCategoryColor}'))` +
                 ` and not(categories/any(c:c eq '${skipCategoryColor}'))`;
-            
+
             // Function to fetch emails with pagination
             function fetchEmails(url, allEmails = []) {
                 $.ajax({

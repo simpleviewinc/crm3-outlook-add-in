@@ -1,35 +1,7 @@
 ﻿let ApiUrl = '', UserId = '', isLoaded = false;
 
-function initSettings(ApiUrlVal) {
-    console.log("init initSettings " + ApiUrlVal);
-    ApiUrl = ApiUrlVal;
-}
 
 $(document).ready(function () {
-    console.log('loaded settings.js version DEV 1.6');
-    console.log('ApiUrl');
-    console.log(ApiUrl);
-
-    if (typeof ApiUrl === 'string' && ApiUrl.startsWith('http') && isLoaded == false) {
-        isLoaded = true;
-        GetTaskTypes(); GetPriorityType();
-    }
-
-    function handleDataFromIndexPage(event) {
-        $("#settingLoader").hide();
-        const receivedData = event.data;
-        console.log('Data received in popup:', receivedData);
-        console.log('ApiUrl');
-        console.log(ApiUrl);
-
-        //ApiUrl = receivedData;
-        if (typeof ApiUrl === 'string' && ApiUrl.startsWith('http') && isLoaded == false) {
-            isLoaded = true;
-            GetTaskTypes(); GetPriorityType();
-        }
-    }
-    window.addEventListener('message', handleDataFromIndexPage, false);
-
     var resval = localStorage.getItem("crm");
     var data = {};
     if (resval != null) {
@@ -39,10 +11,16 @@ $(document).ready(function () {
             if (data.userId != null && data.userId != undefined && data.userId != '') {
                 $('#emailSettings').show();
                 $('#Save').hide();
+                $('#logout').show();
+                $("#settingLoader").hide();
                 UserId = data.userId;
+                ApiUrl = SetProxyUrl(data.crmUrl);
+                GetTaskTypes(); GetPriorityType();
             }
             else {
                 $('#emailSettings').hide();
+                $('#logout').hide();
+                console.log("logout hide");
             }
             $('#crm-login').val(data.crmLogin);
             $('#crm-url').val(data.crmUrl);
@@ -53,6 +31,8 @@ $(document).ready(function () {
     }
     else {
         $('#emailSettings').hide();
+        $('#logout').hide();
+        $("#settingLoader").hide();
     }
 
     function escapeHtml(unsafe) {
@@ -64,11 +44,7 @@ $(document).ready(function () {
             .replace(/'/g, '&#039;');
     }
 
-    function GetUserIdByLogin(url, email, password) {
-        if (url.endsWith('/')) {
-            url = url.slice(0, -1);
-        }
-        password = escapeHtml(password);
+    function SetProxyUrl(url) {
         if (url == "https://demo.simpleviewcrm.com") {
             if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
                 url = "http://localhost:4000";
@@ -77,8 +53,18 @@ $(document).ready(function () {
             } // else use the actual url -- for PROD
         } else {
             alert("Url not valid");
-            return;
+            url = '';
         }
+        return url;
+    }
+
+    function GetUserIdByLogin(url, email, password) {
+        if (url.endsWith('/')) {
+            url = url.slice(0, -1);
+        }
+        url = SetProxyUrl(url);
+        password = escapeHtml(password);
+        
         $("#settingLoader").show();
         const settings = {
             url: url + "/api/cftags/outlook.cfc",
@@ -115,6 +101,7 @@ $(document).ready(function () {
                     UserId = parseInt(decodedString);
                     $('#emailSettings').show();
                     $('#Save').hide();
+                    $('#logout').show();
                     ApiUrl = url;
                     GetTaskTypes(); GetPriorityType();
                 }
@@ -344,18 +331,37 @@ $(document).ready(function () {
 
         console.log('setting localStorage');
         localStorage.setItem("crm", formDataEncodeString);
-        try {
-            console.log('window.opener.postMessage');
-            window.opener.postMessage(formDataString, window.location.origin);
-        } catch (error) {
-            console.log('window.opener.postMessage error');
-            console.log(error);
-        }
+       
         alert("Settings Updated.");
         if (window.opener && !window.opener.closed) {
-            if (typeof window.opener.CloseTheTaskPane === 'function') {
+            if (typeof window.opener.ReloadTaskPane === 'function') {
                 console.log('window.opener.CloseTheTaskPane');
-                window.opener.CloseTheTaskPane();
+                window.opener.ReloadTaskPane(false);
+                //window.close(); // Optionally close the popup after sending data
+            } else {
+                console.error("Parent window method setCategoryToEmail is not defined.");
+            }
+            if (typeof window.opener.SetLocalStorageItem === 'function') {
+                console.log('window.opener.CloseTheTaskPane');
+                window.opener.SetLocalStorageItem(formDataString);
+                //window.close(); // Optionally close the popup after sending data
+            } else {
+                console.error("Parent window method SetLocalStorageItem is not defined.");
+            }
+
+        } else {
+            console.error("Parent window is not available.");
+        }
+    });
+
+    $("#reset").click(function () {
+        localStorage.removeItem('crm');
+        alert("Settings Removed.");
+        window.location.reload();
+        if (window.opener && !window.opener.closed) {
+            if (typeof window.opener.ReloadTaskPane === 'function') {
+                console.log('window.opener.CloseTheTaskPane');
+                window.opener.ReloadTaskPane(true);
                 //window.close(); // Optionally close the popup after sending data
             } else {
                 console.error("Parent window method setCategoryToEmail is not defined.");
