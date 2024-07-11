@@ -1,0 +1,18 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/SimpleViewOutlook/FileContentIndex/23a89a93-b155-416b-a9a1-f644076dd775.vsidx
+*.vsidx
+*.lock
+*.wsuo
+/.vs
+/OutlookToolbar/.vs/OutlookToolbar
+/OutlookToolbar/bin/Debug
+/OutlookToolbar/obj
+/OutlookToolbar/pkgobj/Debug
+/OutlookToolbarWeb/bin
+/OutlookToolbarWeb/obj
+/OutlookToolbar/.vs
+/OutlookToolbarWeb/.vs
+/OutlookToolbarWeb/node_modules

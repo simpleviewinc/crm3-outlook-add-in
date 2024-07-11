@@ -1,0 +1,445 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column; /* Align children vertically */
+    justify-content: flex-start;
+    align-items: center; /* Center children horizontally */
+    overflow: hidden; /* Prevent scrolling */
+    font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    font-size: 14px;
+}
+
+/*========== MAIN PLUGIN PAGE ==========*/
+
+.content-main {
+    /* Remove the width property to allow it to be determined by content size */
+    margin: 0; /* Removed margin to use flexbox centering */
+    display: flex;
+    flex-direction: column; /* Align children vertically */
+    justify-content: center; /* Center children vertically */
+    align-items: center; /* Center children horizontally */
+    /* Add padding if needed, for example: */
+
+    box-sizing: border-box; /* Include padding in the content's size */
+}
+
+.button-container {
+    display: flex;
+    /*    background-color: #ADD8E6;*/ /* Light blue background */
+    padding: 5px;
+}
+
+.ms-Button {
+    display: flex;
+    align-items: center; /* Align the image and text inside the button */
+    border: none; /* Remove default button borders */
+    background: none; /* Remove default button background */
+    cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+    .ms-Button img {
+        margin-right: 5px; /* This adds space between the image and the text */
+    }
+
+    .ms-Button:not(:last-child) {
+        border-right: 1px solid #A9A9A9; /* Add a vertical line to the right of each button except the last one */
+        width: 80%;
+    }
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    border-right: 1px solid #A9A9A9; /* Light gray vertical line */
+    padding-right: 10px; /* Space between the line and the first button */
+}
+
+p {
+    /*display: inline;
+    font-size: 16px;
+    font-family: math;*/
+}
+
+.btnIndex {
+    width: 240px;
+    border-radius: 10px;
+    display: block;
+    padding: 10px;
+    background: #3e8ff9;
+    margin-top: 20px;
+    border: 1px solid #3e8ff9;
+    cursor: pointer;
+    color: #ffffff;
+}
+    /*.btnIndex:hover {
+    background: #00a4f0;
+}*/
+    .btnIndex p {
+        margin: 0;
+        font-size: 15px;
+    }
+
+button.disabled {
+    background-color: lightgray;
+    color: black;
+    cursor: not-allowed;
+}
+
+/*========== SETTINGS ==========*/
+
+.settingsUI {
+    width: 96%;
+    padding: 15px;
+}
+
+    .settingsUI #creds {
+        margin-bottom: 15px;
+    }
+
+    .settingsUI #emailSettings{
+        margin-bottom:15px;
+    }
+
+    h3 {
+        font-weight: 700;
+        padding: 10px;
+        border: solid 1px #BEBEBE;
+        background: #CCEDFC;
+        color: #1A1A1A;
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+
+.input-container {
+    display: flex; /* Use a flexbox layout */
+    align-items: center; /* Align items vertically */
+    margin: 10px 0;
+}
+
+    .input-container label {
+        flex: 0 0 150px; /* Don't grow, don't shrink, start at 120px */
+        margin-right: 10px; /* Add some space between the label and the input */
+        font-weight: 700;
+    }
+
+input, select, option {
+    flex: 1; /* Grow to occupy the rest of the space */
+    padding: 8px;
+    margin: 6px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px; /* Optional: for rounded corners */
+    box-sizing: border-box; /* Include padding and border in the input's width */
+}
+
+.button-container {
+    text-align: right;
+}
+
+button {
+    font-size: 15px;
+    border-radius: 10px;
+    padding: 10px 20px;
+    margin-left: 10px; /* Space between buttons */
+    background: #3e8ff9;
+    border: 1px solid #3e8ff9;
+    cursor: pointer;
+    color: #ffffff;
+}
+/*button:hover {
+    background: #00a4f0;
+}*/
+
+fieldset {
+    border: solid 1px #BEBEBE;
+    background: #F5F5F0;
+    padding: 5px 40px 15px 20px;
+}
+
+/*========== SEND EMAIL ==========*/
+
+#sendEmailUI {
+    width: 96%;
+    padding: 15px;
+}
+
+#selectContact.grid.active {
+    background: #F5F5F0;
+}
+
+#selectContact > fieldset > legend {
+    font-weight: 700;
+    padding: 10px;
+    border: solid 1px #BEBEBE;
+    background: #CCEDFC;
+    color: #1A1A1A;
+    text-transform: capitalize;
+}
+
+#selectContact > fieldset:first-child {
+    margin-bottom: 15px;
+}
+
+.box {
+    border: 1px solid #BEBEBE;
+    margin: 0px;
+    padding: 10px;
+    width: calc(100% - 15px); /* Full width minus margin and border */
+    height: 450px; /* Fixed height */
+    overflow-y: scroll; /* Enable vertical scroll if content overflows */
+    position: relative; /* Required for absolute positioning */
+}
+
+.headings {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.left-side {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Allow it to take only necessary space */
+    margin-bottom: 10px;
+}
+
+    .left-side h5 {
+        margin: 5px 0; /* Add some margin to avoid overlapping */
+        font-size: 14px;
+    }
+
+.right-side {
+    text-align: right;
+    flex-shrink: 0; /* Prevent it from shrinking */
+    margin-left: 20px; /* Add some margin to separate it from the left-side content */
+    margin-bottom: 10px;
+}
+
+    .right-side h5 {
+        font-size: 14px;
+    }
+
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #000;
+    padding: 5px;
+    text-align: left;
+    word-wrap: break-word;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+.box-header {
+    display: flex;
+    justify-content: flex-end; /* Aligns children to the right */
+    align-items: flex-end;
+    background: #F5F5F0;
+}
+
+.button-container {
+    display: flex;
+    align-items: center;
+}
+
+.bottom-right-buttons {
+    padding: 5px 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    margin-top: 15px;
+}
+
+tr:hover {
+    background-color: #89CFF0;
+}
+
+tr.selected {
+    background-color: #89CFF0;
+}
+
+.grid {
+    display: none;
+}
+
+    .grid.active {
+        display: block;
+        background: #fff;
+    }
+
+tr:hover {
+    cursor: pointer;
+}
+
+.toggle-buttons {
+    background: #F5F5F0;
+}
+
+    .toggle-buttons button {
+        padding: 10px 15px;
+        color: #fff;
+        background-color: #BEBEBE;
+        border: 1px solid;
+        border-bottom: none;
+        border-radius: 2px;
+        margin-right: -4px;
+        cursor: pointer;
+        margin-top: 0px;
+        margin-left: 0px;
+    }
+
+        .toggle-buttons button.active {
+            background: #3e8ff9;
+        }
+
+
+input, select, option {
+    flex: none !important;
+    width: 220px;
+}
+
+#inboxTable input,
+#inboxTable select,
+#inboxTable option {
+    width: 50px;
+}
+
+#sentBoxTable input,
+#sentBoxTable select,
+#sentBoxTable option {
+    width: 50px;
+}
+
+/*
+.input-container label {
+    margin-right: 0px !important;
+    margin-left: 10px;
+}
+*/
+.hide {
+    display: none;
+}
+
+.show {
+    display: block;
+}
+
+.bold {
+    font-weight: 600;
+}
+
+.block {
+    display: block !important;
+}
+
+.ml {
+    margin-left: 190px !important;
+}
+
+/* Hide the loader initially */
+.loader {
+    border: 16px solid #BEBEBE;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    width: 60px;
+    height: 60px;
+    animation: spin 2s linear infinite;
+    position: absolute;
+    top: 25%;
+    left: 42%;
+    transform: translate(-50%, -50%);
+}
+
+/* Loader animation */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.mt {
+    margin-top: -50px;
+}
+
+.fixTable {
+    table-layout: fixed;
+}
+
+
+.hidden {
+    display: none;
+}
+
+/*========== SYNC EMAIL ==========*/
+
+#syncEmailUI {
+    width: 96%;
+}
+/*
+.input-container {
+    display: flex; 
+    align-items: center; 
+    margin: 10px 0;
+}
+
+    .input-container label {
+        flex: 0 0 150px; 
+        margin-right: 10px; 
+        font-weight: 700;
+    }
+*/
+input, select, option {
+    flex: 1; /* Grow to occupy the rest of the space */
+    padding: 8px;
+    margin: 6px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px; /* Optional: for rounded corners */
+    box-sizing: border-box; /* Include padding and border in the input's width */
+}
+
+.button-container {
+    text-align: right;
+}
+
+button {
+    font-size: 15px;
+    border-radius: 10px;
+    padding: 10px 20px;
+    margin-left: 10px; /* Space between buttons */
+    background: #3e8ff9;
+    border: 1px solid #3e8ff9;
+    cursor: pointer;
+    color: #ffffff;
+}
+
+
+.overflowY {
+    overflow-y: auto;
+}
+
+.statusMsg {
+    margin-top: 20px;
+    border-top: solid 1px #3e8ff9;
+    padding-top: 15px;
+    color: #1A1A1A;
+}
+
+#indexLoader {
+    top: 38%;
+    left: 33%;
+}
+
+#errMsg{
+    padding: 0 40px;
+}
