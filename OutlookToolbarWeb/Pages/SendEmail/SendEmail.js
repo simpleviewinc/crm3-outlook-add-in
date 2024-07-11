@@ -1079,10 +1079,6 @@ function GetMatchingDataForSync(email, userId) {
         return;
     $("#matchContactLoader").show();
 
-    if (email == "dallaslacross@members.birthcenters.org") {
-        email = "awilkins@americanhomeshield.com";
-    }
-
     const settings = {
         url: ApiUrl + "/api/cftags/outlook.cfc",
         method: "POST",
