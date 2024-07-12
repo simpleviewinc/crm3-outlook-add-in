@@ -45,15 +45,27 @@ $(document).ready(function () {
     }
 
     function SetProxyUrl(url) {
-        if (url == "https://demo.simpleviewcrm.com") {
-            if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
-                url = "http://localhost:4000";
-            } else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
-                url = "https://271f-13-84-216-53.ngrok-free.app";
-            } // else use the actual url -- for PROD
+        if (window.location.hostname.toLowerCase().indexOf('localhost') > -1 ||
+            window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
+
+            if (url === "https://demo.simpleviewcrm.com") {
+                if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
+                    url = "http://localhost:4000";
+                } else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
+                    url = "https://271f-13-84-216-53.ngrok-free.app";
+                }
+            } else {
+                alert("Url not valid");
+                url = '';
+            }
+
         } else {
-            alert("Url not valid");
-            url = '';
+            if (url.endsWith(".simpleviewcrm.com")) {
+                url = url // use the actual url provided by user
+            } else {
+                alert("Url not valid");
+                url = '';
+            }
         }
         return url;
     }
@@ -63,6 +75,8 @@ $(document).ready(function () {
             url = url.slice(0, -1);
         }
         url = SetProxyUrl(url);
+        if (url == '')
+            return;
         password = escapeHtml(password);
         
         $("#settingLoader").show();

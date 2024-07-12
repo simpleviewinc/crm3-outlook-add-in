@@ -618,19 +618,28 @@ function SetApiUrl() {
         if (data != null) {
             if (data.userId != null && data.userId != undefined && data.userId != '') {
                 var url = data.crmUrl;
-                // Temporary checks only for dev and local environment for proxy server
-                if (url == "https://demo.simpleviewcrm.com") {
-                    if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
-                        ApiUrl = "http://localhost:4000";
-                    } else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
-                        ApiUrl = "https://271f-13-84-216-53.ngrok-free.app";
+
+                if (window.location.hostname.toLowerCase().indexOf('localhost') > -1 ||
+                    window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
+
+                    if (url === "https://demo.simpleviewcrm.com") {
+                        if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
+                            ApiUrl = "http://localhost:4000";
+                        } else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
+                            ApiUrl = "https://271f-13-84-216-53.ngrok-free.app";
+                        }
+                    } else {
+                        alert("Url not valid");
+                        return;
                     }
-                    else {
-                        ApiUrl = url;
-                    }
+
                 } else {
-                    alert("Url not valid");
-                    return;
+                    if (url.endsWith(".simpleviewcrm.com")) {
+                        ApiUrl = url;
+                    } else {
+                        alert("Url not valid");
+                        return;
+                    }
                 }
             }
         }
