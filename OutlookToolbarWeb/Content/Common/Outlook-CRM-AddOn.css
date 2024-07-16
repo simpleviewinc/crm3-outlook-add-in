@@ -385,6 +385,7 @@ input, select, option {
 
 #syncEmailUI {
     width: 96%;
+    padding: 15px;
 }
 /*
 .input-container {
@@ -442,4 +443,9 @@ button {
 
 #errMsg{
     padding: 0 40px;
+}
+
+#syncEmailUI > #syncGrid > legend {
+    position: relative;
+    margin-bottom: 7px;
 }
