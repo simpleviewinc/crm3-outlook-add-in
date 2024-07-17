@@ -1,3 +1,5 @@
+/*========== GENERAL UI ==========*/
+
 html, body {
     width: 100%;
     height: 100%;
@@ -10,6 +12,82 @@ html, body {
     font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
     font-size: 14px;
 }
+
+
+
+h3 {
+    font-weight: 700;
+    padding: 10px;
+    border: solid 1px #BEBEBE;
+    background: #CCEDFC;
+    color: #1A1A1A;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+}
+
+    .input-container label {
+        margin-right: 0; /* Add some space between the label and the input */
+        font-weight: 700;
+    }
+
+input, select, option {
+    flex: none;
+    width: auto;
+    min-width: 220px;
+    padding: 8px;
+    margin: 5px 25px 5px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px; /* Optional: for rounded corners */
+    box-sizing: border-box; /* Include padding and border in the input's width */
+}
+
+.button-container {
+    text-align: right;
+}
+
+button {
+    font-size: 15px;
+    border-radius: 10px;
+    padding: 10px 20px;
+    margin-left: 10px; /* Space between buttons */
+    background: #3e8ff9;
+    border: 1px solid #3e8ff9;
+    cursor: pointer;
+    color: #ffffff;
+}
+
+fieldset {
+    border: solid 1px #BEBEBE;
+    background: #F5F5F0;
+    padding: 5px 40px 15px 20px;
+}
+
+legend {
+    position: relative;
+    margin-bottom: 7px;
+}
+
+/*========== SETTINGS PAGE ==========*/
+
+.settingsUI {
+    width: 96%;
+    padding: 15px;
+}
+
+    .settingsUI #emailSettings,
+    .settingsUI #logout {
+        margin-top: 15px;
+    }
+
+    .settingsUI .input-container label {
+        /* flex: 0 0 150px; */ /* Don't grow, don't shrink, start at 150px */
+    }
 
 /*========== MAIN PLUGIN PAGE ==========*/
 
@@ -55,12 +133,6 @@ html, body {
     padding-right: 10px; /* Space between the line and the first button */
 }
 
-p {
-    /*display: inline;
-    font-size: 16px;
-    font-family: math;*/
-}
-
 .btnIndex {
     width: 240px;
     border-radius: 10px;
@@ -72,9 +144,7 @@ p {
     cursor: pointer;
     color: #ffffff;
 }
-    /*.btnIndex:hover {
-    background: #00a4f0;
-}*/
+
     .btnIndex p {
         margin: 0;
         font-size: 15px;
@@ -86,76 +156,7 @@ button.disabled {
     cursor: not-allowed;
 }
 
-/*========== SETTINGS ==========*/
 
-.settingsUI {
-    width: 96%;
-    padding: 15px;
-}
-
-    .settingsUI #creds {
-        margin-bottom: 15px;
-    }
-
-    .settingsUI #emailSettings{
-        margin-bottom:15px;
-    }
-
-    h3 {
-        font-weight: 700;
-        padding: 10px;
-        border: solid 1px #BEBEBE;
-        background: #CCEDFC;
-        color: #1A1A1A;
-        text-transform: uppercase;
-        margin: 0;
-    }
-
-
-.input-container {
-    display: flex; /* Use a flexbox layout */
-    align-items: center; /* Align items vertically */
-    margin: 10px 0;
-}
-
-    .input-container label {
-        flex: 0 0 150px; /* Don't grow, don't shrink, start at 120px */
-        margin-right: 10px; /* Add some space between the label and the input */
-        font-weight: 700;
-    }
-
-input, select, option {
-    flex: 1; /* Grow to occupy the rest of the space */
-    padding: 8px;
-    margin: 6px 0;
-    border: 1px solid #ccc;
-    border-radius: 4px; /* Optional: for rounded corners */
-    box-sizing: border-box; /* Include padding and border in the input's width */
-}
-
-.button-container {
-    text-align: right;
-}
-
-button {
-    font-size: 15px;
-    border-radius: 10px;
-    padding: 10px 20px;
-    margin-left: 10px; /* Space between buttons */
-    background: #3e8ff9;
-    border: 1px solid #3e8ff9;
-    cursor: pointer;
-    color: #ffffff;
-}
-/*button:hover {
-    background: #00a4f0;
-}*/
-
-fieldset {
-    border: solid 1px #BEBEBE;
-    background: #F5F5F0;
-    padding: 5px 40px 15px 20px;
-}
 
 /*========== SEND EMAIL ==========*/
 
@@ -251,9 +252,9 @@ th {
 
 .bottom-right-buttons {
     padding: 5px 10px;
-    cursor: pointer;
+    /* cursor: pointer; */
     display: flex;
-    justify-content: flex-end; /* Align buttons to the right */
+    justify-content: flex-end;
     margin-top: 15px;
 }
 
@@ -299,30 +300,21 @@ tr:hover {
             background: #3e8ff9;
         }
 
-
-input, select, option {
-    flex: none !important;
-    width: 220px;
-}
-
 #inboxTable input,
 #inboxTable select,
 #inboxTable option {
-    width: 50px;
+    width: 40px;
+    min-width: 0 !important;
 }
 
 #sentBoxTable input,
 #sentBoxTable select,
 #sentBoxTable option {
-    width: 50px;
+    width: 40px;
+    min-width: 0 !important;
 }
 
-/*
-.input-container label {
-    margin-right: 0px !important;
-    margin-left: 10px;
-}
-*/
+
 .hide {
     display: none;
 }
@@ -387,27 +379,6 @@ input, select, option {
     width: 96%;
     padding: 15px;
 }
-/*
-.input-container {
-    display: flex; 
-    align-items: center; 
-    margin: 10px 0;
-}
-
-    .input-container label {
-        flex: 0 0 150px; 
-        margin-right: 10px; 
-        font-weight: 700;
-    }
-*/
-input, select, option {
-    flex: 1; /* Grow to occupy the rest of the space */
-    padding: 8px;
-    margin: 6px 0;
-    border: 1px solid #ccc;
-    border-radius: 4px; /* Optional: for rounded corners */
-    box-sizing: border-box; /* Include padding and border in the input's width */
-}
 
 .button-container {
     text-align: right;
@@ -427,25 +398,4 @@ button {
 
 .overflowY {
     overflow-y: auto;
-}
-
-.statusMsg {
-    margin-top: 20px;
-    border-top: solid 1px #3e8ff9;
-    padding-top: 15px;
-    color: #1A1A1A;
-}
-
-#indexLoader {
-    top: 38%;
-    left: 33%;
-}
-
-#errMsg{
-    padding: 0 40px;
-}
-
-#syncEmailUI > #syncGrid > legend {
-    position: relative;
-    margin-bottom: 7px;
 }
