@@ -81,7 +81,7 @@ $(document).ready(function () {
         
         $("#settingLoader").show();
         const settings = {
-            url: url + "/api/cftags/outlook.cfc",
+            url: url + "/cftags/outlook.cfc",
             method: "POST",
             timeout: 0,
             headers: {
@@ -129,7 +129,7 @@ $(document).ready(function () {
 
     function GetPriorityType() {
         const settings = {
-            url: ApiUrl + "/api/cftags/outlook.cfc",
+            url: ApiUrl + "/cftags/outlook.cfc",
             method: "POST",
             timeout: 0,
             headers: {
@@ -203,7 +203,7 @@ $(document).ready(function () {
 
     function GetTaskTypes() {
         const settings = {
-            url: ApiUrl + "/api/cftags/outlook.cfc",
+            url: ApiUrl + "/cftags/outlook.cfc",
             method: "POST",
             timeout: 0,
             headers: {
