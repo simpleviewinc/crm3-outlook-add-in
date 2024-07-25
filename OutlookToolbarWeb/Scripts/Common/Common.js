@@ -10,9 +10,9 @@
 
             if (url === "https://demo.simpleviewcrm.com") {
                 if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
-                    window.ApiUrl = "http://localhost:4000";
+                    window.ApiUrl = "http://localhost:4000/api";
                 } else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
-                    window.ApiUrl = "https://271f-13-84-216-53.ngrok-free.app";
+                    window.ApiUrl = "https://c219-13-84-216-53.ngrok-free.app/api";
                 }
             } else {
                 alert("Url not valid");
