@@ -73,6 +73,13 @@ legend {
     margin-bottom: 7px;
 }
 
+.statusMsg {
+    margin-top: 20px;
+    border-top: solid 2px #8dc640;
+    border-bottom: solid 2px #8dc640;
+    padding: 15px;
+}
+
 /*========== SETTINGS PAGE ==========*/
 
 .settingsUI {

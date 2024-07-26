@@ -272,7 +272,7 @@ function SendTheEmail() {
             let getMatchesReturn = response.getElementsByTagName("sendEmailReturn");
             const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
             $("#sendEmailLoader").hide();
-            alert("Email Send with trace id: " + parseInt(decodedString));
+            alert("Email sent with trace id: " + parseInt(decodedString));
             removeFirstItem(currentSelectedData);
             if (currentSelectedData && currentSelectedData.length > 0)
                 ProcessSelectedData(currentSelectedData);

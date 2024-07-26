@@ -111,7 +111,7 @@ $(document).ready(function () {
                 }
                 else {
                     $("#settingLoader").hide();
-                    alert("Login Successful.");
+                    alert("Login successful.");
                     UserId = parseInt(decodedString);
                     $('#emailSettings').show();
                     $('#Save').hide();
@@ -346,7 +346,7 @@ $(document).ready(function () {
         console.log('setting localStorage');
         localStorage.setItem("crm", formDataEncodeString);
        
-        alert("Settings Updated.");
+        alert("Settings updated.");
         if (window.opener && !window.opener.closed) {
             if (typeof window.opener.ReloadTaskPane === 'function') {
                 console.log('window.opener.CloseTheTaskPane');
@@ -370,7 +370,7 @@ $(document).ready(function () {
 
     $("#reset").click(function () {
         localStorage.removeItem('crm');
-        alert("Settings Removed.");
+        alert("Settings removed.");
         window.location.reload();
         if (window.opener && !window.opener.closed) {
             if (typeof window.opener.ReloadTaskPane === 'function') {
