@@ -405,7 +405,7 @@ function getSpecificEmailDetails(id) {
                             subject: emailData.Subject,
                             receivedDate: new Date(emailData.ReceivedDateTime).toLocaleString(),
                             body: emailData.BodyPreview,
-                            isInbox: folderName == 'Inbox'
+                            isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))
                         };
 
                         const exists = selectedEmails.some(email => email.id === rowData.id);
