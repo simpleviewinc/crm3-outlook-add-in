@@ -49,9 +49,9 @@ $(document).ready(function () {
             window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
 
             if (url === "https://demo.simpleviewcrm.com") {
-                if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
+            if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
                     url = "http://localhost:4000/api";
-                } else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
+            } else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
                     url = "https://c219-13-84-216-53.ngrok-free.app/api";
                 }
             } else {
@@ -62,10 +62,10 @@ $(document).ready(function () {
         } else {
             if (url.endsWith(".simpleviewcrm.com")) {
                 url = url // use the actual url provided by user
-            } else {
-                alert("Url not valid");
-                url = '';
-            }
+        } else {
+            alert("Url not valid");
+            url = '';
+        }
         }
         return url;
     }
@@ -81,7 +81,8 @@ $(document).ready(function () {
         
         $("#settingLoader").show();
         const settings = {
-            url: url + "/cftags/outlook.cfc",
+            //url: url + "/cftags/outlook.cfc",
+            url: `/submit/?apiUrl=${url}`,
             method: "POST",
             timeout: 0,
             headers: {
@@ -102,7 +103,10 @@ $(document).ready(function () {
 
         $.ajax(settings)
             .done(function (response) {
-                let getMatchesReturn = response.getElementsByTagName("checkLoginReturn");
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(response, "application/xml");
+                
+                let getMatchesReturn = xmlDoc.getElementsByTagName("checkLoginReturn");
                 const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
                 console.log(decodedString);
                 if (decodedString == '-1.0') {
@@ -129,7 +133,8 @@ $(document).ready(function () {
 
     function GetPriorityType() {
         const settings = {
-            url: ApiUrl + "/cftags/outlook.cfc",
+            //url: ApiUrl + "/cftags/outlook.cfc",
+            url: `/submit/?apiUrl= ${ApiUrl}`,
             method: "POST",
             timeout: 0,
             headers: {
@@ -203,7 +208,8 @@ $(document).ready(function () {
 
     function GetTaskTypes() {
         const settings = {
-            url: ApiUrl + "/cftags/outlook.cfc",
+            //url: ApiUrl + "/cftags/outlook.cfc",
+            url: `/submit/?apiUrl= ${ApiUrl}`,
             method: "POST",
             timeout: 0,
             headers: {
