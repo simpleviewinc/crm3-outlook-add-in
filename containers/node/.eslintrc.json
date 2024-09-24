@@ -1,5 +1,5 @@
 {
-	"ignorePatterns": ["**/Scripts/*"],
+	"ignorePatterns": ["**/Scripts/embedded/*", "**/Scripts/Office/*", "**/Scripts/jquery-*", "**/Scripts/MessageBanner.js"],
 	"rules": {
 		"constructor-super": 2,
 		"for-direction": 2,
@@ -65,6 +65,8 @@
 		"node": true,
 		"es2022": true,
 		"mongo": true,
-		"mocha": true
+		"mocha": true,
+		"jquery": true,
+		"browser": true
 	}
 }

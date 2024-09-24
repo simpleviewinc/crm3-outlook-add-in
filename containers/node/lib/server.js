@@ -66,7 +66,7 @@ app.post('/submit/', bodyParser.raw({ type: 'text/xml' }), routeErrorHandler(asy
 		data: requestBody
 	});
 
-    res.send(result.data);
+	res.send(result.data);
 }));
 
 const boot = async () => {

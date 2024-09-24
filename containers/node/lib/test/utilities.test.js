@@ -2,7 +2,6 @@ const { deepCheck } = require('@simpleview/assertlib');
 const mochaLib = require('@simpleview/mochalib');
 const assert = require('assert');
 const {
-	isValidDate,
 	errorHandler,
 	routeErrorHandler,
 } = require('../utilities');
