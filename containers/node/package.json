@@ -1,0 +1,22 @@
+{
+	"name": "crm3-outlook-add-in",
+	"version": "1.0.0",
+	"description": "CRM30 - Outlook Web Add-In",
+	"author": "Jordan Kennedy",
+	"main": "server.js",
+	"scripts": {
+		"start": "node lib/server.js",
+		"test": "mocha lib/test/ --recursive",
+		"style": "eslint ."
+	},
+	"dependencies": {
+		"axios": "1.7.7",
+		"express": "4.20.0"
+	},
+	"devDependencies": {
+		"@simpleview/assertlib": "1.2.0",
+		"@simpleview/mochalib": "2.0.2",
+		"eslint": "8.35.0",
+		"mocha": "10.2.0"
+	}
+}

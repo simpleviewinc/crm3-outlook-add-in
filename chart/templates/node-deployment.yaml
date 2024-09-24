@@ -1,0 +1,49 @@
+{{ $name := "node" }}
+{{ $fullName := printf "%s-%s" .Release.Name $name }}
+{{ $image := printf "%s%s-%s:%s" .Values.sv.dockerRegistry .Chart.Name $name $.Values.sv.tag }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+spec:
+  selector:
+    matchLabels:
+      name: {{ $fullName }}
+  template:
+    metadata:
+      labels:
+        name: {{ $fullName }}
+      annotations:
+        checksum: {{ index .Values.sv.ids $image }}
+        sv-test-command: yarn test
+    spec:
+      terminationGracePeriodSeconds: 90
+      containers:
+        - name: {{ $name }}
+          image: {{ $image }}
+          readinessProbe:
+            httpGet:
+              path: /status/
+              port: 80
+            failureThreshold: 24
+            periodSeconds: 5
+            timeoutSeconds: 1
+          lifecycle:
+            preStop:
+              exec:
+                command : ["/bin/sh" , "-c", "sleep 60;"]
+          ports:
+            - containerPort: 80
+          {{- if .Values.mountdir }}
+          volumeMounts:
+            - name: app-lib
+              mountPath: /app/lib
+          {{- end }}
+      {{- if .Values.mountdir }}
+      volumes:
+        - name: app-lib
+          hostPath:
+            path: {{ .Values.sv.containerPath}}/{{ $name }}/lib
+            type: Directory
+      {{- end }}

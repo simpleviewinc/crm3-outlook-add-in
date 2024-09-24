@@ -1,0 +1,13 @@
+{{ $name := "node" }}
+{{ $fullName := printf "%s-%s" .Release.Name $name }}
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullName }}
+spec:
+  selector:
+    name: {{ $fullName }}
+  ports:
+    - protocol: TCP
+      port: 80

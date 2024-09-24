@@ -1,0 +1,47 @@
+version: 2.1
+workflows:
+  build:
+    jobs:
+      - build:
+          context: default
+          filters:
+            branches:
+              only:
+                - develop
+                - master
+                - qa
+                - /pull.*/
+orbs:
+  slack: circleci/slack@4.4.0
+jobs:
+  build:
+    docker:
+      - image: gcr.io/sv-shared-231700/sv-deploy-gce
+        auth:
+          username: _json_key
+          password: $GCLOUD_SERVICE_KEY
+    working_directory: /repo
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+          version: docker23
+      - run:
+          name: Setup Environment Variables
+          command: |
+            echo 'export BRANCH_NAME="$CIRCLE_BRANCH"' >> $BASH_ENV
+            echo 'export REPO_NAME="$CIRCLE_PROJECT_REPONAME"' >> $BASH_ENV
+            echo 'export ZONE="$ZONE"' >> $BASH_ENV
+            echo 'export PROJECT_ID="$PROJECT_ID"' >> $BASH_ENV
+      - run:
+          name: build/deploy/test
+          command: |
+            node /app/lib/default.js
+      - slack/notify:
+          channel: C07NM7E3HSR
+          event: fail
+          template: basic_fail_1
+      - slack/notify:
+          channel: C07NM7E3HSR
+          event: pass
+          template: basic_success_1
