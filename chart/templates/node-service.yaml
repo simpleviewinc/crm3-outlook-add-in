@@ -6,6 +6,10 @@ kind: Service
 metadata:
   name: {{ $fullName }}
 spec:
+  {{- if .Values.frontendIp }}
+  type: LoadBalancer
+  loadBalancerIp: {{ .Values.frontendIp }}
+  {{- end }}
   selector:
     name: {{ $fullName }}
   ports:
