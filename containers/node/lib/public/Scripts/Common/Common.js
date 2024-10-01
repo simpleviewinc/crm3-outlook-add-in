@@ -7,7 +7,7 @@ function GetDataFromLocalStorage() {
 	// GetProxyUrl(url) which takes the CRM url as a parameter and returns the API URL, using a proxy when needed.
 	// GetProxyUrlLocalStorage() which first calls GetCrmUrlFromLocalStorage() and then GetProxyUrl(url)
 	//since this was used in multiple places, I also added GetDataFromLocalStorageAndSetApiUrlGlobal() to replace it's original functionality.
-	let resval = localStorage.getItem("CRM");
+	let resval = localStorage.getItem("crm");
 	let data = null;
 	if (resval != null) {
 		data = decodeFromBase64(resval);
@@ -54,7 +54,7 @@ function GetDataFromLocalStorageAndSetApiUrlGlobal() {
 function GetCrmUrlFromLocalStorage() {
 	//this could be simplified to use GetDataFromLocalStorage() if it wasn't also
 	//setting window.ApiUrl, which it shouldn't be.  that should be moved to indepdent function calls
-	//let resval = localStorage.getItem("CRM");
+	//let resval = localStorage.getItem("crm");
 	let data = GetDataFromLocalStorage();
 	if (data != null) {
 		
@@ -67,8 +67,9 @@ function GetCrmUrlFromLocalStorage() {
 		if (url.endsWith(".simpleviewcrm.com")) {
 			return url;
 		}
+		alert("Url " + url + " not valid");
 	}
-	alert("Url " + url + " not valid");
+	alert("configuration data not found");
 	return;
 }
 

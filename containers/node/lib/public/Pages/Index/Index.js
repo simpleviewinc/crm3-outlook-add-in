@@ -218,14 +218,14 @@ function CloseTheTaskPane() {
 
 // eslint-disable-next-line no-unused-vars
 function SetLocalStorageItem(settings) {
-	localStorage.setItem("CRM", btoa(settings));
+	localStorage.setItem("crm", btoa(settings));
 }
 
 // eslint-disable-next-line no-unused-vars
 function ReloadTaskPane(isRemoveSettings) {
 	console.log("removed settings");
 	if (isRemoveSettings)
-		localStorage.removeItem('CRM');
+		localStorage.removeItem('crm');
 	window.location.reload(true);
 }
 

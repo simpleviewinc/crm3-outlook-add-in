@@ -238,7 +238,7 @@ function decodeFromBase64(base64Str) {
 function SendTheEmail() {
 	$("#sendEmailLoader").show();
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
@@ -304,8 +304,10 @@ function CloseAll() {
 }
 
 function GetAttachedToDDInfo() {
+	console.log("GetAttachedToDDInfo");
+	console.debug(messageObject);
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
@@ -327,6 +329,7 @@ function GetAttachedToDDInfo() {
 
 	$.ajax(settings)
 		.done(function (response) {
+			console.log(response);
 			// Extract the inner XML string
 			let getMatchesReturn = response.getElementsByTagName("getRelOptsReturn");
 			const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
@@ -504,7 +507,7 @@ function bindLeadDataToSelect(jsonData) {
 function GetPriorityType(selectedType) {
 
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
@@ -569,7 +572,7 @@ function GetPriorityType(selectedType) {
 
 function GetTaskTypes(selectedTask) {
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
@@ -866,7 +869,7 @@ $(document).ready(function () {
 
 function GetGroupsByUserId() {
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
@@ -1053,7 +1056,7 @@ function GetSearchedResult() {
 	const companyName = $('#company').val();
 
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
@@ -1121,7 +1124,7 @@ function GetMatchingDataForSync(email, userId) {
 	$("#matchContactLoader").show();
 
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
