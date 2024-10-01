@@ -3,20 +3,20 @@
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0" xsi:type="MailApp">
 	<!-- Begin Basic Settings: Add-in metadata, used for all versions of Office unless override provided. -->
 	<!-- IMPORTANT! Id must be unique for your add-in, if you reuse this manifest ensure that you change this id to a new GUID. -->
-	<Id>50c0fe30-6f24-422b-9539-57361e4cbc30</Id>
+	<Id>c047df11-9473-4215-a8d6-1f162ebcf9bf</Id>
 	<!-- Version. Updates from the store only get triggered if there is a version change. -->
-	<Version>1.4.1.1</Version>
-	<ProviderName>Simpleview DM-VDEV 1.4.1.1</ProviderName>
+	<Version>1.0.0.1</Version>
+	<ProviderName>Simpleview QA</ProviderName>
 	<DefaultLocale>en-US</DefaultLocale>
 	<!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
-	<DisplayName DefaultValue="Simpleview DM-VDEV"/>
-	<Description DefaultValue="Simpleview DM-VDEV"/>
-	<IconUrl DefaultValue="https://simpleviewcrmdev.vdev.digitalmettle.com/Images/sv-icon-64.png"/>
-	<HighResolutionIconUrl DefaultValue="https://simpleviewcrmdev.vdev.digitalmettle.com/Images/sv-icon-128.png"/>
-	<SupportUrl DefaultValue="http://www.contoso.com"/>
+	<DisplayName DefaultValue="Simpleview QA"/>
+	<Description DefaultValue="Simpleview QA"/>
+	<IconUrl DefaultValue="https://outlook.qa.simpleviewinc.com/Images/sv-icon-64.png"/>
+	<HighResolutionIconUrl DefaultValue="https://outlook.qa.simpleviewinc.com/Images/sv-icon-128.png"/>
+	<SupportUrl DefaultValue="https://www.simpleviewinc.com/products/simpleview-cms/"/>
 	<!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
 	<AppDomains>
-		<AppDomain>https://simpleviewcrmdev.vdev.digitalmettle.com</AppDomain>
+		<AppDomain>https://outlook.qa.simpleviewinc.com</AppDomain>
 	</AppDomains>
 	<!-- End Basic Settings. -->
 	<Hosts>
@@ -30,7 +30,7 @@
 	<FormSettings>
 		<Form xsi:type="ItemRead">
 			<DesktopSettings>
-				<SourceLocation DefaultValue="https://simpleviewcrmdev.vdev.digitalmettle.com/Pages/Index/Index.html"/>
+				<SourceLocation DefaultValue="https://outlook.qa.simpleviewinc.com/Pages/Index/Index.html"/>
 				<RequestedHeight>250</RequestedHeight>
 			</DesktopSettings>
 		</Form>
@@ -78,19 +78,19 @@
 			</Hosts>
 			<Resources>
 				<bt:Images>
-					<bt:Image id="Icon.16x16" DefaultValue="https://simpleviewcrmdev.vdev.digitalmettle.com/Images/sv-icon-16.png"/>
-					<bt:Image id="Icon.32x32" DefaultValue="https://simpleviewcrmdev.vdev.digitalmettle.com/Images/sv-icon-32.png"/>
-					<bt:Image id="Icon.80x80" DefaultValue="https://simpleviewcrmdev.vdev.digitalmettle.com/Images/sv-icon-80.png"/>
+					<bt:Image id="Icon.16x16" DefaultValue="https://outlook.qa.simpleviewinc.com/Images/sv-icon-16.png"/>
+					<bt:Image id="Icon.32x32" DefaultValue="https://outlook.qa.simpleviewinc.com/Images/sv-icon-32.png"/>
+					<bt:Image id="Icon.80x80" DefaultValue="https://outlook.qa.simpleviewinc.com/Images/sv-icon-80.png"/>
 				</bt:Images>
 				<bt:Urls>
-					<bt:Url id="Taskpane.Url" DefaultValue="https://simpleviewcrmdev.vdev.digitalmettle.com/Pages/Index/Index.html"/>
+					<bt:Url id="Taskpane.Url" DefaultValue="https://outlook.qa.simpleviewinc.com/Pages/Index/Index.html"/>
 				</bt:Urls>
 				<bt:ShortStrings>
-					<bt:String id="GroupLabel" DefaultValue="SimpleView DM-VDEV"/>
-					<bt:String id="TaskpaneButton.Label" DefaultValue="DM-VDEV"/>
+					<bt:String id="GroupLabel" DefaultValue="SimpleView QA"/>
+					<bt:String id="TaskpaneButton.Label" DefaultValue="CRM QA"/>
 				</bt:ShortStrings>
 				<bt:LongStrings>
-					<bt:String id="TaskpaneButton.Tooltip" DefaultValue="DM-VDEV Send messages to SimpleView CRM."/>
+					<bt:String id="TaskpaneButton.Tooltip" DefaultValue="QA Send messages to SimpleView CRM."/>
 				</bt:LongStrings>
 			</Resources>
 		</VersionOverrides>

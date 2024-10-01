@@ -88,6 +88,8 @@
     <Content Include="Images\sv-icon-80.png" />
     <Content Include="OutlookToolbarManifest\OutlookToolbar Localhost-DEV.xml" />
     <Content Include="OutlookToolbarManifest\Simpleview CRM DM-VDEV.xml" />
+    <Content Include="OutlookToolbarManifest\Simpleview CRM Outlook Toolbar QA.xml" />
+    <Content Include="OutlookToolbarManifest\Simpleview CRM Outlook Toolbar DEV.xml" />
     <Content Include="OutlookToolbarManifest\Simpleview CRM Outlook Toolbar PROD.xml" />
     <Content Include="Pages\Index\Index.html" />
     <Content Include="Pages\Index\Index.js" />
