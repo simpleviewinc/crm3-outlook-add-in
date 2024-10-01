@@ -9,6 +9,8 @@ services:
       - "3001:80"
     volumes:
       - .\containers\node\lib:/app/lib
+    environment:
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
 
   nginx:
     build:
