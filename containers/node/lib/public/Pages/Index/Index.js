@@ -1,5 +1,5 @@
 ﻿'use strict';
-/* global Office, GetDataFromLocalStorage, ApiUrl*/
+/* global Office, GetDataFromLocalStorageAndSetApiUrlGlobal, ApiUrl*/
 window.MatchedData = {};
 window.selectedEmailData = {}; // Global Variable to store the selected emails data
 window.inboxEmails = {};
@@ -40,7 +40,7 @@ function setCategoryToEmail(emailId, isSentFlag) {
 
 			// Determine category color based on flag
 			let categoryColor = 'Yellow category'; // initialized with some valid value 
-			let data = GetDataFromLocalStorage();
+			let data = GetDataFromLocalStorageAndSetApiUrlGlobal();
 			if (data != null) {
 				categoryColor = isSentFlag ? data.sentFlagColor : data.skipFlagColor;
 			}
@@ -84,7 +84,7 @@ function processQueue() {
 	const { emailId, isSentFlag } = emailQueue.shift();
 
 	let categoryColor = 'Yellow category'; // initialized with some valid value 
-	let data = GetDataFromLocalStorage();
+	let data = GetDataFromLocalStorageAndSetApiUrlGlobal();
 	if (data != null) {
 		if (isSentFlag) {
 			categoryColor = data.sentFlagColor;
@@ -167,7 +167,7 @@ let settingsOk = false;
 /* eslint-enable no-unused-vars */
 
 function CheckSettings() {
-	const data = GetDataFromLocalStorage();
+	const data = GetDataFromLocalStorageAndSetApiUrlGlobal();
 	if (data != null) {
 		if (data.userId != null && data.userId != undefined && data.userId != '') {
 			return true;
@@ -194,7 +194,7 @@ Office.onReady((info) => {
 			fetchSelectedEmails(false);
 			Office.context.mailbox.addHandlerAsync(Office.EventType.SelectedItemsChanged, () => fetchSelectedEmails(true));
 
-			const data = GetDataFromLocalStorage();
+			const data = GetDataFromLocalStorageAndSetApiUrlGlobal();
 			window.ApiUrlVal = ApiUrl;
 			if (data != null) {
 				// data = decodeFromBase64(resval);
@@ -285,7 +285,7 @@ function fetchSelectedEmails(refresh) {
 	function tryFetchSelectedItems() {
 		$('#send-email-btn').prop('disabled', true);
 		$('#send-email-btn').addClass('disabled');
-		let storage = GetDataFromLocalStorage();
+		let storage = GetDataFromLocalStorageAndSetApiUrlGlobal();
 		if (storage == null || storage == undefined || Object.keys(storage).length === 0) {
 			return;
 		}
@@ -486,7 +486,7 @@ function parseDate(dateString) {
 
 
 function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryColor, skipCategoryColor) {
-	const storage = GetDataFromLocalStorage();
+	const storage = GetDataFromLocalStorageAndSetApiUrlGlobal();
 	if (storage == null || storage == undefined || Object.keys(storage).length === 0) {
 		return;
 	}

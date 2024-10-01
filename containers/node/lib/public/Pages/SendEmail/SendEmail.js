@@ -642,39 +642,40 @@ function removeFirstItem(obj) {
 }
 
 function SetApiUrl() {
-	const resval = localStorage.getItem("crm");
-	let data = {};
-	if (resval != null) {
-		data = decodeFromBase64(resval);
-		if (data != null) {
-			if (data.userId != null && data.userId != undefined && data.userId != '') {
-				const url = data.crmUrl;
+	ApiUrl = GetProxyUrl(GetCrmUrlFromLocalStorage());
+	//const resval = localStorage.getItem("crm");
+	//let data = {};
+	//if (resval != null) {
+	//	data = decodeFromBase64(resval);
+	//	if (data != null) {
+	//		if (data.userId != null && data.userId != undefined && data.userId != '') {
+	//			const url = data.crmUrl;
 
-				if (window.location.hostname.toLowerCase().indexOf('localhost') > -1 ||
-					window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
+	//			if (window.location.hostname.toLowerCase().indexOf('localhost') > -1 ||
+	//				window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
 
-					if (url === "https://demo.simpleviewcrm.com") {
-						if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
-							ApiUrl = "http://localhost:4000/api";
-						} else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
-							ApiUrl = "https://c219-13-84-216-53.ngrok-free.app/api";
-						}
-					} else {
-						alert("Url not valid");
-						return;
-					}
+	//				if (url === "https://demo.simpleviewcrm.com") {
+	//					if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
+	//						ApiUrl = "http://localhost:4000/api";
+	//					} else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
+	//						ApiUrl = "https://c219-13-84-216-53.ngrok-free.app/api";
+	//					}
+	//				} else {
+	//					alert("Url not valid");
+	//					return;
+	//				}
 
-				} else {
-					if (url.endsWith(".simpleviewcrm.com")) {
-						ApiUrl = url;
-					} else {
-						alert("Url not valid");
-						return;
-					}
-				}
-			}
-		}
-	}
+	//			} else {
+	//				if (url.endsWith(".simpleviewcrm.com")) {
+	//					ApiUrl = url;
+	//				} else {
+	//					alert("Url not valid");
+	//					return;
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 }
 
 $(document).ready(function () {
