@@ -66,6 +66,14 @@ app.post('/submit/', bodyParser.raw({ type: 'text/xml' }), routeErrorHandler(asy
 		data: requestBody
 	});
 
+	// Set the status code of the client response to match the backend response
+	res.status(result.status);
+
+	// Pass the headers from the backend response to the client response
+	Object.keys(result.headers).forEach(key => {
+		res.setHeader(key, result.headers[key]);
+	});
+	
 	res.send(result.data);
 }));
 

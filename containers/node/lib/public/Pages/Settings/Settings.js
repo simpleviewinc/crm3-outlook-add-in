@@ -79,12 +79,14 @@ $(document).ready(function () {
 
 		$.ajax(settings)
 			.done(function (response) {
+				//console.log(response);
 				const parser = new DOMParser();
-				const xmlDoc = parser.parseFromString(response, "application/xml");
+				//const xmlDoc = parser.parseFromString(response, "application/xml");
 				
-				let getMatchesReturn = xmlDoc.getElementsByTagName("checkLoginReturn");
+				let getMatchesReturn = response.getElementsByTagName("checkLoginReturn");
+				//console.log(getMatchesReturn);
 				const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-				console.log(decodedString);
+				//console.log(decodedString);
 				if (decodedString == '-1.0') {
 					$("#settingLoader").hide();
 					alert("Credentials not valid.");
