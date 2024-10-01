@@ -134,7 +134,7 @@ $(document).ready(function () {
 	function GetPriorityType() {
 		const settings = {
 			//url: ApiUrl + "/cftags/outlook.cfc",
-			url: `/submit/?apiUrl= ${ApiUrl}`,
+			url: '/submit/?apiUrl=${ApiUrl}',
 			method: "POST",
 			timeout: 0,
 			headers: {
@@ -209,7 +209,7 @@ $(document).ready(function () {
 	function GetTaskTypes() {
 		const settings = {
 			//url: ApiUrl + "/cftags/outlook.cfc",
-			url: `/submit/?apiUrl= ${ApiUrl}`,
+			url: '/submit/?apiUrl=${ApiUrl}',
 			method: "POST",
 			timeout: 0,
 			headers: {
