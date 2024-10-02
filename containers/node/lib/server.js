@@ -43,14 +43,14 @@ app.post('/submit/', bodyParser.raw({ type: 'text/xml' }), routeErrorHandler(asy
 	const requestBody = req.body;
 
 	if (apiUrl === undefined || /^https:\/\/(?:[a-zA-Z0-9-]+\.)?ABCDEFG\.com(?:\/.*)?$/.test(apiUrl)) {
-		return res.json({
+		return res.status(400).json({
 			success: false,
 			message: `The 'apiUrl' parameter is required`,
 		});
 	}
 
 	if (/^https:\/\/(?:[a-zA-Z0-9-]+\.)?simpleviewcrm\.com(:\/.*)?$/.test(apiUrl) !== true) {
-		return res.json({
+		return res.status(400).json({
 			success: false,
 			message: `The 'apiUrl' parameter must be a valid CRM URL (e.g. https://demo.simpleviewcrm.com)`,
 		});
@@ -66,6 +66,16 @@ app.post('/submit/', bodyParser.raw({ type: 'text/xml' }), routeErrorHandler(asy
 		data: requestBody
 	});
 
+	// Set the status code of the client response to match the backend response
+	res.status(result.status);
+
+	// Pass the headers from the backend response to the client response, excluding 'Content-Length' and 'Transfer-Encoding'
+	Object.keys(result.headers).forEach(key => {
+		if (key.toLowerCase() !== 'content-length' && key.toLowerCase() !== 'transfer-encoding') {
+			res.setHeader(key, result.headers[key]);
+		}
+	});
+	
 	res.send(result.data);
 }));
 

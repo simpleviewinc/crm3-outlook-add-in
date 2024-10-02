@@ -238,7 +238,7 @@ function decodeFromBase64(base64Str) {
 function SendTheEmail() {
 	$("#sendEmailLoader").show();
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
@@ -304,8 +304,10 @@ function CloseAll() {
 }
 
 function GetAttachedToDDInfo() {
+	console.log("GetAttachedToDDInfo");
+	console.debug(messageObject);
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
@@ -327,6 +329,7 @@ function GetAttachedToDDInfo() {
 
 	$.ajax(settings)
 		.done(function (response) {
+			console.log(response);
 			// Extract the inner XML string
 			let getMatchesReturn = response.getElementsByTagName("getRelOptsReturn");
 			const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
@@ -504,7 +507,7 @@ function bindLeadDataToSelect(jsonData) {
 function GetPriorityType(selectedType) {
 
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
@@ -569,7 +572,7 @@ function GetPriorityType(selectedType) {
 
 function GetTaskTypes(selectedTask) {
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
@@ -642,39 +645,40 @@ function removeFirstItem(obj) {
 }
 
 function SetApiUrl() {
-	const resval = localStorage.getItem("crm");
-	let data = {};
-	if (resval != null) {
-		data = decodeFromBase64(resval);
-		if (data != null) {
-			if (data.userId != null && data.userId != undefined && data.userId != '') {
-				const url = data.crmUrl;
+	ApiUrl = GetProxyUrl(GetCrmUrlFromLocalStorage());
+	//const resval = localStorage.getItem("crm");
+	//let data = {};
+	//if (resval != null) {
+	//	data = decodeFromBase64(resval);
+	//	if (data != null) {
+	//		if (data.userId != null && data.userId != undefined && data.userId != '') {
+	//			const url = data.crmUrl;
 
-				if (window.location.hostname.toLowerCase().indexOf('localhost') > -1 ||
-					window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
+	//			if (window.location.hostname.toLowerCase().indexOf('localhost') > -1 ||
+	//				window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
 
-					if (url === "https://demo.simpleviewcrm.com") {
-						if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
-							ApiUrl = "http://localhost:4000/api";
-						} else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
-							ApiUrl = "https://c219-13-84-216-53.ngrok-free.app/api";
-						}
-					} else {
-						alert("Url not valid");
-						return;
-					}
+	//				if (url === "https://demo.simpleviewcrm.com") {
+	//					if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
+	//						ApiUrl = "http://localhost:4000/api";
+	//					} else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
+	//						ApiUrl = "https://c219-13-84-216-53.ngrok-free.app/api";
+	//					}
+	//				} else {
+	//					alert("Url not valid");
+	//					return;
+	//				}
 
-				} else {
-					if (url.endsWith(".simpleviewcrm.com")) {
-						ApiUrl = url;
-					} else {
-						alert("Url not valid");
-						return;
-					}
-				}
-			}
-		}
-	}
+	//			} else {
+	//				if (url.endsWith(".simpleviewcrm.com")) {
+	//					ApiUrl = url;
+	//				} else {
+	//					alert("Url not valid");
+	//					return;
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 }
 
 $(document).ready(function () {
@@ -865,7 +869,7 @@ $(document).ready(function () {
 
 function GetGroupsByUserId() {
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
@@ -1052,7 +1056,7 @@ function GetSearchedResult() {
 	const companyName = $('#company').val();
 
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {
@@ -1120,7 +1124,7 @@ function GetMatchingDataForSync(email, userId) {
 	$("#matchContactLoader").show();
 
 	const settings = {
-		url: ApiUrl + "/cftags/outlook.cfc",
+		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
 		timeout: 0,
 		headers: {

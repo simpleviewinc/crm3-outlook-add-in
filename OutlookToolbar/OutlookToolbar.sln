@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutlookToolbar", "OutlookToolbar.csproj", "{4A562281-CBB4-4E8A-860A-081143702CB0}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutlookToolbarWeb", "..\OutlookToolbarWeb\OutlookToolbarWeb.csproj", "{153C8ECE-51CD-4A5C-A1B2-FE6ECC622FBA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutlookToolbarWeb", "..\containers\node\lib\public\OutlookToolbarWeb.csproj", "{153C8ECE-51CD-4A5C-A1B2-FE6ECC622FBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,12 +11,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4A562281-CBB4-4E8A-860A-081143702CB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4A562281-CBB4-4E8A-860A-081143702CB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4A562281-CBB4-4E8A-860A-081143702CB0}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{4A562281-CBB4-4E8A-860A-081143702CB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4A562281-CBB4-4E8A-860A-081143702CB0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4A562281-CBB4-4E8A-860A-081143702CB0}.Release|Any CPU.Deploy.0 = Release|Any CPU
 		{153C8ECE-51CD-4A5C-A1B2-FE6ECC622FBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{153C8ECE-51CD-4A5C-A1B2-FE6ECC622FBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{153C8ECE-51CD-4A5C-A1B2-FE6ECC622FBA}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -14,7 +14,7 @@ $(document).ready(function () {
 				$('#logout').show();
 				$("#settingLoader").hide();
 				UserId = data.userId;
-				ApiUrl = SetProxyUrl(data.crmUrl);
+				ApiUrl = GetProxyUrl(data.crmUrl);
 				GetTaskTypes(); GetPriorityType();
 			}
 			else {
@@ -44,45 +44,21 @@ $(document).ready(function () {
 			.replace(/'/g, '&#039;');
 	}
 
-	function SetProxyUrl(url) {
-		if (window.location.hostname.toLowerCase().indexOf('localhost') > -1 ||
-			window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
+	
 
-			if (url === "https://demo.simpleviewcrm.com") {
-				if (window.location.hostname.toLowerCase().indexOf('localhost') > -1) {
-					url = "http://localhost:4000/api";
-				} else if (window.location.hostname.toLowerCase().indexOf('.vdev') > -1) {
-					url = "https://c219-13-84-216-53.ngrok-free.app/api";
-				}
-			} else {
-				alert("Url not valid");
-				url = '';
-			}
-
-		} else {
-			if (url.endsWith(".simpleviewcrm.com")) {
-				return url; // use the actual url provided by user
-			} else {
-				alert("Url not valid");
-				url = '';
-			}
+	function GetUserIdByLogin(crmUrl, email, password) {
+		if (crmUrl.endsWith('/')) {
+			crmUrl = crmUrl.slice(0, -1);
 		}
-		return url;
-	}
-
-	function GetUserIdByLogin(url, email, password) {
-		if (url.endsWith('/')) {
-			url = url.slice(0, -1);
-		}
-		url = SetProxyUrl(url);
-		if (url == '')
-			return;
+		if (!ValidateCRMUrl(crmUrl)) return;
+		//url = SetProxyUrl(url);
+		//if (url == '')
+		//	return;
 		password = escapeHtml(password);
 		
 		$("#settingLoader").show();
 		const settings = {
-			//url: url + "/cftags/outlook.cfc",
-			url: `/submit/?apiUrl=${url}`,
+			url: GetProxyUrl(crmUrl),
 			method: "POST",
 			timeout: 0,
 			headers: {
@@ -103,12 +79,14 @@ $(document).ready(function () {
 
 		$.ajax(settings)
 			.done(function (response) {
+				//console.log(response);
 				const parser = new DOMParser();
-				const xmlDoc = parser.parseFromString(response, "application/xml");
+				//const xmlDoc = parser.parseFromString(response, "application/xml");
 				
-				let getMatchesReturn = xmlDoc.getElementsByTagName("checkLoginReturn");
+				let getMatchesReturn = response.getElementsByTagName("checkLoginReturn");
+				//console.log(getMatchesReturn);
 				const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-				console.log(decodedString);
+				//console.log(decodedString);
 				if (decodedString == '-1.0') {
 					$("#settingLoader").hide();
 					alert("Credentials not valid.");
@@ -120,8 +98,9 @@ $(document).ready(function () {
 					$('#emailSettings').show();
 					$('#Save').hide();
 					$('#logout').show();
-					ApiUrl = url;
-					GetTaskTypes(); GetPriorityType();
+					ApiUrl = GetProxyUrl(crmUrl);
+					GetTaskTypes();
+					GetPriorityType();
 				}
 			})
 			.fail(function (jqXHR, textStatus, errorThrown) {
@@ -133,8 +112,7 @@ $(document).ready(function () {
 
 	function GetPriorityType() {
 		const settings = {
-			//url: ApiUrl + "/cftags/outlook.cfc",
-			url: `/submit/?apiUrl= ${ApiUrl}`,
+			url: ApiUrl, //API URL saved as the is the CRM URL formatted through the GetProxyUrl function already
 			method: "POST",
 			timeout: 0,
 			headers: {
@@ -208,8 +186,7 @@ $(document).ready(function () {
 
 	function GetTaskTypes() {
 		const settings = {
-			//url: ApiUrl + "/cftags/outlook.cfc",
-			url: `/submit/?apiUrl= ${ApiUrl}`,
+			url: ApiUrl, //API URL saved as the is the CRM URL formatted through the GetProxyUrl function already
 			method: "POST",
 			timeout: 0,
 			headers: {
