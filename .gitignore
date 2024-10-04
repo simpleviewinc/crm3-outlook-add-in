@@ -18,3 +18,5 @@
 /OutlookToolbarWeb/node_modules
 /containers/nginx/
 /docker-compose.yml
+/containers/node/lib/public/localhost.crt
+/containers/node/lib/public/localhost.key

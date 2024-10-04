@@ -234,8 +234,22 @@ function decodeFromBase64(base64Str) {
 	const jsonString = atob(base64Str);
 	return JSON.parse(jsonString);
 }
+function validateMessageObject(messageObject) {
+	// Checking if each optional field exists and is not null, otherwise assign an empty string
+	messageObject.duedate = messageObject.duedate || '';
+	messageObject.subject = messageObject.subject || '';
+	messageObject.body = messageObject.body || '';
+	messageObject.attachment = messageObject.attachment || '';
+	messageObject.attachmentcontent = messageObject.attachmentcontent || '';
+	messageObject.tblid = messageObject.tblid || '';
+	messageObject.recid = messageObject.recid || '';
+	messageObject.relflds = messageObject.relflds || '';
+	messageObject.relfldvals = messageObject.relfldvals || '';
 
+	return messageObject;
+}
 function SendTheEmail() {
+	messageObject = validateMessageObject(messageObject);
 	$("#sendEmailLoader").show();
 	const settings = {
 		url: ApiUrl,// + "/cftags/outlook.cfc",
@@ -303,9 +317,66 @@ function CloseAll() {
 	}
 }
 
+function checkMessageObjectFields(messageObject) {
+	messageObject.priorityid = $("#priority").val();
+	messageObject.typeid = $("#trace-type").val();
+	messageObject.tblid = $("#lead").val();
+	messageObject.recid = $("#profile").val();
+
+	// Initialize arrays for missing required and optional fields
+	let requiredFields = ['groupid', 'userid', 'acctid', 'contactid', 'priorityid', 'typeid'];
+	let remainingFields = [ 'tblid', 'recid', 'relflds', 'relfldvals'];
+
+	let missingRequired = [];
+	let missingOptional = [];
+
+	// Function to check if the value is null or empty
+	function isNullOrEmpty(value) {
+		return value === null || value === '';
+	}
+
+	// Check required fields
+	requiredFields.forEach(function (field) {
+		if (isNullOrEmpty(messageObject[field])) {
+			missingRequired.push(field);
+		}
+	});
+
+	// Check remaining optional fields
+	remainingFields.forEach(function (field) {
+		if (isNullOrEmpty(messageObject[field])) {
+			missingOptional.push(field);
+		}
+	});
+
+	// Display message in a div using jQuery
+	if (missingRequired.length > 0) {
+		const requiredMessage = missingRequired.length === 1
+			? `Required field ${missingRequired[0]} is missing for this contact.`
+			: `Required fields ${missingRequired.join(', ')} are missing for this contact.`;
+
+		$('#messageDiv').text(requiredMessage);
+		DisableButtonById("#sendEmail");
+	} else if (missingOptional.length > 0) {
+		EnableButtonById("#sendEmail");
+
+		const optionalMessage = missingOptional.length === 1
+			? `Optional field ${missingOptional[0]} is missing for this contact.`
+			: `Optional fields ${missingOptional.join(', ')} are missing for this contact.`;
+
+		$('#messageDiv').text(optionalMessage);
+	} else {
+		EnableButtonById("#sendEmail");
+		$('#messageDiv').text("");
+	}
+
+}
+
 function GetAttachedToDDInfo() {
 	console.log("GetAttachedToDDInfo");
 	console.debug(messageObject);
+	$("#sendEmailLoader").show();
+	DisableButtonById("#sendEmail");
 	const settings = {
 		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
@@ -330,6 +401,7 @@ function GetAttachedToDDInfo() {
 	$.ajax(settings)
 		.done(function (response) {
 			console.log(response);
+			$("#sendEmailLoader").hide();
 			// Extract the inner XML string
 			let getMatchesReturn = response.getElementsByTagName("getRelOptsReturn");
 			const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
@@ -339,6 +411,7 @@ function GetAttachedToDDInfo() {
 			parseXmlToJson(decodedInnerXML);
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
+			$("#sendEmailLoader").hide();
 			console.error('Error:', textStatus, errorThrown);
 		});
 
@@ -402,8 +475,9 @@ function bindLeadDataToSelect(jsonData) {
 
 	// Lead Data
 	const leadData = findRelByTitle(jsonData.opts.rels.rel, "Lead");
+	const select = document.getElementById("lead");
+	select.innerHTML = '';
 	if (leadData) {
-		const select = document.getElementById("lead");
 		if (Array.isArray(leadData.data.row)) {
 			leadData.data.row.forEach(row => {
 				if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
@@ -418,8 +492,9 @@ function bindLeadDataToSelect(jsonData) {
 
 	// Profile Data
 	const profileData = findRelByTitle(jsonData.opts.rels.rel, "Profile");
+	const profileSelect = document.getElementById("profile");
+	profileSelect.innerHTML = '';
 	if (profileData) {
-		const profileSelect = document.getElementById("profile");
 		if (Array.isArray(profileData.data.row)) {
 			profileData.data.row.forEach(row => {
 				if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
@@ -434,8 +509,9 @@ function bindLeadDataToSelect(jsonData) {
 
 	// Service Request Data
 	const requestData = findRelByTitle(jsonData.opts.rels.rel, "Service Request");
+	const requestSelect = document.getElementById("request");
+	requestSelect.innerHTML = '';
 	if (requestData) {
-		const requestSelect = document.getElementById("request");
 		if (Array.isArray(requestData.data.row)) {
 			requestData.data.row.forEach(row => {
 				if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
@@ -458,8 +534,9 @@ function bindLeadDataToSelect(jsonData) {
 
 	// Planner Account Data
 	const plannerActData = findRelByTitle(jsonData.opts.rels.rel, "Planner Account");
+	const plannerSelect = document.getElementById("plannerAct");
+	plannerSelect.innerHTML = '';
 	if (plannerActData) {
-		const plannerSelect = document.getElementById("plannerAct");
 		if (Array.isArray(plannerActData.data.row)) {
 			plannerActData.data.row.forEach(row => {
 				if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
@@ -474,8 +551,9 @@ function bindLeadDataToSelect(jsonData) {
 
 	// Planner Contact Data
 	const plannerContact = findRelByTitle(jsonData.opts.rels.rel, "Planner Contact");
+	const plannerContactSelect = document.getElementById("plannerContact");
+	plannerContactSelect.innerHTML = '';
 	if (plannerContact) {
-		const plannerContactSelect = document.getElementById("plannerContact");
 		if (Array.isArray(plannerContact.data.row)) {
 			plannerContact.data.row.forEach(row => {
 				if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
@@ -501,6 +579,8 @@ function bindLeadDataToSelect(jsonData) {
 	if (jsonData.opts.hiddenrelval && jsonData.opts.hiddenrelval["#text"]) {
 		messageObject.relfldvals = jsonData.opts.hiddenrelval["#text"];
 	}
+
+	checkMessageObjectFields(messageObject);
 }
 
 
