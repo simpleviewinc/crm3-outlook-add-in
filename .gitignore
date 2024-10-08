@@ -16,5 +16,7 @@
 /OutlookToolbar/.vs
 /OutlookToolbarWeb/.vs
 /OutlookToolbarWeb/node_modules
-/containers/nginx/nginx-selfsigned.crt
-/containers/nginx/nginx-selfsigned.key
+/containers/nginx/
+/docker-compose.yml
+/containers/node/lib/public/localhost.crt
+/containers/node/lib/public/localhost.key

@@ -80,7 +80,7 @@ $(document).ready(function () {
 		$.ajax(settings)
 			.done(function (response) {
 				//console.log(response);
-				const parser = new DOMParser();
+				// const parser = new DOMParser();
 				//const xmlDoc = parser.parseFromString(response, "application/xml");
 				
 				let getMatchesReturn = response.getElementsByTagName("checkLoginReturn");

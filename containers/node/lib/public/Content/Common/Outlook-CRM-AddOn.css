@@ -407,3 +407,8 @@ button {
 .overflowY {
     overflow-y: auto;
 }
+
+#messageDiv {
+    font-size: 15px;
+    line-height: 32px;
+}

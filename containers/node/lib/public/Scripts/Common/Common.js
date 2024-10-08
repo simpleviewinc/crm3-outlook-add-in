@@ -57,7 +57,7 @@ function GetCrmUrlFromLocalStorage() {
 	//let resval = localStorage.getItem("crm");
 	let data = GetDataFromLocalStorage();
 	if (data != null) {
-		
+
 		let url = data.crmUrl;
 
 		if (url.endsWith('/')) {
@@ -107,7 +107,7 @@ function GetProxyUrl(url) {
 	//		url = '';
 	//	}
 	//}
-	return '/submit/?apiUrl='+url;
+	return '/submit/?apiUrl=' + url;
 }
 
 function GetProxyUrlLocalStorage() {
