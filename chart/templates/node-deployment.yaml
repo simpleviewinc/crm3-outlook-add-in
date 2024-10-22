@@ -22,6 +22,7 @@ spec:
       containers:
         - name: {{ $name }}
           image: {{ $image }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
           readinessProbe:
             httpGet:
               path: /status/
