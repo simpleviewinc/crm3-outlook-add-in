@@ -1,2 +1,3 @@
 mountdir: true
 frontendIp: false
+imagePullPolicy: IfNotPresent
