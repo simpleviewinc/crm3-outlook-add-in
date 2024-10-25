@@ -56,27 +56,43 @@ app.post('/submit/', bodyParser.raw({ type: 'text/xml' }), routeErrorHandler(asy
 		});
 	}
 
-	const result = await axios({
-		method: "POST",
-		url: `${apiUrl}/cftags/outlook.cfc`,
-		headers: {
-			"Content-Type": "text/xml; charset=utf-8",
-			"SOAPAction": ""
-		},
-		data: requestBody
-	});
+	try {
+		const result = await axios({
+			method: "POST",
+			url: `${apiUrl}/cftags/outlook.cfc`,
+			headers: {
+				"Content-Type": "text/xml; charset=utf-8",
+				"SOAPAction": ""
+			},
+			data: requestBody
+		});
 
-	// Set the status code of the client response to match the backend response
-	res.status(result.status);
-
-	// Pass the headers from the backend response to the client response, excluding 'Content-Length' and 'Transfer-Encoding'
-	Object.keys(result.headers).forEach(key => {
-		if (key.toLowerCase() !== 'content-length' && key.toLowerCase() !== 'transfer-encoding') {
-			res.setHeader(key, result.headers[key]);
-		}
-	});
+		// Set the status code of the client response to match the backend response
+		res.status(result.status);
 	
-	res.send(result.data);
+		// Pass the headers from the backend response to the client response, excluding 'Content-Length' and 'Transfer-Encoding'
+		Object.keys(result.headers).forEach(key => {
+			if (key.toLowerCase() !== 'content-length' && key.toLowerCase() !== 'transfer-encoding') {
+				res.setHeader(key, result.headers[key]);
+			}
+		});
+	
+		res.send(result.data);
+	} catch (error) {	
+		// Determine the response details
+		if (error.response) {
+			// The request was made and the server responded with a status code
+			const statusCode = error.response.status;
+			if(error.response.data){
+				res.status(statusCode).send(error.response.data);
+			}else{
+				res.status(statusCode).send('An error occurred');
+			}			
+		} else {
+			// Something happened in setting up the request
+			res.status(500).send({ message: 'Error in making request: ' + error.message });
+		}
+	}	
 }));
 
 const boot = async () => {
