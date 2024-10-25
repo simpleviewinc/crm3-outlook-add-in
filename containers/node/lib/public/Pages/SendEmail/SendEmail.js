@@ -19,11 +19,11 @@
 	currentSelectedData = [],
 	isSelectButtonClicked = false;
 
-	let LeadOptionSelected = false;
-	let ProfileOptionSelected = false;
-	let ServiceRequestOptionSelected = false;
-	let PlannerAccountDropDownOption;
-	let PlannerContactDropDownOption;
+let LeadOptionSelected = false;
+let ProfileOptionSelected = false;
+let ServiceRequestOptionSelected = false;
+let PlannerAccountDropDownOption;
+let PlannerContactDropDownOption;
 
 SetApiUrl();
 
@@ -159,65 +159,65 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 		$('#lead').change(function() {
 			let selectedValue = $(this).val(); 
 			console.log(selectedValue," lead dropdown");
-			if(selectedValue == 0){
+			if (selectedValue == 0) {
 				LeadOptionSelected = false;
-			}else{
+			} else {
 				LeadOptionSelected = true;
 			}
 
-			if(LeadOptionSelected && ProfileOptionSelected && ServiceRequestOptionSelected){
+			if (LeadOptionSelected && ProfileOptionSelected && ServiceRequestOptionSelected) {
 				$('#plannerAct').removeAttr('disabled')
 				$('#plannerContact').removeAttr('disabled')
 				SetPlannerDropDownOption();
-			}else{
+			} else {
 				$('#plannerAct').attr('disabled',true)
 				$('#plannerContact').attr('disabled',true)
 				AddChooseAboveItemFirstDDOption(['plannerAct','plannerContact']);
 			}
 
-		  });
+		});
 
-		  $('#profile').change(function() {
+		$('#profile').change(function() {
 			let selectedValue = $(this).val(); 
 			console.log(selectedValue," profile dropdown");
-			if(selectedValue == 0){
+			if (selectedValue == 0) {
 				ProfileOptionSelected = false;
-			}else{
+			} else {
 				ProfileOptionSelected = true;
 			}
 
-			if(LeadOptionSelected && ProfileOptionSelected && ServiceRequestOptionSelected){
+			if (LeadOptionSelected && ProfileOptionSelected && ServiceRequestOptionSelected) {
 				$('#plannerAct').removeAttr('disabled')
 				$('#plannerContact').removeAttr('disabled')
 				SetPlannerDropDownOption();
-			}else{
-				$('#plannerAct').attr('disabled',true)
-				$('#plannerContact').attr('disabled',true)
-				AddChooseAboveItemFirstDDOption(['plannerAct','plannerContact']);
+			} else {
+				$('#plannerAct').attr('disabled', true)
+				$('#plannerContact').attr('disabled', true)
+				AddChooseAboveItemFirstDDOption(['plannerAct', 'plannerContact']);
 			}
 
-		  });
+		});
 
-		  $('#request').change(function() {
-			let selectedValue = $(this).val(); 
-			console.log(selectedValue," request dropdown");
-			if(selectedValue == 0){
+		$('#request').change(function () {
+			let selectedValue = $(this).val();
+			console.log(selectedValue, " request dropdown");
+			if (selectedValue == 0) {
 				ServiceRequestOptionSelected = false;
-			}else{
+			} else {
 				ServiceRequestOptionSelected = true;
 			}
 
-			if(LeadOptionSelected && ProfileOptionSelected && ServiceRequestOptionSelected){
+			if (LeadOptionSelected && ProfileOptionSelected && ServiceRequestOptionSelected) {
 				$('#plannerAct').removeAttr('disabled');
 				$('#plannerContact').removeAttr('disabled');
 				SetPlannerDropDownOption();
-			}else{
-				$('#plannerAct').attr('disabled',true);
-				$('#plannerContact').attr('disabled',true);
-				AddChooseAboveItemFirstDDOption(['plannerAct','plannerContact']);
+			} else {
+				$('#plannerAct').attr('disabled', true);
+				$('#plannerContact').attr('disabled', true);
+				AddChooseAboveItemFirstDDOption(['plannerAct', 'plannerContact']);
 			}
 
-		  });
+		});
 	});
 };
 let isInboxTabClicked = true;
@@ -230,10 +230,10 @@ function ProcessSelectedData(data) {
 	let settings = {};
 	if (resval != null) {
 		settings = decodeFromBase64(resval);
-		if(!settings.inboundPriority) settings.inboundPriority = 0;
-		if(!settings.inboundTraceType) settings.inboundTraceType = 0;
-		if(!settings.outboundPriority) settings.outboundPriority = 0;
-		if(!settings.outboundTraceType) settings.outboundTraceType = 0;
+		if (!settings.inboundPriority) settings.inboundPriority = 0;
+		if (!settings.inboundTraceType) settings.inboundTraceType = 0;
+		if (!settings.outboundPriority) settings.outboundPriority = 0;
+		if (!settings.outboundTraceType) settings.outboundTraceType = 0;
 	}
 	console.log("3");
 	const outboundPrt = document.getElementById('priority');
@@ -267,7 +267,7 @@ function ProcessSelectedData(data) {
 	let [time, modifier] = timePart.split(' ');
 	let [hours, minutes, seconds] = time.split(':');
 
-	if(timePart.toUpperCase().includes('AM') || timePart.toUpperCase().includes('PM')){
+	if (timePart.toUpperCase().includes('AM') || timePart.toUpperCase().includes('PM')) {
 		if (modifier === 'PM' && hours !== '12') {
 			hours = String(Number(hours) + 12); // Convert PM hour
 		} else if (modifier === 'AM' && hours === '12') {
@@ -362,7 +362,7 @@ function SendTheEmail() {
 					<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
 					  <soap:Body>
 						<sendEmail>
-						  <groupid>`+ messageObject.groupid +`</groupid>
+						  <groupid>` + messageObject.groupid + `</groupid>
 						  <userid>` + messageObject.userid + `</userid>
 						  <acctid>` + messageObject.acctid + `</acctid>
 						  <contactid>` + messageObject.contactid + `</contactid>
@@ -400,7 +400,7 @@ function SendTheEmail() {
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
 			let errorMessage = "Some error has occurred";
-			if(jqXHR.responseText.includes('faultstring')){
+			if (jqXHR.responseText.includes('faultstring')) {
 				const parser = new DOMParser();
 				const xmlDoc = parser.parseFromString(jqXHR.responseText, "application/xml");
 	
@@ -418,7 +418,7 @@ function SendTheEmail() {
 						errorMessage = messageMatch[1].trim(); // Get the message after the colon
 						console.log("errorMessage",errorMessage);
 					}
-				}else if(getErrorSting.includes(':')){
+				} else if (getErrorSting.includes(':')) {
 					errorMessage = getErrorSting;
 				}
 			}
@@ -426,7 +426,7 @@ function SendTheEmail() {
 			// Log the response text for debugging
 			$("#sendEmailLoader").hide();
 
-			alert("Simpleview API error: "+errorMessage);
+			alert("Simpleview API error: " + errorMessage);
 			CloseAll();
 		});
 
@@ -470,8 +470,8 @@ function checkMessageObjectFields(messageObject) {
 		}
 	});
 
-	if(messageObject['priorityid'] == 0) missingRequired.push("priorityid");
-	if(messageObject['typeid'] == 0) missingRequired.push("typeid");
+	if (messageObject['priorityid'] == 0) missingRequired.push("priorityid");
+	if (messageObject['typeid'] == 0) missingRequired.push("typeid");
 
 	// Check remaining optional fields
 	remainingFields.forEach(function (field) {
@@ -1157,7 +1157,7 @@ function BindClickOnRowForSearch() {
 
 		// Log the row data to the console
 		console.log(rowData);
-		if(rowData){
+		if (rowData) {
 			EnableButtonById("#selectBtn");
 		}
 		messageObject.groupid = rowData["GroupId"];
@@ -1460,13 +1460,13 @@ function SetPlannerDropDownOption(){
 
 
 function addNoneOptionToDropDown(element){
-		//added none option
-		let option = document.createElement("option");
-		option.value = 0;
-		option.text = "--none--";
-		element.appendChild(option);
-		//set the default value of lead dropdown
-		element.value = 0;
+	//added none option
+	let option = document.createElement("option");
+	option.value = 0;
+	option.text = "--none--";
+	element.appendChild(option);
+	//set the default value of lead dropdown
+	element.value = 0;
 }
 
 function AddChooseAboveItemFirstDDOption(DDlist){

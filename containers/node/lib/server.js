@@ -83,9 +83,9 @@ app.post('/submit/', bodyParser.raw({ type: 'text/xml' }), routeErrorHandler(asy
 		if (error.response) {
 			// The request was made and the server responded with a status code
 			const statusCode = error.response.status;
-			if(error.response.data){
+			if (error.response.data) {
 				res.status(statusCode).send(error.response.data);
-			}else{
+			} else {
 				res.status(statusCode).send('An error occurred');
 			}			
 		} else {
