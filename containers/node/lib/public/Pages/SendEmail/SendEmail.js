@@ -168,10 +168,10 @@ function ProcessSelectedData(data) {
 	let settings = {};
 	if (resval != null) {
 		settings = decodeFromBase64(resval);
-		if(!settings.inboundPriority) settings.inboundPriority = 0;
-		if(!settings.inboundTraceType) settings.inboundTraceType = 0;
-		if(!settings.outboundPriority) settings.outboundPriority = 0;
-		if(!settings.outboundTraceType) settings.outboundTraceType = 0;
+		if (!settings.inboundPriority) settings.inboundPriority = 0;
+		if (!settings.inboundTraceType) settings.inboundTraceType = 0;
+		if (!settings.outboundPriority) settings.outboundPriority = 0;
+		if (!settings.outboundTraceType) settings.outboundTraceType = 0;
 	}
 	console.log("3");
 	const outboundPrt = document.getElementById('priority');
@@ -420,7 +420,7 @@ function checkMessageObjectFields(messageObject) {
 	requiredFields.forEach(function (field) {
 		if (isNullOrEmpty(messageObject[field]) || messageObject[field] == 0) {
 			let requiredFieldName = field.replace(/id$/i, '').toUpperCase();
-			if(requiredFieldName === 'TYPE') missingRequired.push('TRACE TYPE');
+			if (requiredFieldName === 'TYPE') missingRequired.push('TRACE TYPE');
 			else missingRequired.push(requiredFieldName);
 		}
 	});
@@ -559,12 +559,12 @@ function bindLeadDataToSelect(jsonData) {
 	let parentfieldSetElement = document.getElementById('dropDownFieldAsPerGroup');
 	parentfieldSetElement.innerHTML = '';
 	
-	if(Array.isArray(jsonData.opts.rels.rel)){
+	if (Array.isArray(jsonData.opts.rels.rel)){
 		for(let currRel of jsonData.opts.rels.rel){
 			let containerDiv = AddDropDownToFieldSetAsPerRelsList(currRel);
 			parentfieldSetElement.appendChild(containerDiv);
 		}
-	}else{
+	} else {
 		let containerDiv = AddDropDownToFieldSetAsPerRelsList(jsonData.opts.rels.rel);
 		parentfieldSetElement.appendChild(containerDiv);
 	}
@@ -1388,7 +1388,7 @@ function AddDropDownToFieldSetAsPerRelsList(currRel){
 
 	currDropDown.id = currRel.fldname["#text"].toLowerCase();
 
-	if(currRel.title["#text"] === "Planner Account" || currRel.title["#text"] === "Planner Contact"){
+	if (currRel.title["#text"] === "Planner Account" || currRel.title["#text"] === "Planner Contact"){
 		currDropDown.disabled = true;
 		let option = document.createElement("option");
 		option.value = 0;
@@ -1396,10 +1396,10 @@ function AddDropDownToFieldSetAsPerRelsList(currRel){
 		currDropDown.appendChild(option);
 		//set the default value of lead dropdown
 		currDropDown.value = 0;
-	}else{
+	} else {
 		addNoneOptionToDropDown(currDropDown);
 
-		if(Array.isArray(currRel.data.row)){
+		if (Array.isArray(currRel.data.row)){
 			currRel.data.row.forEach(row => {
 				if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
 					const option = document.createElement("option");
@@ -1408,7 +1408,7 @@ function AddDropDownToFieldSetAsPerRelsList(currRel){
 					currDropDown.appendChild(option);
 				}
 			});
-		}else{
+		} else {
 			const row = currRel.data.row;
 			if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
 				const option = document.createElement("option");
@@ -1428,9 +1428,9 @@ function AddOnChangeListnerToDropDown(){
 	$('#rel_5').change(function() {
 		let selectedValue = $(this).val(); 
 		console.log(selectedValue," lead dropdown");
-		if(selectedValue == 0){
+		if (selectedValue == 0){
 			LeadOptionSelected = false;
-		}else{
+		} else {
 			LeadOptionSelected = true;
 		}
 		toggleThePlannerOption();
@@ -1439,9 +1439,9 @@ function AddOnChangeListnerToDropDown(){
 	  $('#rel_24').change(function() {
 		let selectedValue = $(this).val(); 
 		console.log(selectedValue," profile dropdown");
-		if(selectedValue == 0){
+		if (selectedValue == 0){
 			ProfileOptionSelected = false;
-		}else{
+		} else {
 			ProfileOptionSelected = true;
 		}
 		toggleThePlannerOption();
@@ -1450,13 +1450,11 @@ function AddOnChangeListnerToDropDown(){
 	  $('#rel_301').change(function() {
 		let selectedValue = $(this).val(); 
 		console.log(selectedValue," request dropdown");
-		if(selectedValue == 0){
+		if (selectedValue == 0){
 			ServiceRequestOptionSelected = false;
-		}else{
+		} else {
 			ServiceRequestOptionSelected = true;
 		}
 		toggleThePlannerOption();
 	  });
-}
-
 }
