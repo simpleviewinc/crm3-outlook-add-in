@@ -415,7 +415,7 @@ function getSpecificEmailDetails(id) {
 							fromEmail: emailData.From.EmailAddress.Address,
 							subject: emailData.Subject,
 							receivedDate: new Date(emailData.ReceivedDateTime).toLocaleString(),
-							body: emailData.BodyPreview,
+							body: emailData.Body.Content,
 							isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))
 						};
 
