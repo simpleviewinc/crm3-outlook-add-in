@@ -19,12 +19,12 @@
 	currentSelectedData = [],
 	isSelectButtonClicked = false;
 
-	let LeadOptionSelected = false;
-	let ProfileOptionSelected = false;
-	let ServiceRequestOptionSelected = false;
-	let PlannerAccountDropDownOption;
-	let PlannerContactDropDownOption;
-	let listOfRelfIdvalsDynamicObj = {};
+let LeadOptionSelected = false;
+let ProfileOptionSelected = false;
+let ServiceRequestOptionSelected = false;
+let PlannerAccountDropDownOption;
+let PlannerContactDropDownOption;
+let listOfRelfIdvalsDynamicObj = {};
 
 SetApiUrl();
 
@@ -560,7 +560,7 @@ function bindLeadDataToSelect(jsonData) {
 	parentfieldSetElement.innerHTML = '';
 	
 	if (Array.isArray(jsonData.opts.rels.rel)){
-		for(let currRel of jsonData.opts.rels.rel){
+		for (let currRel of jsonData.opts.rels.rel){
 			let containerDiv = AddDropDownToFieldSetAsPerRelsList(currRel);
 			parentfieldSetElement.appendChild(containerDiv);
 		}
@@ -1383,7 +1383,7 @@ function AddDropDownToFieldSetAsPerRelsList(currRel){
 	let containerDiv = document.createElement('div');
 	containerDiv.classList.add('input-container');
 	let currDropDownLabel = document.createElement('label');
-	currDropDownLabel.textContent = currRel.title["#text"]+':';
+	currDropDownLabel.textContent = currRel.title["#text"] + ':';
 	let currDropDown = document.createElement('select');
 
 	currDropDown.id = currRel.fldname["#text"].toLowerCase();
@@ -1434,9 +1434,9 @@ function AddOnChangeListnerToDropDown(){
 			LeadOptionSelected = true;
 		}
 		toggleThePlannerOption();
-	  });
+	});
 
-	  $('#rel_24').change(function() {
+	$('#rel_24').change(function() {
 		let selectedValue = $(this).val(); 
 		console.log(selectedValue," profile dropdown");
 		if (selectedValue == 0){
@@ -1445,9 +1445,9 @@ function AddOnChangeListnerToDropDown(){
 			ProfileOptionSelected = true;
 		}
 		toggleThePlannerOption();
-	  });
+	});
 
-	  $('#rel_301').change(function() {
+	$('#rel_301').change(function() {
 		let selectedValue = $(this).val(); 
 		console.log(selectedValue," request dropdown");
 		if (selectedValue == 0){
@@ -1456,5 +1456,5 @@ function AddOnChangeListnerToDropDown(){
 			ServiceRequestOptionSelected = true;
 		}
 		toggleThePlannerOption();
-	  });
+	});
 }
