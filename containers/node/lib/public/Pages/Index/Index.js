@@ -393,7 +393,8 @@ function getSpecificEmailDetails(id) {
 
 				const headers = {
 					'Authorization': `Bearer ${accessToken}`,
-					'Accept': 'application/json'
+					'Accept': 'application/json',
+					'Prefer': `outlook.body-content-type="text"`
 				};
 
 				fetchWithRetry(requestUrl, headers)

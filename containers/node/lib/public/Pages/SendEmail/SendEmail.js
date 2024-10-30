@@ -198,30 +198,16 @@ function ProcessSelectedData(data) {
 	$('#sendEmailUI').show();
 	$('.headings h5:nth-child(1)').text('From: ' + data[0].fromEmail);
 	$('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
-	//console.log("currDate : ",data[0].receivedDate);
-	const receivedDate = data[0].receivedDate;
-	let [datePart, timePart] = receivedDate.split(', ');
-	let [day, month, year] = datePart.split('/');
-	let [time, modifier] = timePart.split(' ');
-	let [hours, minutes, seconds] = time.split(':');
-
-	if (timePart.toUpperCase().includes('AM') || timePart.toUpperCase().includes('PM')) {
-		if (modifier === 'PM' && hours !== '12') {
-			hours = String(Number(hours) + 12); // Convert PM hour
-		} else if (modifier === 'AM' && hours === '12') {
-			hours = '00'; // Convert midnight hour
+	
+	try {
+		if (data[0].receivedDate && data[0].receivedDate.toLowerCase() != 'invalid date') {
+			$('#received').text('Received: ' + data[0].receivedDate);
 		}
+	} catch (error) {
+		console.log(error);
 	}
+	
 
-	month = month.padStart(2, '0');
-	day = day.padStart(2, '0');
-	hours = hours.padStart(2, '0');
-	minutes = minutes.padStart(2, '0');
-	seconds = seconds.padStart(2, '0');
-
-	let isoDateString = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-	const dateObject = new Date(isoDateString);
-	$('#received').text('Received: ' + dateObject.toLocaleString());
 	$('#EmailId').val(data[0].id);
 	messageObject.body = data[0].body;
 	messageObject.subject = data[0].subject;
@@ -1320,6 +1306,7 @@ $(document).ready(function () {
 
 function SetPlannerDropDownOption(){
 	const plannerSelect = document.getElementById("rel_p3");
+	plannerSelect.disabled = false;
 	plannerSelect.innerHTML = '';
 	addNoneOptionToDropDown(plannerSelect);
 	
@@ -1338,6 +1325,7 @@ function SetPlannerDropDownOption(){
 
 	
 	const plannerContactSelect = document.getElementById("rel_p4");
+	plannerContactSelect.disabled = false;
 	plannerContactSelect.innerHTML = '';
 	addNoneOptionToDropDown(plannerContactSelect);
 	
@@ -1369,6 +1357,7 @@ function addNoneOptionToDropDown(element){
 function AddChooseAboveItemFirstDDOption(DDlist){
 	DDlist.forEach((c) => {
 		let element = document.getElementById(c);
+		element.disabled = true;
 		element.innerHTML = '';
 		let option = document.createElement("option");
 		option.value = 0;
@@ -1425,36 +1414,40 @@ function AddDropDownToFieldSetAsPerRelsList(currRel){
 }
 
 function AddOnChangeListnerToDropDown(){
-	$('#rel_5').change(function() {
-		let selectedValue = $(this).val(); 
-		console.log(selectedValue," lead dropdown");
-		if (selectedValue == 0){
-			LeadOptionSelected = false;
-		} else {
-			LeadOptionSelected = true;
+
+	let allDropdownList = $('#dropDownFieldAsPerGroup select');
+
+	let isAllSelectedDDValue = true;
+	allDropdownList.each(function() {
+		const id = $(this).attr('id');
+
+		if (id != 'rel_p3' && id != 'rel_p4') {
+			$(this).change(function() {
+				CheckAllDropDownSelectAndSetPlanner();
+			});
 		}
-		toggleThePlannerOption();
+	});
+}
+
+function CheckAllDropDownSelectAndSetPlanner(){
+	let isAllSelectedDDValue = true;
+	let allDropdownList = $('#dropDownFieldAsPerGroup select');
+
+	allDropdownList.each(function() {
+		const id = $(this).attr('id');
+
+		if (id != 'rel_p3' && id != 'rel_p4') {
+			const value = $(this).val();
+			if (value == 0) {
+				isAllSelectedDDValue = false;
+				return;
+			}
+		}
 	});
 
-	$('#rel_24').change(function() {
-		let selectedValue = $(this).val(); 
-		console.log(selectedValue," profile dropdown");
-		if (selectedValue == 0){
-			ProfileOptionSelected = false;
-		} else {
-			ProfileOptionSelected = true;
-		}
-		toggleThePlannerOption();
-	});
-
-	$('#rel_301').change(function() {
-		let selectedValue = $(this).val(); 
-		console.log(selectedValue," request dropdown");
-		if (selectedValue == 0){
-			ServiceRequestOptionSelected = false;
-		} else {
-			ServiceRequestOptionSelected = true;
-		}
-		toggleThePlannerOption();
-	});
+	if (isAllSelectedDDValue) {
+		SetPlannerDropDownOption();
+	} else {
+		AddChooseAboveItemFirstDDOption(['rel_p3','rel_p4']);
+	}
 }
