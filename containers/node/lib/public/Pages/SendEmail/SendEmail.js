@@ -198,8 +198,11 @@ function ProcessSelectedData(data) {
 	$('#sendEmailUI').show();
 	$('.headings h5:nth-child(1)').text('From: ' + data[0].fromEmail);
 	$('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
-	
-	$('#received').text('Received: ' + data[0].receivedDate);
+
+	if (data[0].receivedDate && data[0].receivedDate.toLowerCase() != 'invalid date') {
+		$('#received').text('Received: ' + data[0].receivedDate);
+	}
+
 	$('#EmailId').val(data[0].id);
 	messageObject.body = data[0].body;
 	messageObject.subject = data[0].subject;
