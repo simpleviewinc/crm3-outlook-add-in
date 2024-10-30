@@ -198,30 +198,8 @@ function ProcessSelectedData(data) {
 	$('#sendEmailUI').show();
 	$('.headings h5:nth-child(1)').text('From: ' + data[0].fromEmail);
 	$('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
-	//console.log("currDate : ",data[0].receivedDate);
-	const receivedDate = data[0].receivedDate;
-	let [datePart, timePart] = receivedDate.split(', ');
-	let [day, month, year] = datePart.split('/');
-	let [time, modifier] = timePart.split(' ');
-	let [hours, minutes, seconds] = time.split(':');
-
-	if (timePart.toUpperCase().includes('AM') || timePart.toUpperCase().includes('PM')) {
-		if (modifier === 'PM' && hours !== '12') {
-			hours = String(Number(hours) + 12); // Convert PM hour
-		} else if (modifier === 'AM' && hours === '12') {
-			hours = '00'; // Convert midnight hour
-		}
-	}
-
-	month = month.padStart(2, '0');
-	day = day.padStart(2, '0');
-	hours = hours.padStart(2, '0');
-	minutes = minutes.padStart(2, '0');
-	seconds = seconds.padStart(2, '0');
-
-	let isoDateString = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-	const dateObject = new Date(isoDateString);
-	$('#received').text('Received: ' + dateObject.toLocaleString());
+	
+	$('#received').text('Received: ' + data[0].receivedDate);
 	$('#EmailId').val(data[0].id);
 	messageObject.body = data[0].body;
 	messageObject.subject = data[0].subject;
