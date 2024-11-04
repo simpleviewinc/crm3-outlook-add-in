@@ -327,7 +327,9 @@ function fetchSelectedEmails(refresh) {
 					updateEmailCount();
 					$('#send-email-btn').prop('disabled', false);
 					$('#send-email-btn').removeClass('disabled');
-					$('#indexLoader').hide();
+					if (Array.isArray(window.inboxEmails) && Array.isArray(window.sentEmails)) {
+						$('#indexLoader').hide();
+					}
 					$('#fetching').hide();
 					$('#noOfEmails').show();
 					$('#errMsg').hide();
@@ -543,9 +545,10 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 							console.log("Sent emails from the selected timeframe:");
 							console.log(window.sentEmails);
 						}
-						if (CheckSettings()) {
+						if (CheckSettings() && Array.isArray(window.inboxEmails) && Array.isArray(window.sentEmails)) {
 							$('#sync-email-btn').removeClass('disabled');
 							$('#sync-email-btn').prop('disabled', false);
+							$('#indexLoader').hide();
 						}
 					}
 				}).fail(function (jqXHR, textStatus, errorThrown) {
