@@ -17,11 +17,9 @@
 	},
 	ApiUrl,
 	currentSelectedData = [],
-	isSelectButtonClicked = false;
+	isSelectButtonClicked = false,
+	IsInboxTab = false;
 
-let LeadOptionSelected = false;
-let ProfileOptionSelected = false;
-let ServiceRequestOptionSelected = false;
 let PlannerAccountDropDownOption;
 let PlannerContactDropDownOption;
 let listOfRelfIdvalsDynamicObj = {};
@@ -162,6 +160,7 @@ let isInboxTabClicked = true;
 let index = 1;
 
 function ProcessSelectedData(data) {
+	messageObject.IsInboxTab = data[0].isInbox;
 	console.log("Process method called:-- ");
 	const count = currentSelectedData.length + index - 1;
 	const resval = localStorage.getItem("crm");
@@ -185,10 +184,9 @@ function ProcessSelectedData(data) {
 	} else {
 		$('#inboundHeading').text("Outbound Email " + index + " of " + count);
 		if (settings != null) {
-			setTimeout(() => {
-				outboundPrt.value = settings.outboundPriority;
-				outboundDD.value = settings.outboundTraceType;
-			}, 1500);
+			outboundPrt.value = settings.outboundPriority;
+			outboundDD.value = settings.outboundTraceType;
+	
 		}
 	}
 	index++;
@@ -211,6 +209,10 @@ function ProcessSelectedData(data) {
 	$('#EmailId').val(data[0].id);
 	messageObject.body = data[0].body;
 	messageObject.subject = data[0].subject;
+
+	messageObject.attachment = data[0].subject+".eml";
+	// Convert string to Base64
+	messageObject.attachmentcontent = btoa(data[0].mailMimeContent);
 	messageObject.duedate = formatDate(new Date(data[0].receivedDate), data[0].receivedDate);
 	GetMatchingDataForSync(data[0].fromEmail, messageObject.userid);
 }
@@ -273,9 +275,10 @@ function SendTheEmail() {
 	const id = $('#EmailId').val();
 	messageObject = validateMessageObject(messageObject);
 	
-	//replace '<' and '>' with '&lt;' and '&gt;'
+	//replace '<' and '>' with '&lt;' and '&gt;' 
 	let mailSubject = messageObject.subject.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;").replace(/&nbsp;/g, " "); 
 	let mailBody = messageObject.body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;").replace(/&nbsp;/g, " ");
+	messageObject.attachment = messageObject.attachment.replace(/[^\w-_\.]+/g, "-");
 	let allDropdownList = $('#dropDownFieldAsPerGroup select');
 
 	allDropdownList.each(function() {
@@ -446,6 +449,22 @@ function GetAttachedToDDInfo() {
 	console.debug(messageObject);
 	$("#sendEmailLoader").show();
 	DisableButtonById("#sendEmail");
+
+	//loading trace-type and priority dropdown data
+	const resval = localStorage.getItem("crm");
+	let crmsettings = {};
+	if (resval != null) {
+		crmsettings = decodeFromBase64(resval);
+		if (messageObject.IsInboxTab) {
+			GetTaskTypes(crmsettings.inboundTraceType); 
+			GetPriorityType(crmsettings.inboundPriority);
+		} else {
+			GetTaskTypes(crmsettings.outboundTraceType); 
+			GetPriorityType(crmsettings.outboundPriority);
+		}		
+	}
+
+	//loading rels dropdown data
 	const settings = {
 		url: ApiUrl,// + "/cftags/outlook.cfc",
 		method: "POST",
@@ -628,9 +647,10 @@ function GetPriorityType(selectedType) {
 				priorityList.push(priObj);
 			}
 			const inboundPrt = document.getElementById('priority');
+			inboundPrt.innerHTML = '';
 			let option = document.createElement("option");
 			option.value = 0;
-			option.text = "--none--";
+			option.text = "--None--";
 			inboundPrt.appendChild(option);
 
 			// populate the dropdown
@@ -663,7 +683,7 @@ function GetTaskTypes(selectedTask) {
 					<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
 					  <soap:Body>
 						<getTaskTypes>
-						  <groupid>0</groupid>
+						  <groupid>` + messageObject.groupid + `</groupid>
 						</getTaskTypes>
 					  </soap:Body>
 					</soap:Envelope>`
@@ -699,9 +719,10 @@ function GetTaskTypes(selectedTask) {
 				typeList.push(typeObj);
 			}
 			const inboundDD = document.getElementById('trace-type');
+			inboundDD.innerHTML = '';
 			let option = document.createElement("option");
 			option.value = 0;
-			option.text = "--none--";
+			option.text = "--None--";
 			inboundDD.appendChild(option);
 
 
@@ -776,7 +797,6 @@ $(document).ready(function () {
 		if (data != null) {
 			if (data.userId != null && data.userId != undefined && data.userId != '') {
 				messageObject.userid = data.userId;
-				GetTaskTypes(data.inboundTraceType); GetPriorityType(data.inboundPriority);
 				GetGroupsByUserId();
 			}
 		}
@@ -1348,7 +1368,7 @@ function addNoneOptionToDropDown(element){
 	//added none option
 	let option = document.createElement("option");
 	option.value = 0;
-	option.text = "--none--";
+	option.text = "--None--";
 	element.appendChild(option);
 	//set the default value of lead dropdown
 	element.value = 0;

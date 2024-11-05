@@ -373,11 +373,11 @@ function getSpecificEmailDetails(id) {
 
 				// Function to perform AJAX request with exponential backoff
 				// eslint-disable-next-line no-inner-declarations
-				function fetchWithRetry(url, headers, retries = MAX_RETRIES, delay = INITIAL_DELAY) {
+				function fetchWithRetry(url, headers, dataType = 'json', retries = MAX_RETRIES, delay = INITIAL_DELAY) {
 					return new Promise((resolve, reject) => {
 						$.ajax({
 							url: url,
-							dataType: 'json',
+							dataType: dataType,
 							headers: headers
 						}).done((data) => {
 							resolve(data);
@@ -411,6 +411,12 @@ function getSpecificEmailDetails(id) {
 						});
 					})
 					.then(({ emailData, folderData }) => {
+						delete headers['Prefer'];
+						return fetchWithRetry(requestUrl+"/$value",headers,'text').then((mailMimeContent) => {
+							return { emailData, folderData, mailMimeContent};
+						});
+					})
+					.then(({ emailData, folderData, mailMimeContent }) => {
 						const folderName = folderData.DisplayName;
 
 						const rowData = {
@@ -419,6 +425,7 @@ function getSpecificEmailDetails(id) {
 							subject: emailData.Subject,
 							receivedDate: new Date(emailData.ReceivedDateTime).toLocaleString(),
 							body: emailData.Body.Content,
+							mailMimeContent: mailMimeContent,
 							isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))
 						};
 
