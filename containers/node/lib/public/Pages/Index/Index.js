@@ -412,7 +412,7 @@ function getSpecificEmailDetails(id) {
 					})
 					.then(({ emailData, folderData }) => {
 						delete headers['Prefer'];
-						return fetchWithRetry(requestUrl+"/$value",headers,'text').then((mailMimeContent) => {
+						return fetchWithRetry(requestUrl + "/$value",headers,'text').then((mailMimeContent) => {
 							return { emailData, folderData, mailMimeContent};
 						});
 					})

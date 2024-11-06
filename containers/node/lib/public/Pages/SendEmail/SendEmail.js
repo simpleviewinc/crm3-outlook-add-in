@@ -209,7 +209,7 @@ function ProcessSelectedData(data) {
 	messageObject.body = data[0].body;
 	messageObject.subject = data[0].subject;
 
-	messageObject.attachment = data[0].subject+".eml";
+	messageObject.attachment = data[0].subject + ".eml";
 	// Convert string to Base64
 	messageObject.attachmentcontent = btoa(data[0].mailMimeContent);
 	messageObject.duedate = formatDate(new Date(data[0].receivedDate), data[0].receivedDate);
@@ -277,7 +277,7 @@ function SendTheEmail() {
 	//replace '<' and '>' with '&lt;' and '&gt;' 
 	let mailSubject = messageObject.subject.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;").replace(/&nbsp;/g, " "); 
 	let mailBody = messageObject.body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;").replace(/&nbsp;/g, " ");
-	messageObject.attachment = messageObject.attachment.replace(/[^\w-_\.]+/g, "-");
+	messageObject.attachment = messageObject.attachment.replace(/[^\w-_\x2E]+/g, "-");
 	let allDropdownList = $('#dropDownFieldAsPerGroup select');
 
 	allDropdownList.each(function() {
