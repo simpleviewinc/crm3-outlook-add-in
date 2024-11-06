@@ -37,8 +37,9 @@ app.get('/status/', (req, res) => {
 *** Submit form to CRM 3.0 outlook.cfc
 *** @apiUrl: Must be valid CRM URL (e.g. https://demo.simpleviewcrm.com)
 *** POST body data should be in `text/xml` format
+*** The request body size (including email attachments) is limited to 20mb
 ***/
-app.post('/submit/', bodyParser.raw({ type: 'text/xml' }), routeErrorHandler(async (req, res, next) => {
+app.post('/submit/', bodyParser.raw({ type: 'text/xml', limit: '20mb' }), routeErrorHandler(async (req, res, next) => {
 	const { apiUrl } = req.query;
 	const requestBody = req.body;
 
