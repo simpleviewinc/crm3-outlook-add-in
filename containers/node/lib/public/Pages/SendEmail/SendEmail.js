@@ -20,8 +20,7 @@
 	isSelectButtonClicked = false,
 	IsInboxTab = false;
 
-let PlannerAccountDropDownOption;
-let PlannerContactDropDownOption;
+let HiddenReloptsIdtoVal = {};
 let listOfRelfIdvalsDynamicObj = {};
 
 SetApiUrl();
@@ -546,18 +545,6 @@ function parseXmlToJson(xmlStr) {
 	return json;
 }
 
-function findRelByTitle(rels, title) {
-	if (Array.isArray(rels)) {
-		return rels.find(rel => rel.title["#text"] === title);
-	} else if (rels && typeof rels === 'object') {
-		const relArray = [rels];
-		return relArray.find(rel => rel.title["#text"] === title);
-	} else {
-		console.error(`Invalid data structure: rels is not an array or object for title: ${title}`);
-		return null;
-	}
-}
-
 function bindLeadDataToSelect(jsonData) {
 	jsonData = JSON.parse(jsonData);
 
@@ -574,11 +561,6 @@ function bindLeadDataToSelect(jsonData) {
 		parentfieldSetElement.appendChild(containerDiv);
 	}
 
-	// Planner Account Data
-	PlannerAccountDropDownOption = findRelByTitle(jsonData.opts.rels.rel, "Planner Account");
-
-	// Planner Contact Data
-	PlannerContactDropDownOption = findRelByTitle(jsonData.opts.rels.rel, "Planner Contact");
 	AddOnChangeListnerToDropDown();
 
 	// Bind messageObject properties
@@ -1324,41 +1306,27 @@ $(document).ready(function () {
 });
 
 
-function SetPlannerDropDownOption(){
-	const plannerSelect = document.getElementById("rel_p3");
-	plannerSelect.disabled = false;
-	plannerSelect.innerHTML = '';
-	addNoneOptionToDropDown(plannerSelect);
-	
-	if (PlannerAccountDropDownOption) {
-		if (Array.isArray(PlannerAccountDropDownOption.data.row)) {
-			PlannerAccountDropDownOption.data.row.forEach(row => {
-				if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
-					const option = document.createElement("option");
-					option.value = row.ID["#text"];
-					option.text = row.DISPLAY["#text"];
-					plannerSelect.appendChild(option);
-				}
-			});
-		}
-	}
+function SetHiddenDropDownOption(){
 
-	
-	const plannerContactSelect = document.getElementById("rel_p4");
-	plannerContactSelect.disabled = false;
-	plannerContactSelect.innerHTML = '';
-	addNoneOptionToDropDown(plannerContactSelect);
-	
-	if (PlannerContactDropDownOption) {
-		if (Array.isArray(PlannerContactDropDownOption.data.row)) {
-			PlannerContactDropDownOption.data.row.forEach(row => {
-				if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
-					const option = document.createElement("option");
-					option.value = row.ID["#text"];
-					option.text = row.DISPLAY["#text"];
-					plannerContactSelect.appendChild(option);
+	for (let key in HiddenReloptsIdtoVal) {
+		const hiddenSelect = document.getElementById(key);
+		if (hiddenSelect) {
+			hiddenSelect.disabled = false;
+			hiddenSelect.innerHTML = '';
+			addNoneOptionToDropDown(hiddenSelect);
+			let hiddenrelopt = HiddenReloptsIdtoVal[key];
+			if (hiddenrelopt) {
+				if (Array.isArray(hiddenrelopt.data.row)) {
+					hiddenrelopt.data.row.forEach(row => {
+						if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
+							const option = document.createElement("option");
+							option.value = row.ID["#text"];
+							option.text = row.DISPLAY["#text"];
+							hiddenSelect.appendChild(option);
+						}
+					});
 				}
-			});
+			}
 		}
 	}
 }
@@ -1374,18 +1342,20 @@ function addNoneOptionToDropDown(element){
 	element.value = 0;
 }
 
-function AddChooseAboveItemFirstDDOption(DDlist){
-	DDlist.forEach((c) => {
-		let element = document.getElementById(c);
-		element.disabled = true;
-		element.innerHTML = '';
-		let option = document.createElement("option");
-		option.value = 0;
-		option.text = "--Choose Above Item First--";
-		element.appendChild(option);
-		//set the default value of lead dropdown
-		element.value = 0;
-	});
+function AddChooseAboveItemFirstDDOption(){
+	for (let key in HiddenReloptsIdtoVal) {
+		const hiddenSelect = document.getElementById(key);
+		if (hiddenSelect) {
+			hiddenSelect.disabled = true;
+			hiddenSelect.innerHTML = '';
+			let option = document.createElement("option");
+			option.value = 0;
+			option.text = "--Choose Above Item First--";
+			hiddenSelect.appendChild(option);
+			//set the default value of lead dropdown
+			hiddenSelect.value = 0;
+		}
+	}
 }
 
 function AddDropDownToFieldSetAsPerRelsList(currRel){
@@ -1395,9 +1365,9 @@ function AddDropDownToFieldSetAsPerRelsList(currRel){
 	currDropDownLabel.textContent = currRel.title["#text"] + ':';
 	let currDropDown = document.createElement('select');
 
-	currDropDown.id = currRel.fldname["#text"].toLowerCase();
+	currDropDown.id = currRel.fldname["#text"];
 
-	if (currRel.title["#text"] === "Planner Account" || currRel.title["#text"] === "Planner Contact"){
+	if (currRel.hidden["#text"] == 1) {
 		currDropDown.disabled = true;
 		let option = document.createElement("option");
 		option.value = 0;
@@ -1405,6 +1375,8 @@ function AddDropDownToFieldSetAsPerRelsList(currRel){
 		currDropDown.appendChild(option);
 		//set the default value of lead dropdown
 		currDropDown.value = 0;
+		currDropDown.title = 'hidden';
+		HiddenReloptsIdtoVal[currRel.fldname["#text"]] = currRel;
 	} else {
 		addNoneOptionToDropDown(currDropDown);
 
@@ -1456,7 +1428,7 @@ function CheckAllDropDownSelectAndSetPlanner(){
 	allDropdownList.each(function() {
 		const id = $(this).attr('id');
 
-		if (id != 'rel_p3' && id != 'rel_p4') {
+		if ($(this).attr('title') !== 'hidden') {
 			const value = $(this).val();
 			if (value == 0) {
 				isAllSelectedDDValue = false;
@@ -1466,8 +1438,8 @@ function CheckAllDropDownSelectAndSetPlanner(){
 	});
 
 	if (isAllSelectedDDValue) {
-		SetPlannerDropDownOption();
+		SetHiddenDropDownOption();
 	} else {
-		AddChooseAboveItemFirstDDOption(['rel_p3','rel_p4']);
+		AddChooseAboveItemFirstDDOption();
 	}
 }
