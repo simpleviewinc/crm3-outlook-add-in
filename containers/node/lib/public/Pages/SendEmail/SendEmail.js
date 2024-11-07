@@ -80,7 +80,7 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 						const receivedCell = row.insertCell(3);
 						const bodyCell = row.insertCell(4);
 
-						bodyCell.textContent = email.BodyPreview;
+						bodyCell.textContent = email.Body.Content;
 						bodyCell.style.display = 'none';
 						indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
 						fromCell.textContent = email.From.EmailAddress.Address;
@@ -105,17 +105,23 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 					Object.values(window.sentEmails).forEach((email, index) => {
 						const row = tableBody.insertRow();
 						const indexCell = row.insertCell(0);
-						const fromCell = row.insertCell(1);
+						const toCell = row.insertCell(1);
 						const subjectCell = row.insertCell(2);
 						const receivedCell = row.insertCell(3);
 						const bodyCell = row.insertCell(4);
 
-						bodyCell.textContent = email.BodyPreview;
+						bodyCell.textContent = email.Body.Content;
 						bodyCell.style.display = 'none';
 						indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
-						fromCell.textContent = email.From.EmailAddress.Address;
 						subjectCell.textContent = email.Subject;
 						receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
+
+						let AllToRecipients = "";
+						
+						email.ToRecipients.forEach((element, index) => {
+							AllToRecipients = AllToRecipients + (index > 0 ? ', ' : '') + element.EmailAddress.Address;
+						});
+						toCell.textContent = AllToRecipients;
 					});
 				} else {
 					const tableBody = document.querySelector("#sentBoxTable tbody");
@@ -193,12 +199,17 @@ function ProcessSelectedData(data) {
 	console.log(data);
 	$('#syncEmailUI').hide();
 	$('#sendEmailUI').show();
-	$('.headings h5:nth-child(1)').text('From: ' + data[0].fromEmail);
+	if (data[0].isInbox) {
+		$('.headings h5:nth-child(1)').text('From: ' + data[0].fromEmail);
+	} else {
+		$('.headings h5:nth-child(1)').text('To: ' + data[0].fromEmail);
+	}
 	$('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
 	
 	try {
 		if (data[0].receivedDate && data[0].receivedDate.toLowerCase() != 'invalid date') {
-			$('#received').text('Received: ' + data[0].receivedDate);
+			let sentOrReceivedText = data[0].isInbox ? 'Received: ' : 'Sent: ';
+			$('#received').text(sentOrReceivedText + data[0].receivedDate);
 		}
 	} catch (error) {
 		console.log(error);
@@ -208,10 +219,6 @@ function ProcessSelectedData(data) {
 	$('#EmailId').val(data[0].id);
 	messageObject.body = data[0].body;
 	messageObject.subject = data[0].subject;
-
-	messageObject.attachment = data[0].subject + ".eml";
-	// Convert string to Base64
-	messageObject.attachmentcontent = btoa(data[0].mailMimeContent);
 	messageObject.duedate = formatDate(new Date(data[0].receivedDate), data[0].receivedDate);
 	GetMatchingDataForSync(data[0].fromEmail, messageObject.userid);
 }
@@ -645,6 +652,9 @@ function GetPriorityType(selectedType) {
 				}
 				inboundPrt.appendChild(option);
 			});
+			// when the value of dropdown change from JS then on-change event will not trigger 
+			messageObject.priorityid = option.value;
+			checkMessageObjectFields(messageObject);
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
 			console.error('Error:', textStatus, errorThrown);
@@ -718,6 +728,10 @@ function GetTaskTypes(selectedTask) {
 				}
 				inboundDD.appendChild(option);
 			});
+
+			// when the value of dropdown change from JS then on-change event will not trigger 
+			messageObject.typeID = option.value;
+			checkMessageObjectFields(messageObject);
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
 			console.error('Error:', textStatus, errorThrown);
@@ -820,18 +834,29 @@ $(document).ready(function () {
 	});
 
 	$('#sendEmail').on('click', () => {
-		messageObject.priorityid = $("#priority").val();
-		messageObject.typeid = $("#trace-type").val();
-		console.log(messageObject);
-		if (window.opener && !window.opener.closed) {
-			if (typeof window.opener.setCategoryToEmail === 'function') {
-				SendTheEmail();
+		$("#sendEmailLoader").show();
+		const emailid = $('#EmailId').val();
+		window.opener.fetchMimeContentOfAllEmail(emailid).then((EmailMIMEContent) => {
+			// set the parameters related to the attachement name and content by convert string to Base64
+			messageObject.attachment = messageObject.subject + ".eml";
+			messageObject.attachmentcontent = stringToutf8ToBase64(EmailMIMEContent);
+			messageObject.priorityid = $("#priority").val();
+			messageObject.typeid = $("#trace-type").val();
+			console.log(messageObject);
+			if (window.opener && !window.opener.closed) {
+				if (typeof window.opener.setCategoryToEmail === 'function') {
+					SendTheEmail();
+				} else {
+					console.error("Parent window method setCategoryToEmail is not defined.");
+				}
 			} else {
-				console.error("Parent window method setCategoryToEmail is not defined.");
+				console.error("Parent window is not available.");
 			}
-		} else {
-			console.error("Parent window is not available.");
-		}
+		}).catch((error) => {
+			console.error("Error fetching MIME content:", error);
+			window.alert("Something went wrong while fetching the MIME content of email from Outlook API. Please try again.")
+		})
+		$("#sendEmailLoader").hide();
 	});
 	function getSelectedRowsData() {
 		// Create an array to hold the selected row data
@@ -1362,7 +1387,7 @@ function AddDropDownToFieldSetAsPerRelsList(currRel){
 	let containerDiv = document.createElement('div');
 	containerDiv.classList.add('input-container');
 	let currDropDownLabel = document.createElement('label');
-	currDropDownLabel.textContent = currRel.title["#text"] + ':';
+	currDropDownLabel.textContent = currRel.title["#text"] + ' :';
 	let currDropDown = document.createElement('select');
 
 	currDropDown.id = currRel.fldname["#text"];
@@ -1442,4 +1467,18 @@ function CheckAllDropDownSelectAndSetPlanner(){
 	} else {
 		AddChooseAboveItemFirstDDOption();
 	}
+}
+
+function stringToutf8ToBase64(content) {
+	// Use TextEncoder to convert the string to UTF-8
+	const encoder = new TextEncoder();
+	const uint8Array = encoder.encode(content);
+	
+	// Convert the byte array to Base64
+	let arr = '';
+	for (let i = 0; i < uint8Array.length; i++) {
+		arr += String.fromCharCode(uint8Array[i]);
+	}
+	console.log("typeof arr : ",typeof arr)
+	return btoa(arr); 
 }

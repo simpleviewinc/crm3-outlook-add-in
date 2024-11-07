@@ -20,3 +20,5 @@
 /docker-compose.yml
 /containers/node/lib/public/localhost.crt
 /containers/node/lib/public/localhost.key
+/containers/node/lib/public/obj/Debug
+/containers/node/node_modules

@@ -34,6 +34,7 @@ h3 {
     .input-container label {
         margin-right: 0; /* Add some space between the label and the input */
         font-weight: 700;
+        white-space: nowrap;
     }
 
 input, select, option {
