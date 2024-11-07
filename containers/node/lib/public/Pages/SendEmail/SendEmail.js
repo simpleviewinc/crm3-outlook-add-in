@@ -1477,8 +1477,8 @@ function stringToutf8ToBase64(content) {
 	// Convert the byte array to Base64
 	let arr = '';
 	for (let i = 0; i < uint8Array.length; i++) {
-	  arr += String.fromCharCode(uint8Array[i]);
+		arr += String.fromCharCode(uint8Array[i]);
 	}
 	console.log("typeof arr : ",typeof arr)
 	return btoa(arr); 
-  }
+}
