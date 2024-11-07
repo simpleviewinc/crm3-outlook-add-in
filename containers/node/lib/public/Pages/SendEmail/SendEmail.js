@@ -215,10 +215,6 @@ function ProcessSelectedData(data) {
 	$('#EmailId').val(data[0].id);
 	messageObject.body = data[0].body;
 	messageObject.subject = data[0].subject;
-
-	messageObject.attachment = data[0].subject + ".eml";
-	// Convert string to Base64
-	messageObject.attachmentcontent = btoa(data[0].mailMimeContent);
 	messageObject.duedate = formatDate(new Date(data[0].receivedDate), data[0].receivedDate);
 	GetMatchingDataForSync(data[0].fromEmail, messageObject.userid);
 }
@@ -834,18 +830,29 @@ $(document).ready(function () {
 	});
 
 	$('#sendEmail').on('click', () => {
-		messageObject.priorityid = $("#priority").val();
-		messageObject.typeid = $("#trace-type").val();
-		console.log(messageObject);
-		if (window.opener && !window.opener.closed) {
-			if (typeof window.opener.setCategoryToEmail === 'function') {
-				SendTheEmail();
+		$("#sendEmailLoader").show();
+		const emailid = $('#EmailId').val();
+		window.opener.fetchMimeContentOfAllEmail(emailid).then((EmailMIMEContent) => {
+			// set the parameters related to the attachement name and content by convert string to Base64
+			messageObject.attachment = messageObject.subject + ".eml";
+			messageObject.attachmentcontent = stringToutf8ToBase64(EmailMIMEContent);
+			messageObject.priorityid = $("#priority").val();
+			messageObject.typeid = $("#trace-type").val();
+			console.log(messageObject);
+			if (window.opener && !window.opener.closed) {
+				if (typeof window.opener.setCategoryToEmail === 'function') {
+					SendTheEmail();
+				} else {
+					console.error("Parent window method setCategoryToEmail is not defined.");
+				}
 			} else {
-				console.error("Parent window method setCategoryToEmail is not defined.");
+				console.error("Parent window is not available.");
 			}
-		} else {
-			console.error("Parent window is not available.");
-		}
+		}).catch((error) => {
+			console.error("Error fetching MIME content:", error);
+			window.alert("Something went wrong while fetching the MIME content of email from Outlook API. Please try again.")
+		})
+		$("#sendEmailLoader").hide();
 	});
 	function getSelectedRowsData() {
 		// Create an array to hold the selected row data
@@ -1457,3 +1464,17 @@ function CheckAllDropDownSelectAndSetPlanner(){
 		AddChooseAboveItemFirstDDOption();
 	}
 }
+
+function stringToutf8ToBase64(content) {
+	// Use TextEncoder to convert the string to UTF-8
+	const encoder = new TextEncoder();
+	const uint8Array = encoder.encode(content);
+	
+	// Convert the byte array to Base64
+	let arr = '';
+	for (let i = 0; i < uint8Array.length; i++) {
+	  arr += String.fromCharCode(uint8Array[i]);
+	}
+	console.log("typeof arr : ",typeof arr)
+	return btoa(arr); 
+  }

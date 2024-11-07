@@ -411,12 +411,6 @@ function getSpecificEmailDetails(id) {
 						});
 					})
 					.then(({ emailData, folderData }) => {
-						delete headers['Prefer'];
-						return fetchWithRetry(requestUrl + "/$value",headers,'text').then((mailMimeContent) => {
-							return { emailData, folderData, mailMimeContent};
-						});
-					})
-					.then(({ emailData, folderData, mailMimeContent }) => {
 						const folderName = folderData.DisplayName;
 
 						const rowData = {
@@ -425,7 +419,6 @@ function getSpecificEmailDetails(id) {
 							subject: emailData.Subject,
 							receivedDate: new Date(emailData.ReceivedDateTime).toLocaleString(),
 							body: emailData.Body.Content,
-							mailMimeContent: mailMimeContent,
 							isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))
 						};
 
@@ -575,3 +568,50 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 }
 
 
+
+function fetchMimeContentOfAllEmail(EmailIdTogetMIME) {
+    return new Promise((resolve, reject) => {
+        // Get access token from Office context
+        Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
+            if (result.status === "succeeded") {
+                const accessToken = result.value;
+                const url = `${Office.context.mailbox.restUrl}/v2.0/me/messages/`;
+                const retries = MAX_RETRIES;
+                const delay = INITIAL_DELAY;
+
+                const headers = {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Accept': 'application/json'
+                };
+
+                // Helper function to fetch MIME content for a single email with retry logic
+                const fetchEmailMimeContent = (emailId, retriesLeft, delay) => {
+                    return new Promise((resolveEmail, rejectEmail) => {
+                        $.ajax({
+                            url: `${url}${emailId}/$value`,
+                            dataType: 'text',
+                            headers: headers
+                        }).done((data) => {
+							console.log(emailId, " : mime fetched")
+                            resolveEmail(data); // Resolve with the MIME content
+                        }).fail((error) => {
+                            if (error.status === 429 && retriesLeft > 0) {
+                                setTimeout(() => {
+                                    fetchEmailMimeContent(emailId, retriesLeft - 1, delay * 2).then(resolveEmail).catch(rejectEmail);
+                                }, delay);
+                            } else {
+                                rejectEmail(error);
+                            }
+                        });
+                    });
+                };
+
+				fetchEmailMimeContent(EmailIdTogetMIME,retries,delay).then((mimedata) => {
+					resolve(mimedata);
+				}).catch((error) => {
+					reject(error);
+				});
+            } 
+        });
+    });
+}
