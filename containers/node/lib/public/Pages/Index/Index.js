@@ -415,11 +415,11 @@ function getSpecificEmailDetails(id) {
 
 						const rowData = {
 							id: emailData.Id,
-							fromEmail: emailData.From.EmailAddress.Address,
 							subject: emailData.Subject,
 							receivedDate: new Date(emailData.ReceivedDateTime).toLocaleString(),
 							body: emailData.Body.Content,
-							isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))
+							isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\')),
+							fromEmail: (!(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))) ? emailData.From.EmailAddress.Address : emailData.ToRecipients[0].EmailAddress.Address
 						};
 
 						const exists = selectedEmails.some(email => email.id === rowData.id);

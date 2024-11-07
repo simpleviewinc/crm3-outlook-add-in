@@ -199,12 +199,16 @@ function ProcessSelectedData(data) {
 	console.log(data);
 	$('#syncEmailUI').hide();
 	$('#sendEmailUI').show();
-	$('.headings h5:nth-child(1)').text('From: ' + data[0].fromEmail);
+	if (data[0].isInbox) {
+		$('.headings h5:nth-child(1)').text('From: ' + data[0].fromEmail);
+	} else {
+		$('.headings h5:nth-child(1)').text('To: ' + data[0].fromEmail);
+	}
 	$('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
 	
 	try {
 		if (data[0].receivedDate && data[0].receivedDate.toLowerCase() != 'invalid date') {
-			let sentOrReceivedText = messageObject.IsInboxTab ? 'Sent: ' : 'Received: ';
+			let sentOrReceivedText = data[0].isInbox ? 'Received: ' : 'Sent: ';
 			$('#received').text(sentOrReceivedText + data[0].receivedDate);
 		}
 	} catch (error) {
