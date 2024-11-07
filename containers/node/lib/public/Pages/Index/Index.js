@@ -525,7 +525,8 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 					type: 'GET',
 					contentType: 'application/json',
 					headers: {
-						'Authorization': 'Bearer ' + accessToken
+						'Authorization': 'Bearer ' + accessToken,
+						'Prefer': `outlook.body-content-type="text"`
 					}
 				}).done(function (response) {
 					allEmails = allEmails.concat(response.value);
@@ -565,7 +566,7 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 					$('#sync-email-btn').prop('disabled', false);
 				});
 			}
-
+			
 			fetchEmails(requestUrl + filterQuery);
 		} else {
 			console.error("Error getting callback token:", result.error.message);

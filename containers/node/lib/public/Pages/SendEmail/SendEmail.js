@@ -80,7 +80,7 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 						const receivedCell = row.insertCell(3);
 						const bodyCell = row.insertCell(4);
 
-						bodyCell.textContent = email.BodyPreview;
+						bodyCell.textContent = email.Body.Content;
 						bodyCell.style.display = 'none';
 						indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
 						fromCell.textContent = email.From.EmailAddress.Address;
@@ -105,17 +105,23 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 					Object.values(window.sentEmails).forEach((email, index) => {
 						const row = tableBody.insertRow();
 						const indexCell = row.insertCell(0);
-						const fromCell = row.insertCell(1);
+						const toCell = row.insertCell(1);
 						const subjectCell = row.insertCell(2);
 						const receivedCell = row.insertCell(3);
 						const bodyCell = row.insertCell(4);
 
-						bodyCell.textContent = email.BodyPreview;
+						bodyCell.textContent = email.Body.Content;
 						bodyCell.style.display = 'none';
 						indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
-						fromCell.textContent = email.From.EmailAddress.Address;
 						subjectCell.textContent = email.Subject;
 						receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
+
+						let AllToRecipients = "";
+						
+						email.ToRecipients.forEach((element, index) => {
+							AllToRecipients = AllToRecipients + (index > 0 ? ', ' : '') + element.EmailAddress.Address;
+						});
+						toCell.textContent = AllToRecipients;
 					});
 				} else {
 					const tableBody = document.querySelector("#sentBoxTable tbody");
@@ -198,7 +204,8 @@ function ProcessSelectedData(data) {
 	
 	try {
 		if (data[0].receivedDate && data[0].receivedDate.toLowerCase() != 'invalid date') {
-			$('#received').text('Received: ' + data[0].receivedDate);
+			let sentOrReceivedText = messageObject.IsInboxTab ? 'Sent: ' : 'Received: ';
+			$('#received').text(sentOrReceivedText + data[0].receivedDate);
 		}
 	} catch (error) {
 		console.log(error);
@@ -645,6 +652,9 @@ function GetPriorityType(selectedType) {
 				}
 				inboundPrt.appendChild(option);
 			});
+			// when the value of dropdown change from JS then on-change event will not trigger 
+			messageObject.priorityid = option.value;
+			checkMessageObjectFields(messageObject);
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
 			console.error('Error:', textStatus, errorThrown);
@@ -718,6 +728,10 @@ function GetTaskTypes(selectedTask) {
 				}
 				inboundDD.appendChild(option);
 			});
+
+			// when the value of dropdown change from JS then on-change event will not trigger 
+			messageObject.typeID = option.value;
+			checkMessageObjectFields(messageObject);
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
 			console.error('Error:', textStatus, errorThrown);
@@ -1362,7 +1376,7 @@ function AddDropDownToFieldSetAsPerRelsList(currRel){
 	let containerDiv = document.createElement('div');
 	containerDiv.classList.add('input-container');
 	let currDropDownLabel = document.createElement('label');
-	currDropDownLabel.textContent = currRel.title["#text"] + ':';
+	currDropDownLabel.textContent = currRel.title["#text"] + ' :';
 	let currDropDown = document.createElement('select');
 
 	currDropDown.id = currRel.fldname["#text"];
