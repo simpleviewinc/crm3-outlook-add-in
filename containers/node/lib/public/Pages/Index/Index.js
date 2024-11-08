@@ -364,84 +364,88 @@ function updateEmailCount() {
 // Get specific email details
 function getSpecificEmailDetails(id) {
 	return new Promise((resolve, reject) => {
-		Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
-			if (result.status === "succeeded") {
-				const accessToken = result.value;
-				let correctedId = id.replace(/\//g, '-').replace(/\+/g, '_'); // This might not be needed
-				const encodedId = encodeURIComponent(correctedId); // URL encode the corrected ID
-				const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${encodedId}`;
-
-				// Function to perform AJAX request with exponential backoff
-				// eslint-disable-next-line no-inner-declarations
-				function fetchWithRetry(url, headers, dataType = 'json', retries = MAX_RETRIES, delay = INITIAL_DELAY) {
-					return new Promise((resolve, reject) => {
-						$.ajax({
-							url: url,
-							dataType: dataType,
-							headers: headers
-						}).done((data) => {
-							resolve(data);
-						}).fail((error) => {
-							if (error.status === 429 && retries > 0) {
-								setTimeout(() => {
-									fetchWithRetry(url, headers, retries - 1, delay * 2).then(resolve).catch(reject);
-								}, delay);
-							} else {
-								reject(error);
+		if (id) {
+			Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
+				if (result.status === "succeeded") {
+					const accessToken = result.value;
+					let correctedId = id.replace(/\//g, '-').replace(/\+/g, '_'); // This might not be needed
+					const encodedId = encodeURIComponent(correctedId); // URL encode the corrected ID
+					const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${encodedId}`;
+	
+					// Function to perform AJAX request with exponential backoff
+					// eslint-disable-next-line no-inner-declarations
+					function fetchWithRetry(url, headers, retries = MAX_RETRIES, delay = INITIAL_DELAY) {
+						return new Promise((resolve, reject) => {
+							$.ajax({
+								url: url,
+								dataType: 'json',
+								headers: headers
+							}).done((data) => {
+								resolve(data);
+							}).fail((error) => {
+								if (error.status === 429 && retries > 0) {
+									setTimeout(() => {
+										fetchWithRetry(url, headers, retries - 1, delay * 2).then(resolve).catch(reject);
+									}, delay);
+								} else {
+									reject(error);
+								}
+							});
+						});
+					}
+	
+					const headers = {
+						'Authorization': `Bearer ${accessToken}`,
+						'Accept': 'application/json',
+						'Prefer': `outlook.body-content-type="text"`
+					};
+	
+					fetchWithRetry(requestUrl, headers)
+						.then((emailData) => {
+							window.selectedEmailData[id] = emailData;
+	
+							const parentFolderId = emailData.ParentFolderId;
+							const folderUrl = `${Office.context.mailbox.restUrl}/v2.0/me/mailFolders/${parentFolderId}`;
+	
+							return fetchWithRetry(folderUrl, headers).then(folderData => {
+								return { emailData, folderData };
+							});
+						})
+						.then(({ emailData, folderData }) => {
+							const folderName = folderData.DisplayName;
+	
+							const rowData = {
+								id: emailData.Id,
+								subject: emailData.Subject,
+								receivedDate: new Date(emailData.ReceivedDateTime).toLocaleString(),
+								body: emailData.Body.Content,
+								isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\')),
+								fromEmail: (!(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))) ? emailData.From.EmailAddress.Address : emailData.ToRecipients[0].EmailAddress.Address
+							};
+	
+							const exists = selectedEmails.some(email => email.id === rowData.id);
+							if (!exists) {
+								selectedEmails.push(rowData);
 							}
+	
+							console.log(`Email is in folder: ${folderName}`);
+							resolve();
+						})
+						.catch((error) => {
+							console.error("Error fetching data:", error);
+							if (error.responseJSON) {
+								console.error("Error details:", error.responseJSON);
+							}
+							reject(error);
 						});
-					});
+				} else {
+					console.error(`Error getting callback token: ${result.error.message}`);
+					reject(new Error(result.error.message));
 				}
-
-				const headers = {
-					'Authorization': `Bearer ${accessToken}`,
-					'Accept': 'application/json',
-					'Prefer': `outlook.body-content-type="text"`
-				};
-
-				fetchWithRetry(requestUrl, headers)
-					.then((emailData) => {
-						window.selectedEmailData[id] = emailData;
-
-						const parentFolderId = emailData.ParentFolderId;
-						const folderUrl = `${Office.context.mailbox.restUrl}/v2.0/me/mailFolders/${parentFolderId}`;
-
-						return fetchWithRetry(folderUrl, headers).then(folderData => {
-							return { emailData, folderData };
-						});
-					})
-					.then(({ emailData, folderData }) => {
-						const folderName = folderData.DisplayName;
-
-						const rowData = {
-							id: emailData.Id,
-							subject: emailData.Subject,
-							receivedDate: new Date(emailData.ReceivedDateTime).toLocaleString(),
-							body: emailData.Body.Content,
-							isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\')),
-							fromEmail: (!(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))) ? emailData.From.EmailAddress.Address : emailData.ToRecipients[0].EmailAddress.Address
-						};
-
-						const exists = selectedEmails.some(email => email.id === rowData.id);
-						if (!exists) {
-							selectedEmails.push(rowData);
-						}
-
-						console.log(`Email is in folder: ${folderName}`);
-						resolve();
-					})
-					.catch((error) => {
-						console.error("Error fetching data:", error);
-						if (error.responseJSON) {
-							console.error("Error details:", error.responseJSON);
-						}
-						reject(error);
-					});
-			} else {
-				console.error(`Error getting callback token: ${result.error.message}`);
-				reject(new Error(result.error.message));
-			}
-		});
+			});
+		} else {
+			resolve();
+		}
 	});
 }
 
