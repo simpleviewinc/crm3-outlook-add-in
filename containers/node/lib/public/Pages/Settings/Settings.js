@@ -160,7 +160,9 @@ $(document).ready(function () {
 				console.log(priorityList);
 				const inboundPrt = document.getElementById('inbound-priority');
 				const outboundPrt = document.getElementById('outbound-priority');
-
+				//adding none option to Dropdown
+				addNoneOptionToDropDown(inboundPrt)
+				addNoneOptionToDropDown(outboundPrt)
 				// populate the dropdown
 				priorityList.forEach(item => {
 					const option = document.createElement('option');
@@ -175,8 +177,8 @@ $(document).ready(function () {
 					outboundPrt.appendChild(option);
 				});
 
-				$('#inbound-priority').val(data.inboundPriority);
-				$('#outbound-priority').val(data.outboundPriority);
+				$('#inbound-priority').val(data.inboundPriority || 0);
+				$('#outbound-priority').val(data.outboundPriority || 0);
 			})
 			.fail(function (jqXHR, textStatus, errorThrown) {
 				console.error('Error:', textStatus, errorThrown);
@@ -236,7 +238,9 @@ $(document).ready(function () {
 				console.log(typeList);
 				const inboundDD = document.getElementById('inbound-trace-type');
 				const outboundDD = document.getElementById('outbound-trace-type');
-
+				//adding none option to Dropdown
+				addNoneOptionToDropDown(inboundDD)
+				addNoneOptionToDropDown(outboundDD)
 				// Populate the dropdown
 				typeList.forEach(item => {
 					const option = document.createElement('option');
@@ -251,8 +255,8 @@ $(document).ready(function () {
 					outboundDD.appendChild(option);
 				});
 
-				$('#inbound-trace-type').val(data.inboundTraceType);
-				$('#outbound-trace-type').val(data.outboundTraceType);
+				$('#inbound-trace-type').val(data.inboundTraceType || 0);
+				$('#outbound-trace-type').val(data.outboundTraceType || 0);
 			})
 			.fail(function (jqXHR, textStatus, errorThrown) {
 				console.error('Error:', textStatus, errorThrown);

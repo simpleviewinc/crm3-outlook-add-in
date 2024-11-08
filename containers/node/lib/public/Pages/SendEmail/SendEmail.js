@@ -637,10 +637,7 @@ function GetPriorityType(selectedType) {
 			}
 			const inboundPrt = document.getElementById('priority');
 			inboundPrt.innerHTML = '';
-			let option = document.createElement("option");
-			option.value = 0;
-			option.text = "--None--";
-			inboundPrt.appendChild(option);
+			addNoneOptionToDropDown(inboundPrt);
 
 			// populate the dropdown
 			priorityList.forEach(item => {
@@ -653,9 +650,8 @@ function GetPriorityType(selectedType) {
 				inboundPrt.appendChild(option);
 			});
 			// when the value of dropdown change from JS then on-change event will not trigger 
-			messageObject.priorityid = option.value;
 			checkMessageObjectFields(messageObject);
-		})
+		})	
 		.fail(function (jqXHR, textStatus, errorThrown) {
 			console.error('Error:', textStatus, errorThrown);
 		});
@@ -711,13 +707,9 @@ function GetTaskTypes(selectedTask) {
 				typeList.push(typeObj);
 			}
 			const inboundDD = document.getElementById('trace-type');
-			inboundDD.innerHTML = '';
-			let option = document.createElement("option");
-			option.value = 0;
-			option.text = "--None--";
-			inboundDD.appendChild(option);
-
-
+			inboundDD.innerHTML = '';			
+			addNoneOptionToDropDown(inboundDD);
+			
 			// Populate the dropdown
 			typeList.forEach(item => {
 				const option = document.createElement('option');
@@ -730,7 +722,6 @@ function GetTaskTypes(selectedTask) {
 			});
 
 			// when the value of dropdown change from JS then on-change event will not trigger 
-			messageObject.typeID = option.value;
 			checkMessageObjectFields(messageObject);
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
@@ -1354,17 +1345,6 @@ function SetHiddenDropDownOption(){
 			}
 		}
 	}
-}
-
-
-function addNoneOptionToDropDown(element){
-	//added none option
-	let option = document.createElement("option");
-	option.value = 0;
-	option.text = "--None--";
-	element.appendChild(option);
-	//set the default value of lead dropdown
-	element.value = 0;
 }
 
 function AddChooseAboveItemFirstDDOption(){
