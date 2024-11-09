@@ -30,7 +30,7 @@ function retryCategoryUpdate(emailId, isSentFlag, retryCount = 0) {
 			}, delay);
 		} else {
 			console.error(`Max retries (${MAX_RETRIES}) exceeded. Unable to set category for email ${emailId}.`);
-			reject();
+			reject(`Max retries exceeded for email ${emailId}`);
 		}
 	});
 }
@@ -426,7 +426,7 @@ function getSpecificEmailDetails(id) {
 							const rowData = {
 								id: emailData.Id,
 								subject: emailData.Subject,
-								receivedDate: new Date(emailData.ReceivedDateTime).toLocaleString(),
+								receivedDate: emailData.ReceivedDateTime,
 								body: emailData.Body.Content,
 								isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\')),
 								fromEmail: (!(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))) ? emailData.From.EmailAddress.Address : emailData.ToRecipients[0].EmailAddress.Address

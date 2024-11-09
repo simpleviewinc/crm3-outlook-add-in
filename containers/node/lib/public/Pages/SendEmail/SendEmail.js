@@ -3,7 +3,7 @@
 		userid: '',
 		acctid: '',
 		contactid: '',
-		duedate: formatDate(new Date()),
+		duedate: new Date().toLocaleDateString("en-US"),
 		typeid: '',
 		priorityid: '',
 		subject: '',
@@ -41,15 +41,18 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 						const indexCell = row.insertCell(0);
 						const fromCell = row.insertCell(1);
 						const subjectCell = row.insertCell(2);
-						const receivedCell = row.insertCell(3);
+						const receivedDateCellToDisplay = row.insertCell(3);
 						const bodyCell = row.insertCell(4);
+						const receivedCellUtc = row.insertCell(5);
+						receivedCellUtc.classList.add("hidden");
 
 						bodyCell.textContent = email.Body.Content;
 						bodyCell.style.display = 'none';
 						indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
 						fromCell.textContent = email.From.EmailAddress.Address;
 						subjectCell.textContent = email.Subject;
-						receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
+						receivedDateCellToDisplay.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
+						receivedCellUtc.textContent = email.ReceivedDateTime;
 					});
 				} else {
 					const tableBody = document.querySelector("#inboxTable tbody");
@@ -71,14 +74,17 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 						const indexCell = row.insertCell(0);
 						const toCell = row.insertCell(1);
 						const subjectCell = row.insertCell(2);
-						const receivedCell = row.insertCell(3);
+						const receivedCellToDisplay = row.insertCell(3);
 						const bodyCell = row.insertCell(4);
+						const receivedCellUtc = row.insertCell(5);
+						receivedCellUtc.classList.add("hidden");
 
 						bodyCell.textContent = email.Body.Content;
 						bodyCell.style.display = 'none';
 						indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
 						subjectCell.textContent = email.Subject;
-						receivedCell.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
+						receivedCellToDisplay.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
+						receivedCellUtc.textContent = email.ReceivedDateTime;
 
 						let AllToRecipients = "";
 						
@@ -312,42 +318,6 @@ $(document).ready(function () {
 	});
 });
 
-function formatDate(date, tempDate) {
-	if (date == "Invalid Date" && typeof tempDate === 'string') {
-		let split = tempDate.split(',');
-		if (split != undefined && split != null && split.length > 0)
-			return convertToMMDDYYYY(split[0]);
-	}
-	const day = String(date.getDate()).padStart(2, '0');
-	const month = String(date.getMonth() + 1).padStart(2, '0'); // January is 0!
-	const year = date.getFullYear();
-	
-	// Check if any of the values are null, empty, or NaN
-	if (!day || !month || !year || isNaN(date.getTime())) {
-		const today = new Date();
-		const todayDay = String(today.getDate()).padStart(2, '0');
-		const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
-		const todayYear = today.getFullYear();
-		return `${todayMonth}/${todayDay}/${todayYear}`;
-	}
-
-	return `${month}/${day}/${year}`;
-}
-
-function convertToMMDDYYYY(dateString) {
-	const dateParts = dateString.split('/');
-
-	if (dateParts.length !== 3) {
-		return null; // Invalid date format
-	}
-
-	const day = String(dateParts[0]).padStart(2, '0');
-	const month = String(dateParts[1]).padStart(2, '0'); // January is 0!
-	const year = dateParts[2];
-
-	return `${month}/${day}/${year}`;
-}
-
 function ProcessSelectedData(data) {
 	messageObject.IsInboxTab = data[0].isInbox;
 	console.log("Process method called:-- ");
@@ -385,20 +355,13 @@ function ProcessSelectedData(data) {
 	}
 	$('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
 	
-	try {
-		if (data[0].receivedDate && data[0].receivedDate.toLowerCase() != 'invalid date') {
-			let sentOrReceivedText = data[0].isInbox ? 'Received: ' : 'Sent: ';
-			$('#received').text(sentOrReceivedText + data[0].receivedDate);
-		}
-	} catch (error) {
-		console.log(error);
-	}
-	
+	let sentOrReceivedText = data[0].isInbox ? 'Received: ' : 'Sent: ';
+	$('#received').text(sentOrReceivedText + new Date(data[0].receivedDate).toLocaleString());
 
 	$('#EmailId').val(data[0].id);
 	messageObject.body = data[0].body;
 	messageObject.subject = data[0].subject;
-	messageObject.duedate = formatDate(new Date(data[0].receivedDate), data[0].receivedDate);
+	messageObject.duedate = new Date(data[0].receivedDate).toLocaleDateString('en-US');
 	GetMatchingDataForSync(data[0].fromEmail, messageObject.userid);
 }
 
@@ -431,7 +394,7 @@ function getSelectedRowsData() {
 			// Get the text content from the sibling td elements
 			const email = row.cells[1].textContent;
 			const subject = row.cells[2].textContent;
-			const date = row.cells[3].textContent;
+			const date = row.cells[5].textContent;
 			const body = row.cells[4].textContent;
 
 			// Create an object with the row data
@@ -439,7 +402,7 @@ function getSelectedRowsData() {
 				id: checkboxValue,
 				fromEmail: email,
 				subject: subject,
-				receivedDate: date,
+				receivedDate: new Date(date).toLocaleDateString('en-US'),
 				body: body,
 				isInbox: isInbox
 			};
