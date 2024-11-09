@@ -63,6 +63,12 @@ button {
     color: #ffffff;
 }
 
+.InputErrorMsg{
+    color: red;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
 fieldset {
     border: solid 1px #BEBEBE;
     background: #F5F5F0;

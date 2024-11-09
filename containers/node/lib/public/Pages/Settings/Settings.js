@@ -5,12 +5,13 @@ $(document).ready(function () {
 	let resval = localStorage.getItem("crm");
 	let data = {};
 	if (resval != null) {
+		$('#saveUpdateSettings').text("Update");
 		data = decodeFromBase64(resval);
 		console.log(data);
 		if (data != null) {
 			if (data.userId != null && data.userId != undefined && data.userId != '') {
 				$('#emailSettings').show();
-				$('#Save').hide();
+				$('#Submit').hide();
 				$('#logout').show();
 				$("#settingLoader").hide();
 				UserId = data.userId;
@@ -33,18 +34,8 @@ $(document).ready(function () {
 		$('#emailSettings').hide();
 		$('#logout').hide();
 		$("#settingLoader").hide();
-	}
-
-	function escapeHtml(unsafe) {
-		return unsafe
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/"/g, '&quot;')
-			.replace(/'/g, '&#039;');
-	}
-
-	
+		$('#saveUpdateSettings').text("Save");
+	}	
 
 	function GetUserIdByLogin(crmUrl, email, password) {
 		if (crmUrl.endsWith('/')) {
@@ -54,7 +45,7 @@ $(document).ready(function () {
 		//url = SetProxyUrl(url);
 		//if (url == '')
 		//	return;
-		password = escapeHtml(password);
+		password = password.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 		
 		$("#settingLoader").show();
 		const settings = {
@@ -96,7 +87,7 @@ $(document).ready(function () {
 					alert("Login successful.");
 					UserId = parseInt(decodedString);
 					$('#emailSettings').show();
-					$('#Save').hide();
+					$('#Submit').hide();
 					$('#logout').show();
 					ApiUrl = GetProxyUrl(crmUrl);
 					GetTaskTypes();
@@ -138,11 +129,8 @@ $(document).ready(function () {
 				let getMatchesReturn = response.getElementsByTagName("getTaskPriorityReturn");
 
 				const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-				// Decode the inner XML string
-				const decodedInnerXML = decodeHTMLEntities(decodedString);
-
 				// Parse the decoded inner XML string
-				const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
+				const innerXmlDoc = parser.parseFromString(decodedString, "text/xml");
 				const priority = innerXmlDoc.getElementsByTagName("priority");
 
 				// Convert the extracted contact information into an array of objects
@@ -160,7 +148,9 @@ $(document).ready(function () {
 				console.log(priorityList);
 				const inboundPrt = document.getElementById('inbound-priority');
 				const outboundPrt = document.getElementById('outbound-priority');
-
+				//adding none option to Dropdown
+				addNoneOptionToDropDown(inboundPrt)
+				addNoneOptionToDropDown(outboundPrt)
 				// populate the dropdown
 				priorityList.forEach(item => {
 					const option = document.createElement('option');
@@ -175,8 +165,8 @@ $(document).ready(function () {
 					outboundPrt.appendChild(option);
 				});
 
-				$('#inbound-priority').val(data.inboundPriority);
-				$('#outbound-priority').val(data.outboundPriority);
+				$('#inbound-priority').val(data.inboundPriority || 0);
+				$('#outbound-priority').val(data.outboundPriority || 0);
 			})
 			.fail(function (jqXHR, textStatus, errorThrown) {
 				console.error('Error:', textStatus, errorThrown);
@@ -214,11 +204,8 @@ $(document).ready(function () {
 				let getMatchesReturn = response.getElementsByTagName("getTaskTypesReturn");
 
 				const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-				// Decode the inner XML string
-				const decodedInnerXML = decodeHTMLEntities(decodedString);
-
 				// Parse the decoded inner XML string
-				const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
+				const innerXmlDoc = parser.parseFromString(decodedString, "text/xml");
 				const types = innerXmlDoc.getElementsByTagName("type");
 
 				// Convert the extracted contact information into an array of objects
@@ -236,7 +223,9 @@ $(document).ready(function () {
 				console.log(typeList);
 				const inboundDD = document.getElementById('inbound-trace-type');
 				const outboundDD = document.getElementById('outbound-trace-type');
-
+				//adding none option to Dropdown
+				addNoneOptionToDropDown(inboundDD)
+				addNoneOptionToDropDown(outboundDD)
 				// Populate the dropdown
 				typeList.forEach(item => {
 					const option = document.createElement('option');
@@ -251,8 +240,8 @@ $(document).ready(function () {
 					outboundDD.appendChild(option);
 				});
 
-				$('#inbound-trace-type').val(data.inboundTraceType);
-				$('#outbound-trace-type').val(data.outboundTraceType);
+				$('#inbound-trace-type').val(data.inboundTraceType || 0);
+				$('#outbound-trace-type').val(data.outboundTraceType || 0);
 			})
 			.fail(function (jqXHR, textStatus, errorThrown) {
 				console.error('Error:', textStatus, errorThrown);
@@ -277,28 +266,11 @@ $(document).ready(function () {
 		return tempDiv.textContent || tempDiv.innerText || "";
 	}
 
-	function decodeHTMLEntities(text) {
-		const entities = {
-			'&amp;': '&',
-			'&lt;': '<',
-			'&gt;': '>',
-			'&quot;': '"',
-			'&#x27;': "'",
-			'&#x2F;': '/',
-			'&#x60;': '`',
-			'&#x3D;': '=',
-			'&#xE9;': 'é'
-		};
-		return text.replace(/&[a-zA-Z0-9#x]+;/g, function (match) {
-			return entities[match] || match;
-		});
-	}
-
-	$("#Save").click(function () {
+	$("#Submit").click(function () {
 		GetUserIdByLogin($("#crm-url").val(), $("#crm-login").val(), $("#crm-password").val());
 	});
 
-	$("#okSettings").click(function () {
+	$("#saveUpdateSettings").click(function () {
 		// Capture form data
 		let url = $("#crm-url").val();
 		if (url.endsWith('/')) {

@@ -114,5 +114,15 @@ function GetProxyUrlLocalStorage() {
 	return GetProxyUrl(GetCrmUrlFromLocalStorage());
 }
 
+function addNoneOptionToDropDown(element){
+	//added none option
+	let option = document.createElement("option");
+	option.value = 0;
+	option.text = "--None--";
+	element.appendChild(option);
+	//set the default value of lead dropdown
+	element.value = 0;
+}
 
 window.GetDataFromLocalStorage = GetDataFromLocalStorage;
+window.addNoneOptionToDropDown = addNoneOptionToDropDown;
