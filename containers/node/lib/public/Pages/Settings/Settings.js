@@ -5,12 +5,13 @@ $(document).ready(function () {
 	let resval = localStorage.getItem("crm");
 	let data = {};
 	if (resval != null) {
+		$('#saveUpdateSettings').text("Update");
 		data = decodeFromBase64(resval);
 		console.log(data);
 		if (data != null) {
 			if (data.userId != null && data.userId != undefined && data.userId != '') {
 				$('#emailSettings').show();
-				$('#Save').hide();
+				$('#Submit').hide();
 				$('#logout').show();
 				$("#settingLoader").hide();
 				UserId = data.userId;
@@ -33,6 +34,7 @@ $(document).ready(function () {
 		$('#emailSettings').hide();
 		$('#logout').hide();
 		$("#settingLoader").hide();
+		$('#saveUpdateSettings').text("Save");
 	}
 
 	function escapeHtml(unsafe) {
@@ -96,7 +98,7 @@ $(document).ready(function () {
 					alert("Login successful.");
 					UserId = parseInt(decodedString);
 					$('#emailSettings').show();
-					$('#Save').hide();
+					$('#Submit').hide();
 					$('#logout').show();
 					ApiUrl = GetProxyUrl(crmUrl);
 					GetTaskTypes();
@@ -298,11 +300,11 @@ $(document).ready(function () {
 		});
 	}
 
-	$("#Save").click(function () {
+	$("#Submit").click(function () {
 		GetUserIdByLogin($("#crm-url").val(), $("#crm-login").val(), $("#crm-password").val());
 	});
 
-	$("#okSettings").click(function () {
+	$("#saveUpdateSettings").click(function () {
 		// Capture form data
 		let url = $("#crm-url").val();
 		if (url.endsWith('/')) {
