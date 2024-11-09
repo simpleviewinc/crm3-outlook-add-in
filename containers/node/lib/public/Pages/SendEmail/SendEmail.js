@@ -20,7 +20,7 @@
 	isSelectButtonClicked = false,
 	IsInboxTab = false;
 
-let HiddenReloptsIdtoVal = {};
+let parentRelIdtoChildRelVal = {};
 let listOfRelfIdvalsDynamicObj = {};
 
 SetApiUrl();
@@ -297,7 +297,7 @@ function SendTheEmail() {
 		}
 
 	});
-
+	
 	messageObject.relfldvals = JSON.stringify(listOfRelfIdvalsDynamicObj);
 	$("#sendEmailLoader").show();
 	const settings = {
@@ -335,18 +335,26 @@ function SendTheEmail() {
 	$.ajax(settings)
 		.done(function (response) {
 			console.log(response)
-			window.opener.setCategoryToEmail(id, true)
-			setTimeout(() => {
-				let getMatchesReturn = response.getElementsByTagName("sendEmailReturn");
-				const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-				$("#sendEmailLoader").hide();
-				alert("Email sent with trace id: " + parseInt(decodedString));
-				removeFirstItem(currentSelectedData);
-				if (currentSelectedData && currentSelectedData.length > 0)
-					ProcessSelectedData(currentSelectedData);
-				else
-					CloseAll();
-			},500)			
+			window.opener.setCategoryToEmail(id, true).then(() => {
+				setTimeout(() => {
+					let getMatchesReturn = response.getElementsByTagName("sendEmailReturn");
+					const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
+					$("#sendEmailLoader").hide();
+					alert("Email sent with trace id: " + parseInt(decodedString));
+					removeFirstItem(currentSelectedData);
+					if (currentSelectedData && currentSelectedData.length > 0)
+						ProcessSelectedData(currentSelectedData);
+					else
+						CloseAll();
+				},500)
+				EnableButtonById("#skipit");
+				EnableButtonById("#diffContact");
+				EnableButtonById("#sendEmail");
+			}).catch(() => {
+				EnableButtonById("#skipit");
+				EnableButtonById("#diffContact");
+				EnableButtonById("#sendEmail");
+			});			
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
 			let errorMessage = "Some error has occurred";
@@ -377,6 +385,9 @@ function SendTheEmail() {
 			$("#sendEmailLoader").hide();
 
 			alert("Simpleview API error: " + errorMessage);
+			EnableButtonById("#skipit");
+			EnableButtonById("#diffContact");
+			EnableButtonById("#sendEmail");
 			CloseAll();
 		});
 
@@ -560,11 +571,11 @@ function bindLeadDataToSelect(jsonData) {
 	
 	if (Array.isArray(jsonData.opts.rels.rel)){
 		for (let currRel of jsonData.opts.rels.rel){
-			let containerDiv = AddDropDownToFieldSetAsPerRelsList(currRel);
+			let containerDiv = AddDropDownToFieldSetAsPerRelsList(currRel,jsonData.opts.rels.rel);
 			parentfieldSetElement.appendChild(containerDiv);
 		}
 	} else {
-		let containerDiv = AddDropDownToFieldSetAsPerRelsList(jsonData.opts.rels.rel);
+		let containerDiv = AddDropDownToFieldSetAsPerRelsList(jsonData.opts.rels.rel,jsonData.opts.rels.rel);
 		parentfieldSetElement.appendChild(containerDiv);
 	}
 
@@ -790,25 +801,45 @@ $(document).ready(function () {
 	}
 	
 	$('#skipit').on('click', () => {
+		DisableButtonById("#skipit");
+		DisableButtonById("#diffContact");
+		DisableButtonById("#sendEmail");	
 		const id = $('#EmailId').val();
 		if (window.opener && !window.opener.closed) {
 			if (typeof window.opener.setCategoryToEmail === 'function') {
 				console.log("Email Id: " + id);
-				window.opener.setCategoryToEmail(id, false);
-				removeFirstItem(currentSelectedData);
-				if (currentSelectedData && currentSelectedData.length > 0)
-					ProcessSelectedData(currentSelectedData);
-				else {
-					setTimeout(function () {
-						CloseAll();
-					}, 1000); 
-				}
-					
+				$("#sendEmailLoader").show();
+
+				window.opener.setCategoryToEmail(id, false).then(() => {
+					removeFirstItem(currentSelectedData);
+					if (currentSelectedData && currentSelectedData.length > 0)
+						ProcessSelectedData(currentSelectedData);
+					else {
+						setTimeout(function () {
+							CloseAll();
+						},1000); 
+					}
+					$("#sendEmailLoader").hide();
+					EnableButtonById("#skipit");
+					EnableButtonById("#diffContact");
+					EnableButtonById("#sendEmail");
+				}).catch(() => {
+					$("#sendEmailLoader").hide();
+					EnableButtonById("#skipit");
+					EnableButtonById("#diffContact");
+					EnableButtonById("#sendEmail");
+				});
 			} else {
 				console.error("Parent window method setCategoryToEmail is not defined.");
+				EnableButtonById("#skipit");
+				EnableButtonById("#diffContact");
+				EnableButtonById("#sendEmail");
 			}
 		} else {
 			console.error("Parent window is not available.");
+			EnableButtonById("#skipit");
+			EnableButtonById("#diffContact");
+			EnableButtonById("#sendEmail");
 		}
 	});
 
@@ -825,9 +856,12 @@ $(document).ready(function () {
 	});
 
 	$('#sendEmail').on('click', () => {
-		$("#sendEmailLoader").show();
+		DisableButtonById("#skipit");
+		DisableButtonById("#diffContact");
+		DisableButtonById("#sendEmail");
+		let loader = $("#sendEmailLoader");
 		const emailid = $('#EmailId').val();
-		window.opener.fetchMimeContentOfAllEmail(emailid).then((EmailMIMEContent) => {
+		window.opener.fetchMimeContentOfAllEmail(emailid,loader).then((EmailMIMEContent) => {
 			// set the parameters related to the attachement name and content by convert string to Base64
 			messageObject.attachment = messageObject.subject + ".eml";
 			messageObject.attachmentcontent = stringToutf8ToBase64(EmailMIMEContent);
@@ -846,8 +880,10 @@ $(document).ready(function () {
 		}).catch((error) => {
 			console.error("Error fetching MIME content:", error);
 			window.alert("Something went wrong while fetching the MIME content of email from Outlook API. Please try again.")
+			EnableButtonById("#skipit");
+			EnableButtonById("#diffContact");
+			EnableButtonById("#sendEmail");
 		})
-		$("#sendEmailLoader").hide();
 	});
 	function getSelectedRowsData() {
 		// Create an array to hold the selected row data
@@ -941,6 +977,11 @@ $(document).ready(function () {
 		$('#box2').removeClass('active');
 		$('#showGrid1').addClass('active');
 		$('#showGrid2').removeClass('active');
+		messageObject.groupid = "";
+		messageObject.acctid = "";
+		messageObject.contactid = "";
+		DisableButtonById("#selectBtn");
+		$('#searchTable tbody tr').removeClass('selected');
 	});
 
 	$('#showGrid2').on('click', function () {
@@ -948,6 +989,11 @@ $(document).ready(function () {
 		$('#box2').addClass('active');
 		$('#showGrid1').removeClass('active');
 		$('#showGrid2').addClass('active');
+		messageObject.groupid = "";
+		messageObject.acctid = "";
+		messageObject.contactid = "";
+		DisableButtonById("#selectBtn");
+		$('#contactTable tbody tr').removeClass('selected');
 	});
 
 	$('#showGrid3').on('click', function () {
@@ -1039,8 +1085,18 @@ function BindClickOnRowForSearch() {
 		if ($(this).find('td').first().text().trim().toLowerCase() === "no data found") {
 			return;
 		}
+
+		if ($(this).hasClass('selected')) {
+			$(this).removeClass('selected');
+			messageObject.groupid = "";
+			messageObject.acctid = "";
+			messageObject.contactid = "";
+			DisableButtonById("#selectBtn");
+			return;
+		}
+		
 		$('#searchTable tbody tr').removeClass('selected');
-		$(this).toggleClass('selected');
+		$(this).addClass('selected');
 		// Collect data from the selected row
 		let rowData = {};
 		const headers = $('#searchTable th');
@@ -1068,18 +1124,22 @@ function BindClickOnRowForSearch() {
 }
 
 
-$(document).ready(function () {
-	BindRowSelectFunction();
-});
-
 function BindRowSelectFunction() {
 	$('#contactTable tbody tr').on('click', function () {
 		if ($(this).find('td').first().text().trim().toLowerCase() === "no data found") {
 			return;
 		}
+		if ($(this).hasClass('selected')) {
+			$(this).removeClass('selected');
+			messageObject.groupid = "";
+			messageObject.acctid = "";
+			messageObject.contactid = "";
+			DisableButtonById("#selectBtn");
+			return;
+		}
+		
 		$('#contactTable tbody tr').removeClass('selected');
-		$(this).toggleClass('selected');
-		console.log("contact table row clicked");
+		$(this).addClass('selected');
 		// Collect data from the selected row
 		let rowData = {};
 		const headers = $('#contactTable th');
@@ -1095,6 +1155,9 @@ function BindRowSelectFunction() {
 
 		// Log the row data to the console
 		console.log(rowData);
+		if (rowData) {
+			EnableButtonById("#selectBtn");
+		}
 		messageObject.groupid = rowData["GroupId"];
 		messageObject.acctid = rowData["ActId"];
 		messageObject.contactid = rowData["ContId"];
@@ -1321,49 +1384,18 @@ $(document).ready(function () {
 	});
 });
 
-
-function SetHiddenDropDownOption(){
-
-	for (let key in HiddenReloptsIdtoVal) {
-		const hiddenSelect = document.getElementById(key);
-		if (hiddenSelect) {
-			hiddenSelect.disabled = false;
-			hiddenSelect.innerHTML = '';
-			addNoneOptionToDropDown(hiddenSelect);
-			let hiddenrelopt = HiddenReloptsIdtoVal[key];
-			if (hiddenrelopt) {
-				if (Array.isArray(hiddenrelopt.data.row)) {
-					hiddenrelopt.data.row.forEach(row => {
-						if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
-							const option = document.createElement("option");
-							option.value = row.ID["#text"];
-							option.text = row.DISPLAY["#text"];
-							hiddenSelect.appendChild(option);
-						}
-					});
-				}
-			}
-		}
-	}
+function AddChooseAboveItemFirstDDOption(dropdown){
+	dropdown.disabled = true;
+	dropdown.innerHTML = '';
+	let option = document.createElement("option");
+	option.value = 0;
+	option.text = "--Choose Above Item First--";
+	dropdown.appendChild(option);
+	//set the default value of lead dropdown
+	dropdown.value = 0;
 }
 
-function AddChooseAboveItemFirstDDOption(){
-	for (let key in HiddenReloptsIdtoVal) {
-		const hiddenSelect = document.getElementById(key);
-		if (hiddenSelect) {
-			hiddenSelect.disabled = true;
-			hiddenSelect.innerHTML = '';
-			let option = document.createElement("option");
-			option.value = 0;
-			option.text = "--Choose Above Item First--";
-			hiddenSelect.appendChild(option);
-			//set the default value of lead dropdown
-			hiddenSelect.value = 0;
-		}
-	}
-}
-
-function AddDropDownToFieldSetAsPerRelsList(currRel){
+function AddDropDownToFieldSetAsPerRelsList(currRel,allRels){
 	let containerDiv = document.createElement('div');
 	containerDiv.classList.add('input-container');
 	let currDropDownLabel = document.createElement('label');
@@ -1371,17 +1403,13 @@ function AddDropDownToFieldSetAsPerRelsList(currRel){
 	let currDropDown = document.createElement('select');
 
 	currDropDown.id = currRel.fldname["#text"];
+	if (currRel.child["#text"]) {
+		parentRelIdtoChildRelVal[currRel.fldname["#text"]] = findRelByfldname(allRels,currRel.child["#text"]);
+		currDropDown.title = 'parentDD';
+	}
 
 	if (currRel.hidden["#text"] == 1) {
-		currDropDown.disabled = true;
-		let option = document.createElement("option");
-		option.value = 0;
-		option.text = "--Choose Above Item First--";
-		currDropDown.appendChild(option);
-		//set the default value of lead dropdown
-		currDropDown.value = 0;
-		currDropDown.title = 'hidden';
-		HiddenReloptsIdtoVal[currRel.fldname["#text"]] = currRel;
+		AddChooseAboveItemFirstDDOption(currDropDown);
 	} else {
 		addNoneOptionToDropDown(currDropDown);
 
@@ -1410,43 +1438,30 @@ function AddDropDownToFieldSetAsPerRelsList(currRel){
 	return containerDiv;
 }
 
+function findRelByfldname(rels, fldname) {
+	if (Array.isArray(rels)) {
+		return rels.find(rel => rel.fldname["#text"] === fldname);
+	} else if (rels && typeof rels === 'object') {
+		const relArray = [rels];
+		return relArray.find(rel => rel.fldname["#text"] === fldname);
+	} else {
+		console.error(`Invalid data structure: rels is not an array or object for fldname: ${fldname}`);
+		return null;
+	}
+}
+
 function AddOnChangeListnerToDropDown(){
-
 	let allDropdownList = $('#dropDownFieldAsPerGroup select');
-
-	let isAllSelectedDDValue = true;
 	allDropdownList.each(function() {
+		const titleDD = $(this).attr('title');
 		const id = $(this).attr('id');
 
-		if (id != 'rel_p3' && id != 'rel_p4') {
+		if (titleDD === 'parentDD') {
 			$(this).change(function() {
-				CheckAllDropDownSelectAndSetPlanner();
+				FilterChildRelOptOnChangeParentDD(id);
 			});
 		}
 	});
-}
-
-function CheckAllDropDownSelectAndSetPlanner(){
-	let isAllSelectedDDValue = true;
-	let allDropdownList = $('#dropDownFieldAsPerGroup select');
-
-	allDropdownList.each(function() {
-		const id = $(this).attr('id');
-
-		if ($(this).attr('title') !== 'hidden') {
-			const value = $(this).val();
-			if (value == 0) {
-				isAllSelectedDDValue = false;
-				return;
-			}
-		}
-	});
-
-	if (isAllSelectedDDValue) {
-		SetHiddenDropDownOption();
-	} else {
-		AddChooseAboveItemFirstDDOption();
-	}
 }
 
 function stringToutf8ToBase64(content) {
@@ -1461,4 +1476,36 @@ function stringToutf8ToBase64(content) {
 	}
 	console.log("typeof arr : ",typeof arr)
 	return btoa(arr); 
+}
+
+function FilterChildRelOptOnChangeParentDD(dropdownID){
+	let parentDropDownvalue = document.getElementById(dropdownID).value;
+	let childRel = parentRelIdtoChildRelVal[dropdownID];
+	const hiddenSelect = document.getElementById(childRel.fldname["#text"]);
+	if (parentDropDownvalue == 0){
+		AddChooseAboveItemFirstDDOption(hiddenSelect);
+	} else {
+		if (hiddenSelect) {
+			hiddenSelect.disabled = false;
+			hiddenSelect.innerHTML = '';
+			addNoneOptionToDropDown(hiddenSelect);
+			
+			if (childRel) {
+				if (Array.isArray(childRel.data.row)) {
+					childRel.data.row.forEach(row => {
+						if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"] && parentDropDownvalue == row.PARENTID["#text"]) {
+							const option = document.createElement("option");
+							option.value = row.ID["#text"];
+							option.text = row.DISPLAY["#text"];
+							hiddenSelect.appendChild(option);
+						}
+					});
+				}
+			}
+		}
+	}
+
+	if (childRel.child["#text"]) {
+		FilterChildRelOptOnChangeParentDD(childRel.fldname["#text"]);
+	}
 }

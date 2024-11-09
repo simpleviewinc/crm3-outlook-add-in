@@ -18,59 +18,68 @@ function retryCategoryUpdate(emailId, isSentFlag, retryCount = 0) {
 	const MAX_RETRIES = 3;
 	const INITIAL_DELAY = 1000; // Initial retry delay in milliseconds
 
-	if (retryCount < MAX_RETRIES) {
-		const delay = Math.pow(2, retryCount) * INITIAL_DELAY;
-		console.log(`Retrying after ${delay}ms (Retry ${retryCount + 1} of ${MAX_RETRIES})`);
-		setTimeout(() => {
-			setCategoryToEmail(emailId, isSentFlag);
-		}, delay);
-	} else {
-		console.error(`Max retries (${MAX_RETRIES}) exceeded. Unable to set category for email ${emailId}.`);
-	}
+	return new Promise((resolve, reject) => {
+		if (retryCount < MAX_RETRIES) {
+			const delay = Math.pow(2, retryCount) * INITIAL_DELAY;
+			console.log(`Retrying after ${delay}ms (Retry ${retryCount + 1} of ${MAX_RETRIES})`);
+			setTimeout(() => {
+				setCategoryToEmail(emailId, isSentFlag).then(resolve).catch((error) => {
+					// Retry on failure
+					retryCategoryUpdate(emailId, isSentFlag, retryCount + 1).then(resolve).catch(reject);
+				});
+			}, delay);
+		} else {
+			console.error(`Max retries (${MAX_RETRIES}) exceeded. Unable to set category for email ${emailId}.`);
+			reject();
+		}
+	});
 }
 
 // Set category to email with retry logic
 function setCategoryToEmail(emailId, isSentFlag) {
 	console.log("Set category called for email:", emailId);
-
-	Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
-		if (result.status === "succeeded") {
-			const accessToken = result.value;
-			const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${emailId}`;
-
-			// Determine category color based on flag
-			let categoryColor = 'Yellow category'; // initialized with some valid value 
-			let data = GetDataFromLocalStorageAndSetApiUrlGlobal();
-			if (data != null) {
-				categoryColor = isSentFlag ? data.sentFlagColor : data.skipFlagColor;
+	return new Promise((resolve,reject) => {
+		Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
+			if (result.status === "succeeded") {
+				const accessToken = result.value;
+				const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${emailId}`;
+	
+				// Determine category color based on flag
+				let categoryColor = 'Yellow category'; // initialized with some valid value 
+				let data = GetDataFromLocalStorageAndSetApiUrlGlobal();
+				if (data != null) {
+					categoryColor = isSentFlag ? data.sentFlagColor : data.skipFlagColor;
+				}
+				
+				// Construct the payload to set the category
+				const categoryData = {
+					"Categories": [categoryColor]
+				};
+	
+				// Make the PATCH request to update the email with the category
+				$.ajax({
+					url: requestUrl,
+					type: 'PATCH',
+					contentType: 'application/json',
+					headers: {
+						'Authorization': `Bearer ${accessToken}`
+					},
+					data: JSON.stringify(categoryData)
+				}).done(function (response) {
+					console.log(`Email ${emailId} category set successfully:`, response);
+					resolve();
+				}).fail(function (jqXHR, textStatus, errorThrown) {
+					console.error(`Error setting category for email ${emailId}:`, textStatus, errorThrown);
+					console.error("Response text:", jqXHR.responseText);
+	
+					// Retry logic with exponential backoff
+					retryCategoryUpdate(emailId, isSentFlag).then(resolve).catch(reject);
+				});
+			} else {
+				console.error("Error getting callback token:", result.error.message);
+				reject();
 			}
-			
-			// Construct the payload to set the category
-			const categoryData = {
-				"Categories": [categoryColor]
-			};
-
-			// Make the PATCH request to update the email with the category
-			$.ajax({
-				url: requestUrl,
-				type: 'PATCH',
-				contentType: 'application/json',
-				headers: {
-					'Authorization': `Bearer ${accessToken}`
-				},
-				data: JSON.stringify(categoryData)
-			}).done(function (response) {
-				console.log(`Email ${emailId} category set successfully:`, response);
-			}).fail(function (jqXHR, textStatus, errorThrown) {
-				console.error(`Error setting category for email ${emailId}:`, textStatus, errorThrown);
-				console.error("Response text:", jqXHR.responseText);
-
-				// Retry logic with exponential backoff
-				retryCategoryUpdate(emailId, isSentFlag);
-			});
-		} else {
-			console.error("Error getting callback token:", result.error.message);
-		}
+		});
 	});
 }
 
@@ -573,7 +582,8 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 
 
 
-function fetchMimeContentOfAllEmail(EmailIdTogetMIME) {
+function fetchMimeContentOfAllEmail(EmailIdTogetMIME,loader) {
+	loader.show();
 	return new Promise((resolve, reject) => {
 		// Get access token from Office context
 		Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
@@ -610,11 +620,13 @@ function fetchMimeContentOfAllEmail(EmailIdTogetMIME) {
 				};
 
 				fetchEmailMimeContent(EmailIdTogetMIME,retries,delay).then((mimedata) => {
+					loader.hide();
 					resolve(mimedata);
 				}).catch((error) => {
+					loader.hide();
 					reject(error);
 				});
-			} 
+			}
 		});
 	});
 }
