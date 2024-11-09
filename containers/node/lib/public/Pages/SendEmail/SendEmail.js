@@ -17,49 +17,13 @@
 	},
 	ApiUrl,
 	currentSelectedData = [],
-	isSelectButtonClicked = false,
 	IsInboxTab = false;
 
 let parentRelIdtoChildRelVal = {};
 let listOfRelfIdvalsDynamicObj = {};
+let index = 1;
 
 SetApiUrl();
-
-function formatDate(date, tempDate) {
-	if (date == "Invalid Date" && typeof tempDate === 'string') {
-		let split = tempDate.split(',');
-		if (split != undefined && split != null && split.length > 0)
-			return convertToMMDDYYYY(split[0]);
-	}
-	const day = String(date.getDate()).padStart(2, '0');
-	const month = String(date.getMonth() + 1).padStart(2, '0'); // January is 0!
-	const year = date.getFullYear();
-	
-	// Check if any of the values are null, empty, or NaN
-	if (!day || !month || !year || isNaN(date.getTime())) {
-		const today = new Date();
-		const todayDay = String(today.getDate()).padStart(2, '0');
-		const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
-		const todayYear = today.getFullYear();
-		return `${todayMonth}/${todayDay}/${todayYear}`;
-	}
-
-	return `${month}/${day}/${year}`;
-}
-
-function convertToMMDDYYYY(dateString) {
-	const dateParts = dateString.split('/');
-
-	if (dateParts.length !== 3) {
-		return null; // Invalid date format
-	}
-
-	const day = String(dateParts[0]).padStart(2, '0');
-	const month = String(dateParts[1]).padStart(2, '0'); // January is 0!
-	const year = dateParts[2];
-
-	return `${month}/${day}/${year}`;
-}
 
 window.initPopup = function (isSyncEmail, selectedEmails) {
 	console.log("init popup: " + isSyncEmail);
@@ -153,16 +117,236 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 				currentSelectedData = emailData;
 				console.log(emailData);
 				if (emailData != null && emailData.length > 0) {
-					console.log("2");
-					isSelectButtonClicked = true;
 					ProcessSelectedData(currentSelectedData);
 				}
 			}
 		}, 500);
 	});
 };
-let isInboxTabClicked = true;
-let index = 1;
+
+
+$(document).ready(function () {
+	$("#sendEmailLoader").hide();
+	$("#matchContactLoader").hide();
+	DisableButtonById("#selectBtn");
+	const resval = localStorage.getItem("crm");
+	let data = {};
+	if (resval != null) {
+		data = decodeFromBase64(resval);
+		if (data != null) {
+			if (data.userId != null && data.userId != undefined && data.userId != '') {
+				messageObject.userid = data.userId;
+				GetGroupsByUserId();
+			}
+		}
+	}
+
+	$('.select-all-button').click(function () {
+		const targetTable = $(this).data('target');
+		$(targetTable).find('input[type="checkbox"]').prop('checked', true).closest('tr').addClass('selected');
+	});
+
+	$('.clear-all-button').click(function () {
+		const targetTable = $(this).data('target');
+		$(targetTable).find('input[type="checkbox"]').prop('checked', false).closest('tr').removeClass('selected');
+	});
+	
+	$('#skipit').on('click', () => {
+		DisableButtonById("#skipit");
+		DisableButtonById("#diffContact");
+		DisableButtonById("#sendEmail");	
+		const id = $('#EmailId').val();
+		if (window.opener && !window.opener.closed) {
+			if (typeof window.opener.setCategoryToEmail === 'function') {
+				console.log("Email Id: " + id);
+				$("#sendEmailLoader").show();
+
+				window.opener.setCategoryToEmail(id, false).then(() => {
+					removeFirstItem(currentSelectedData);
+					if (currentSelectedData && currentSelectedData.length > 0){
+						ProcessSelectedData(currentSelectedData);
+					}
+					else {
+						setTimeout(function () {
+							CloseAll();
+						},1000); 
+					}
+					$("#sendEmailLoader").hide();
+					EnableButtonById("#skipit");
+					EnableButtonById("#diffContact");
+					EnableButtonById("#sendEmail");
+					checkMessageObjectFields(messageObject);
+				}).catch(() => {
+					$("#sendEmailLoader").hide();
+					EnableButtonById("#skipit");
+					EnableButtonById("#diffContact");
+					EnableButtonById("#sendEmail");
+				});
+			} else {
+				console.error("Parent window method setCategoryToEmail is not defined.");
+				EnableButtonById("#skipit");
+				EnableButtonById("#diffContact");
+				EnableButtonById("#sendEmail");
+			}
+		} else {
+			console.error("Parent window is not available.");
+			EnableButtonById("#skipit");
+			EnableButtonById("#diffContact");
+			EnableButtonById("#sendEmail");
+		}
+	});
+
+
+	$('#priority').on('change', function () {
+		checkMessageObjectFields();
+	});
+	$('#trace-type').on('change', function () {
+		checkMessageObjectFields();
+	});
+
+	$('#sendEmail').on('click', () => {
+		DisableButtonById("#skipit");
+		DisableButtonById("#diffContact");
+		DisableButtonById("#sendEmail");
+		let loader = $("#sendEmailLoader");
+		const emailid = $('#EmailId').val();
+		window.opener.fetchMimeContentOfAllEmail(emailid,loader).then((EmailMIMEContent) => {
+			// set the parameters related to the attachement name and content by convert string to Base64
+			messageObject.attachment = messageObject.subject + ".eml";
+			messageObject.attachmentcontent = stringToutf8ToBase64(EmailMIMEContent);
+			messageObject.priorityid = $("#priority").val();
+			messageObject.typeid = $("#trace-type").val();
+			console.log(messageObject);
+			if (window.opener && !window.opener.closed) {
+				if (typeof window.opener.setCategoryToEmail === 'function') {
+					SendTheEmail();
+				} else {
+					console.error("Parent window method setCategoryToEmail is not defined.");
+				}
+			} else {
+				console.error("Parent window is not available.");
+			}
+		}).catch((error) => {
+			console.error("Error fetching MIME content:", error);
+			window.alert("Something went wrong while fetching the MIME content of email from Outlook API. Please try again.")
+			EnableButtonById("#skipit");
+			EnableButtonById("#diffContact");
+			EnableButtonById("#sendEmail");
+		})
+	});
+
+	$('#loader').hide();
+	$("#searchContacts").click(function () {
+		if ($('#name').val().length < 3 && $('#company').val().length < 3) {
+			$('#NameCompanyErrorMsg').removeClass('hidden');
+		} else {
+			$('#NameCompanyErrorMsg').addClass('hidden');
+			GetSearchedResult();
+		}
+	});
+
+
+	$('#SyncOk').on('click', function () {
+		currentSelectedData = getSelectedRowsData();
+		console.log("Selected Rows Data:-  ");
+		console.log(currentSelectedData);
+		ProcessSelectedData(currentSelectedData);
+	});
+
+	$('#selectBtn').on('click', function () {
+		GetAttachedToDDInfo();
+		$('#grids').addClass('grid');
+		$('#selectContact').addClass('active');
+		$('#sendEmail').addClass('show');
+		$('#diffContact').addClass('show');
+		$('#selectBtn').addClass('hide');
+	});
+	$('#SendCancel').on('click', function () {
+		window.close();
+	});
+
+	$('#diffContact').on('click', function () {
+		$('#grids').removeClass('grid');
+		$('#selectContact').removeClass('active');
+		$('#sendEmail').removeClass('show');
+		$('#diffContact').removeClass('show');
+		$('#selectBtn').removeClass('hide');
+		$('#messageDiv').text('');
+	});
+	$('#showGrid1').on('click', function () {
+		$('#box1').addClass('active');
+		$('#box2').removeClass('active');
+		$('#showGrid1').addClass('active');
+		$('#showGrid2').removeClass('active');
+		messageObject.groupid = "";
+		messageObject.acctid = "";
+		messageObject.contactid = "";
+		DisableButtonById("#selectBtn");
+		$('#searchTable tbody tr').removeClass('selected');
+	});
+
+	$('#showGrid2').on('click', function () {
+		$('#box1').removeClass('active');
+		$('#box2').addClass('active');
+		$('#showGrid1').removeClass('active');
+		$('#showGrid2').addClass('active');
+		messageObject.groupid = "";
+		messageObject.acctid = "";
+		messageObject.contactid = "";
+		DisableButtonById("#selectBtn");
+		$('#contactTable tbody tr').removeClass('selected');
+	});
+
+	$('#showGrid3').on('click', function () {
+		$('#SyncBox1').addClass('active');
+		$('#SyncBox2').removeClass('active');
+		$('#showGrid3').addClass('active');
+		$('#showGrid4').removeClass('active');
+	});
+
+	$('#showGrid4').on('click', function () {
+		$('#SyncBox1').removeClass('active');
+		$('#SyncBox2').addClass('active');
+		$('#showGrid3').removeClass('active');
+		$('#showGrid4').addClass('active');
+	});
+});
+
+function formatDate(date, tempDate) {
+	if (date == "Invalid Date" && typeof tempDate === 'string') {
+		let split = tempDate.split(',');
+		if (split != undefined && split != null && split.length > 0)
+			return convertToMMDDYYYY(split[0]);
+	}
+	const day = String(date.getDate()).padStart(2, '0');
+	const month = String(date.getMonth() + 1).padStart(2, '0'); // January is 0!
+	const year = date.getFullYear();
+	
+	// Check if any of the values are null, empty, or NaN
+	if (!day || !month || !year || isNaN(date.getTime())) {
+		const today = new Date();
+		const todayDay = String(today.getDate()).padStart(2, '0');
+		const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+		const todayYear = today.getFullYear();
+		return `${todayMonth}/${todayDay}/${todayYear}`;
+	}
+
+	return `${month}/${day}/${year}`;
+}
+
+function convertToMMDDYYYY(dateString) {
+	const dateParts = dateString.split('/');
+
+	if (dateParts.length !== 3) {
+		return null; // Invalid date format
+	}
+
+	const day = String(dateParts[0]).padStart(2, '0');
+	const month = String(dateParts[1]).padStart(2, '0'); // January is 0!
+	const year = dateParts[2];
+
+	return `${month}/${day}/${year}`;
+}
 
 function ProcessSelectedData(data) {
 	messageObject.IsInboxTab = data[0].isInbox;
@@ -172,12 +356,7 @@ function ProcessSelectedData(data) {
 	let settings = {};
 	if (resval != null) {
 		settings = decodeFromBase64(resval);
-		if (!settings.inboundPriority) settings.inboundPriority = 0;
-		if (!settings.inboundTraceType) settings.inboundTraceType = 0;
-		if (!settings.outboundPriority) settings.outboundPriority = 0;
-		if (!settings.outboundTraceType) settings.outboundTraceType = 0;
 	}
-	console.log("3");
 	const outboundPrt = document.getElementById('priority');
 	const outboundDD = document.getElementById('trace-type');
 	if (data[0].isInbox) {
@@ -223,6 +402,57 @@ function ProcessSelectedData(data) {
 	GetMatchingDataForSync(data[0].fromEmail, messageObject.userid);
 }
 
+function getSelectedRowsData() {
+	// Create an array to hold the selected row data
+	const selectedRowsData = [];
+
+	const inboxCheckboxes = document.querySelectorAll('#inboxTable .row-checkbox:checked');
+	const sentBoxCheckboxes = document.querySelectorAll('#sentBoxTable .row-checkbox:checked');
+
+	// Convert NodeLists to arrays and merge them
+	const checkboxes = [
+		...Array.from(inboxCheckboxes),
+		...Array.from(sentBoxCheckboxes)
+	];
+
+	// Loop through each checkbox
+	checkboxes.forEach(checkbox => {
+		// Check if the checkbox is selected
+		if (checkbox.checked) {
+			// Find the parent row (tr) of the checkbox
+			const row = checkbox.closest('tr');
+
+			// Check which table the row belongs to
+			const isInbox = row.closest('table').id === 'inboxTable';
+
+			// Get the value from the checkbox
+			const checkboxValue = checkbox.value;
+
+			// Get the text content from the sibling td elements
+			const email = row.cells[1].textContent;
+			const subject = row.cells[2].textContent;
+			const date = row.cells[3].textContent;
+			const body = row.cells[4].textContent;
+
+			// Create an object with the row data
+			const rowData = {
+				id: checkboxValue,
+				fromEmail: email,
+				subject: subject,
+				receivedDate: date,
+				body: body,
+				isInbox: isInbox
+			};
+
+			// Add the row data object to the array
+			selectedRowsData.push(rowData);
+		}
+	});
+
+	// Return the array of selected row data
+	return selectedRowsData;
+}
+
 function populateTable(contactList) {
 	if (!Array.isArray(contactList)) {
 		console.log('contactList is not an array');
@@ -263,6 +493,7 @@ function decodeFromBase64(base64Str) {
 	const jsonString = atob(base64Str);
 	return JSON.parse(jsonString);
 }
+
 function validateMessageObject(messageObject) {
 	// Checking if each optional field exists and is not null, otherwise assign an empty string
 	messageObject.duedate = messageObject.duedate || '';
@@ -277,6 +508,7 @@ function validateMessageObject(messageObject) {
 
 	return messageObject;
 }
+
 function SendTheEmail() {
 	const id = $('#EmailId').val();
 	messageObject = validateMessageObject(messageObject);
@@ -336,7 +568,7 @@ function SendTheEmail() {
 		.done(function (response) {
 			console.log(response)
 			window.opener.setCategoryToEmail(id, true).then(() => {
-				setTimeout(() => {
+				//setTimeout(() => {
 					let getMatchesReturn = response.getElementsByTagName("sendEmailReturn");
 					const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
 					$("#sendEmailLoader").hide();
@@ -346,10 +578,11 @@ function SendTheEmail() {
 						ProcessSelectedData(currentSelectedData);
 					else
 						CloseAll();
-				},500)
+				//},500)
 				EnableButtonById("#skipit");
 				EnableButtonById("#diffContact");
 				EnableButtonById("#sendEmail");
+				checkMessageObjectFields(messageObject);
 			}).catch(() => {
 				EnableButtonById("#skipit");
 				EnableButtonById("#diffContact");
@@ -406,7 +639,7 @@ function CloseAll() {
 	}
 }
 
-function checkMessageObjectFields(messageObject) {
+function checkMessageObjectFields() {
 	messageObject.priorityid = $("#priority").val();
 	messageObject.typeid = $("#trace-type").val();
 
@@ -462,8 +695,6 @@ function checkMessageObjectFields(messageObject) {
 }
 
 function GetAttachedToDDInfo() {
-	console.log("GetAttachedToDDInfo");
-	console.debug(messageObject);
 	$("#sendEmailLoader").show();
 	DisableButtonById("#sendEmail");
 
@@ -506,14 +737,17 @@ function GetAttachedToDDInfo() {
 	$.ajax(settings)
 		.done(function (response) {
 			console.log(response);
-			$("#sendEmailLoader").hide();
 			// Extract the inner XML string
 			let getMatchesReturn = response.getElementsByTagName("getRelOptsReturn");
 			const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
 			// Decode the inner XML string
-			const decodedInnerXML = decodeHTMLEntities(decodedString);
-			//console.log(decodedInnerXML);
-			parseXmlToJson(decodedInnerXML);
+			
+			//const decodedInnerXML1 = decodeHTMLEntities(decodedString);
+			const parser = new DOMParser();
+			const xml = parser.parseFromString(decodedString, "text/xml");
+			const jsonRelOpt = parseXmlToJson(xml);
+			bindLeadDataToSelect(jsonRelOpt);
+			$("#sendEmailLoader").hide();
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
 			$("#sendEmailLoader").hide();
@@ -522,7 +756,7 @@ function GetAttachedToDDInfo() {
 
 }
 
-function xmlToJson(xml) {
+function parseXmlToJson(xml) {
 	let obj = {};
 	if (xml.nodeType === 1) { // element
 		if (xml.attributes.length > 0) {
@@ -541,31 +775,21 @@ function xmlToJson(xml) {
 			const item = xml.childNodes.item(i);
 			const nodeName = item.nodeName;
 			if (typeof obj[nodeName] === "undefined") {
-				obj[nodeName] = xmlToJson(item);
+				obj[nodeName] = parseXmlToJson(item);
 			} else {
 				if (typeof obj[nodeName].push === "undefined") {
 					const old = obj[nodeName];
 					obj[nodeName] = [];
 					obj[nodeName].push(old);
 				}
-				obj[nodeName].push(xmlToJson(item));
+				obj[nodeName].push(parseXmlToJson(item));
 			}
 		}
 	}
 	return obj;
 }
 
-function parseXmlToJson(xmlStr) {
-	const parser = new DOMParser();
-	const xmlDoc = parser.parseFromString(xmlStr, "text/xml");
-	const json = xmlToJson(xmlDoc);
-	bindLeadDataToSelect(JSON.stringify(json, null, 2));
-	return json;
-}
-
 function bindLeadDataToSelect(jsonData) {
-	jsonData = JSON.parse(jsonData);
-
 	let parentfieldSetElement = document.getElementById('dropDownFieldAsPerGroup');
 	parentfieldSetElement.innerHTML = '';
 	
@@ -783,240 +1007,6 @@ function SetApiUrl() {
 	//	}
 	//}
 }
-
-$(document).ready(function () {
-	$("#sendEmailLoader").hide();
-	$("#matchContactLoader").hide();
-	DisableButtonById("#selectBtn");
-	const resval = localStorage.getItem("crm");
-	let data = {};
-	if (resval != null) {
-		data = decodeFromBase64(resval);
-		if (data != null) {
-			if (data.userId != null && data.userId != undefined && data.userId != '') {
-				messageObject.userid = data.userId;
-				GetGroupsByUserId();
-			}
-		}
-	}
-	
-	$('#skipit').on('click', () => {
-		DisableButtonById("#skipit");
-		DisableButtonById("#diffContact");
-		DisableButtonById("#sendEmail");	
-		const id = $('#EmailId').val();
-		if (window.opener && !window.opener.closed) {
-			if (typeof window.opener.setCategoryToEmail === 'function') {
-				console.log("Email Id: " + id);
-				$("#sendEmailLoader").show();
-
-				window.opener.setCategoryToEmail(id, false).then(() => {
-					removeFirstItem(currentSelectedData);
-					if (currentSelectedData && currentSelectedData.length > 0)
-						ProcessSelectedData(currentSelectedData);
-					else {
-						setTimeout(function () {
-							CloseAll();
-						},1000); 
-					}
-					$("#sendEmailLoader").hide();
-					EnableButtonById("#skipit");
-					EnableButtonById("#diffContact");
-					EnableButtonById("#sendEmail");
-				}).catch(() => {
-					$("#sendEmailLoader").hide();
-					EnableButtonById("#skipit");
-					EnableButtonById("#diffContact");
-					EnableButtonById("#sendEmail");
-				});
-			} else {
-				console.error("Parent window method setCategoryToEmail is not defined.");
-				EnableButtonById("#skipit");
-				EnableButtonById("#diffContact");
-				EnableButtonById("#sendEmail");
-			}
-		} else {
-			console.error("Parent window is not available.");
-			EnableButtonById("#skipit");
-			EnableButtonById("#diffContact");
-			EnableButtonById("#sendEmail");
-		}
-	});
-
-
-	$('#priority').on('change', function () {
-		const selectedValue = $(this).val();
-		messageObject.priorityid = selectedValue;
-		checkMessageObjectFields(messageObject);
-	});
-	$('#trace-type').on('change', function () {
-		const selectedValue = $(this).val();
-		messageObject.typeid = selectedValue;
-		checkMessageObjectFields(messageObject);
-	});
-
-	$('#sendEmail').on('click', () => {
-		DisableButtonById("#skipit");
-		DisableButtonById("#diffContact");
-		DisableButtonById("#sendEmail");
-		let loader = $("#sendEmailLoader");
-		const emailid = $('#EmailId').val();
-		window.opener.fetchMimeContentOfAllEmail(emailid,loader).then((EmailMIMEContent) => {
-			// set the parameters related to the attachement name and content by convert string to Base64
-			messageObject.attachment = messageObject.subject + ".eml";
-			messageObject.attachmentcontent = stringToutf8ToBase64(EmailMIMEContent);
-			messageObject.priorityid = $("#priority").val();
-			messageObject.typeid = $("#trace-type").val();
-			console.log(messageObject);
-			if (window.opener && !window.opener.closed) {
-				if (typeof window.opener.setCategoryToEmail === 'function') {
-					SendTheEmail();
-				} else {
-					console.error("Parent window method setCategoryToEmail is not defined.");
-				}
-			} else {
-				console.error("Parent window is not available.");
-			}
-		}).catch((error) => {
-			console.error("Error fetching MIME content:", error);
-			window.alert("Something went wrong while fetching the MIME content of email from Outlook API. Please try again.")
-			EnableButtonById("#skipit");
-			EnableButtonById("#diffContact");
-			EnableButtonById("#sendEmail");
-		})
-	});
-	function getSelectedRowsData() {
-		// Create an array to hold the selected row data
-		const selectedRowsData = [];
-
-		const inboxCheckboxes = document.querySelectorAll('#inboxTable .row-checkbox:checked');
-		const sentBoxCheckboxes = document.querySelectorAll('#sentBoxTable .row-checkbox:checked');
-
-		// Convert NodeLists to arrays and merge them
-		const checkboxes = [
-			...Array.from(inboxCheckboxes),
-			...Array.from(sentBoxCheckboxes)
-		];
-
-		// Loop through each checkbox
-		checkboxes.forEach(checkbox => {
-			// Check if the checkbox is selected
-			if (checkbox.checked) {
-				// Find the parent row (tr) of the checkbox
-				const row = checkbox.closest('tr');
-
-				// Check which table the row belongs to
-				const isInbox = row.closest('table').id === 'inboxTable';
-
-				// Get the value from the checkbox
-				const checkboxValue = checkbox.value;
-
-				// Get the text content from the sibling td elements
-				const email = row.cells[1].textContent;
-				const subject = row.cells[2].textContent;
-				const date = row.cells[3].textContent;
-				const body = row.cells[4].textContent;
-
-				// Create an object with the row data
-				const rowData = {
-					id: checkboxValue,
-					fromEmail: email,
-					subject: subject,
-					receivedDate: date,
-					body: body,
-					isInbox: isInbox
-				};
-
-				// Add the row data object to the array
-				selectedRowsData.push(rowData);
-			}
-		});
-
-		// Return the array of selected row data
-		return selectedRowsData;
-	}
-
-	$('#loader').hide();
-	$("#searchContacts").click(function () {
-		if ($('#name').val().length < 3 && $('#company').val().length < 3) {
-			$('#NameCompanyErrorMsg').removeClass('hidden');
-		} else {
-			$('#NameCompanyErrorMsg').addClass('hidden');
-			GetSearchedResult();
-		}
-	});
-
-
-	$('#SyncOk').on('click', function () {
-		isSelectButtonClicked = true;
-		console.log("ok  clicked !!");
-		console.log("isSelectButtonClicked: REMOVE? - Variable isn't actually in use - ", isSelectButtonClicked);
-		currentSelectedData = getSelectedRowsData(isInboxTabClicked);
-		console.log("Selected Rows Data:-  ");
-		console.log(currentSelectedData);
-		ProcessSelectedData(currentSelectedData);
-	});
-
-	$('#selectBtn').on('click', function () {
-		GetAttachedToDDInfo();
-		$('#grids').addClass('grid');
-		$('#selectContact').addClass('active');
-		$('#sendEmail').addClass('show');
-		$('#diffContact').addClass('show');
-		$('#selectBtn').addClass('hide');
-	});
-	$('#SendCancel').on('click', function () {
-		window.close();
-	});
-
-	$('#diffContact').on('click', function () {
-		$('#grids').removeClass('grid');
-		$('#selectContact').removeClass('active');
-		$('#sendEmail').removeClass('show');
-		$('#diffContact').removeClass('show');
-		$('#selectBtn').removeClass('hide');
-		$('#messageDiv').text('');
-	});
-	$('#showGrid1').on('click', function () {
-		$('#box1').addClass('active');
-		$('#box2').removeClass('active');
-		$('#showGrid1').addClass('active');
-		$('#showGrid2').removeClass('active');
-		messageObject.groupid = "";
-		messageObject.acctid = "";
-		messageObject.contactid = "";
-		DisableButtonById("#selectBtn");
-		$('#searchTable tbody tr').removeClass('selected');
-	});
-
-	$('#showGrid2').on('click', function () {
-		$('#box1').removeClass('active');
-		$('#box2').addClass('active');
-		$('#showGrid1').removeClass('active');
-		$('#showGrid2').addClass('active');
-		messageObject.groupid = "";
-		messageObject.acctid = "";
-		messageObject.contactid = "";
-		DisableButtonById("#selectBtn");
-		$('#contactTable tbody tr').removeClass('selected');
-	});
-
-	$('#showGrid3').on('click', function () {
-		$('#SyncBox1').addClass('active');
-		$('#SyncBox2').removeClass('active');
-		$('#showGrid3').addClass('active');
-		$('#showGrid4').removeClass('active');
-		isInboxTabClicked = true;
-	});
-
-	$('#showGrid4').on('click', function () {
-		$('#SyncBox1').removeClass('active');
-		$('#SyncBox2').addClass('active');
-		$('#showGrid3').removeClass('active');
-		$('#showGrid4').addClass('active');
-		isInboxTabClicked = false;
-	});
-});
 
 function GetGroupsByUserId() {
 	const settings = {
@@ -1374,21 +1364,6 @@ function decodeHTMLEntities(text) {
 	});
 }
 
-
-
-// Function to toggle the state of all checkboxes in a box
-$(document).ready(function () {
-	$('.select-all-button').click(function () {
-		const targetTable = $(this).data('target');
-		$(targetTable).find('input[type="checkbox"]').prop('checked', true).closest('tr').addClass('selected');
-	});
-
-	$('.clear-all-button').click(function () {
-		const targetTable = $(this).data('target');
-		$(targetTable).find('input[type="checkbox"]').prop('checked', false).closest('tr').removeClass('selected');
-	});
-});
-
 function AddChooseAboveItemFirstDDOption(dropdown){
 	dropdown.disabled = true;
 	dropdown.innerHTML = '';
@@ -1408,11 +1383,13 @@ function AddDropDownToFieldSetAsPerRelsList(currRel,allRels){
 	let currDropDown = document.createElement('select');
 
 	currDropDown.id = currRel.fldname["#text"];
+	// if 'currRel.child["#text"]' contain any value that mean current rel is parent of other rel. 
 	if (currRel.child["#text"]) {
 		parentRelIdtoChildRelVal[currRel.fldname["#text"]] = findRelByfldname(allRels,currRel.child["#text"]);
-		currDropDown.title = 'parentDD';
+		currDropDown.setAttribute('data-ParentDropDown', 'true'); 
 	}
 
+	// if 'currRel.hidden["#text"]' contain any value that mean current rel is a child rel. 
 	if (currRel.hidden["#text"] == 1) {
 		AddChooseAboveItemFirstDDOption(currDropDown);
 	} else {
@@ -1456,12 +1433,12 @@ function findRelByfldname(rels, fldname) {
 }
 
 function AddOnChangeListnerToDropDown(){
-	let allDropdownList = $('#dropDownFieldAsPerGroup select');
+	let allDropdownList = $('#dropDownFieldAsPerGroup select[data-ParentDropDown]');
 	allDropdownList.each(function() {
-		const titleDD = $(this).attr('title');
+		const titleDD = $(this).attr('data-ParentDropDown');
 		const id = $(this).attr('id');
 
-		if (titleDD === 'parentDD') {
+		if (titleDD === 'true') {
 			$(this).change(function() {
 				FilterChildRelOptOnChangeParentDD(id);
 			});
@@ -1470,6 +1447,8 @@ function AddOnChangeListnerToDropDown(){
 }
 
 function stringToutf8ToBase64(content) {
+	//This method first encode string content to UTF* then encode it to Base64.
+	// Because UTF-8 encoding ensures that all characters, including non-ASCII and special symbols, are properly represented. 
 	// Use TextEncoder to convert the string to UTF-8
 	const encoder = new TextEncoder();
 	const uint8Array = encoder.encode(content);
