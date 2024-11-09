@@ -496,11 +496,6 @@ function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
 	});
 }
 
-function parseDate(dateString) {
-	return new Date(dateString); // Parse ISO 8601 format directly
-}
-
-
 function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryColor, skipCategoryColor) {
 	const storage = GetDataFromLocalStorageAndSetApiUrlGlobal();
 	if (storage == null || storage == undefined || Object.keys(storage).length === 0) {
@@ -544,8 +539,8 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 
 						// Sort validEmails based on receivedDateTime
 						validEmails.sort((a, b) => {
-							const dateA = parseDate(a.ReceivedDateTime);
-							const dateB = parseDate(b.ReceivedDateTime);
+							const dateA = new Date(a.ReceivedDateTime);
+							const dateB = new Date(b.ReceivedDateTime);
 							return dateB - dateA;
 						});
 						allEmails = validEmails;
@@ -579,8 +574,6 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 		}
 	});
 }
-
-
 
 function fetchMimeContentOfAllEmail(EmailIdTogetMIME,loader) {
 	loader.show();

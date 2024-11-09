@@ -35,18 +35,7 @@ $(document).ready(function () {
 		$('#logout').hide();
 		$("#settingLoader").hide();
 		$('#saveUpdateSettings').text("Save");
-	}
-
-	function escapeHtml(unsafe) {
-		return unsafe
-			.replace(/&/g, '&amp;')
-			.replace(/</g, '&lt;')
-			.replace(/>/g, '&gt;')
-			.replace(/"/g, '&quot;')
-			.replace(/'/g, '&#039;');
-	}
-
-	
+	}	
 
 	function GetUserIdByLogin(crmUrl, email, password) {
 		if (crmUrl.endsWith('/')) {
@@ -56,7 +45,7 @@ $(document).ready(function () {
 		//url = SetProxyUrl(url);
 		//if (url == '')
 		//	return;
-		password = escapeHtml(password);
+		password = password.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 		
 		$("#settingLoader").show();
 		const settings = {
@@ -140,11 +129,8 @@ $(document).ready(function () {
 				let getMatchesReturn = response.getElementsByTagName("getTaskPriorityReturn");
 
 				const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-				// Decode the inner XML string
-				const decodedInnerXML = decodeHTMLEntities(decodedString);
-
 				// Parse the decoded inner XML string
-				const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
+				const innerXmlDoc = parser.parseFromString(decodedString, "text/xml");
 				const priority = innerXmlDoc.getElementsByTagName("priority");
 
 				// Convert the extracted contact information into an array of objects
@@ -218,11 +204,8 @@ $(document).ready(function () {
 				let getMatchesReturn = response.getElementsByTagName("getTaskTypesReturn");
 
 				const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-				// Decode the inner XML string
-				const decodedInnerXML = decodeHTMLEntities(decodedString);
-
 				// Parse the decoded inner XML string
-				const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
+				const innerXmlDoc = parser.parseFromString(decodedString, "text/xml");
 				const types = innerXmlDoc.getElementsByTagName("type");
 
 				// Convert the extracted contact information into an array of objects
@@ -281,23 +264,6 @@ $(document).ready(function () {
 		const tempDiv = document.createElement("div");
 		tempDiv.innerHTML = html;
 		return tempDiv.textContent || tempDiv.innerText || "";
-	}
-
-	function decodeHTMLEntities(text) {
-		const entities = {
-			'&amp;': '&',
-			'&lt;': '<',
-			'&gt;': '>',
-			'&quot;': '"',
-			'&#x27;': "'",
-			'&#x2F;': '/',
-			'&#x60;': '`',
-			'&#x3D;': '=',
-			'&#xE9;': 'é'
-		};
-		return text.replace(/&[a-zA-Z0-9#x]+;/g, function (match) {
-			return entities[match] || match;
-		});
 	}
 
 	$("#Submit").click(function () {

@@ -531,17 +531,15 @@ function SendTheEmail() {
 		.done(function (response) {
 			console.log(response)
 			window.opener.setCategoryToEmail(id, true).then(() => {
-				//setTimeout(() => {
-					let getMatchesReturn = response.getElementsByTagName("sendEmailReturn");
-					const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-					$("#sendEmailLoader").hide();
-					alert("Email sent with trace id: " + parseInt(decodedString));
-					removeFirstItem(currentSelectedData);
-					if (currentSelectedData && currentSelectedData.length > 0)
-						ProcessSelectedData(currentSelectedData);
-					else
-						CloseAll();
-				//},500)
+				let getMatchesReturn = response.getElementsByTagName("sendEmailReturn");
+				const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
+				$("#sendEmailLoader").hide();
+				alert("Email sent with trace id: " + parseInt(decodedString));
+				removeFirstItem(currentSelectedData);
+				if (currentSelectedData && currentSelectedData.length > 0)
+					ProcessSelectedData(currentSelectedData);
+				else
+					CloseAll();
 				EnableButtonById("#skipit");
 				EnableButtonById("#diffContact");
 				EnableButtonById("#sendEmail");
@@ -703,13 +701,10 @@ function GetAttachedToDDInfo() {
 			// Extract the inner XML string
 			let getMatchesReturn = response.getElementsByTagName("getRelOptsReturn");
 			const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-			// Decode the inner XML string
-			
-			//const decodedInnerXML1 = decodeHTMLEntities(decodedString);
 			const parser = new DOMParser();
 			const xml = parser.parseFromString(decodedString, "text/xml");
 			const jsonRelOpt = parseXmlToJson(xml);
-			bindLeadDataToSelect(jsonRelOpt);
+			bindDropDownsDataToSelect(jsonRelOpt);
 			$("#sendEmailLoader").hide();
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
@@ -752,7 +747,7 @@ function parseXmlToJson(xml) {
 	return obj;
 }
 
-function bindLeadDataToSelect(jsonData) {
+function bindDropDownsDataToSelect(jsonData) {
 	let parentfieldSetElement = document.getElementById('dropDownFieldAsPerGroup');
 	parentfieldSetElement.innerHTML = '';
 	
@@ -785,7 +780,6 @@ function bindLeadDataToSelect(jsonData) {
 	checkMessageObjectFields(messageObject);
 }
 
-
 function GetPriorityType(selectedType) {
 
 	const settings = {
@@ -815,11 +809,9 @@ function GetPriorityType(selectedType) {
 			let getMatchesReturn = response.getElementsByTagName("getTaskPriorityReturn");
 
 			const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-			// Decode the inner XML string
-			const decodedInnerXML = decodeHTMLEntities(decodedString);
 
 			// Parse the decoded inner XML string
-			const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
+			const innerXmlDoc = parser.parseFromString(decodedString, "text/xml");
 			const priority = innerXmlDoc.getElementsByTagName("priority");
 
 			// Convert the extracted contact information into an array of objects
@@ -886,11 +878,8 @@ function GetTaskTypes(selectedTask) {
 			let getMatchesReturn = response.getElementsByTagName("getTaskTypesReturn");
 
 			const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-			// Decode the inner XML string
-			const decodedInnerXML = decodeHTMLEntities(decodedString);
-
 			// Parse the decoded inner XML string
-			const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
+			const innerXmlDoc = parser.parseFromString(decodedString, "text/xml");
 			const types = innerXmlDoc.getElementsByTagName("type");
 
 			// Convert the extracted contact information into an array of objects
@@ -1000,13 +989,8 @@ function GetGroupsByUserId() {
 			let getMatchesReturn = response.getElementsByTagName("getGroupsReturn");
 
 			const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-			// Decode the inner XML string
-
-			let decodedInnerXML = decodeHTMLEntities(decodedString);
-			const escapedXml = decodedInnerXML.replace(/&/g, '&amp;');
-
 			// Parse the decoded inner XML string
-			const innerXmlDoc = parser.parseFromString(escapedXml, "text/xml");
+			const innerXmlDoc = parser.parseFromString(decodedString, "text/xml");
 
 			const group = innerXmlDoc.getElementsByTagName("group");
 
@@ -1080,7 +1064,6 @@ function BindClickOnRowForSearch() {
 		messageObject.contactid = rowData["ContId"];
 	});
 }
-
 
 function BindRowSelectFunction() {
 	$('#contactTable tbody tr').on('click', function () {
@@ -1204,8 +1187,7 @@ function GetSearchedResult() {
 			const parser = new DOMParser();
 			let getMatchesReturn = response.getElementsByTagName("getSearchReturn");
 			const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-			const decodedInnerXML = decodeHTMLEntities(decodedString);
-			const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
+			const innerXmlDoc = parser.parseFromString(decodedString, "text/xml");
 			const contacts = innerXmlDoc.getElementsByTagName("contact");
 			const contactList = [];
 			for (let i = 0; i < contacts.length; i++) {
@@ -1271,10 +1253,8 @@ function GetMatchingDataForSync(email, userId) {
 			// Extract the inner XML string
 			let getMatchesReturn = response.getElementsByTagName("getMatchesReturn");
 			const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
-			// Decode the inner XML string
-			const decodedInnerXML = decodeHTMLEntities(decodedString);
 			// Parse the decoded inner XML string
-			const innerXmlDoc = parser.parseFromString(decodedInnerXML, "text/xml");
+			const innerXmlDoc = parser.parseFromString(decodedString, "text/xml");
 			const contacts = innerXmlDoc.getElementsByTagName("contact");
 			// Convert the extracted contact information into an array of objects
 			const contactList = [];
@@ -1308,23 +1288,6 @@ function htmlToString(html) {
 	const tempDiv = document.createElement("div");
 	tempDiv.innerHTML = html;
 	return tempDiv.textContent || tempDiv.innerText || "";
-}
-
-function decodeHTMLEntities(text) {
-	const entities = {
-		'&amp;': '&',
-		'&lt;': '<',
-		'&gt;': '>',
-		'&quot;': '"',
-		'&#x27;': "'",
-		'&#x2F;': '/',
-		'&#x60;': '`',
-		'&#x3D;': '=',
-		'&#xE9;': 'é'
-	};
-	return text.replace(/&[a-zA-Z0-9#x]+;/g, function (match) {
-		return entities[match] || match;
-	});
 }
 
 function AddChooseAboveItemFirstDDOption(dropdown){
