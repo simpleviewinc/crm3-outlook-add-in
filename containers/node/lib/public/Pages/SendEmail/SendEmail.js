@@ -938,7 +938,12 @@ $(document).ready(function () {
 
 	$('#loader').hide();
 	$("#searchContacts").click(function () {
-		GetSearchedResult();
+		if ($('#name').val().length < 3 && $('#company').val().length < 3) {
+			$('#NameCompanyErrorMsg').removeClass('hidden');
+		} else {
+			$('#NameCompanyErrorMsg').addClass('hidden');
+			GetSearchedResult();
+		}
 	});
 
 
