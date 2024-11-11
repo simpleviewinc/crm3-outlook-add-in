@@ -757,11 +757,11 @@ function bindDropDownsDataToSelect(jsonData) {
 			parentfieldSetElement.appendChild(containerDiv);
 		}
 	} else {
-		let containerDiv = AddDropDownToFieldSetAsPerRelsList(jsonData.opts.rels.rel,jsonData.opts.rels.rel);
-		parentfieldSetElement.appendChild(containerDiv);
+		if (jsonData.opts.rels.rel) {
+			let containerDiv = AddDropDownToFieldSetAsPerRelsList(jsonData.opts.rels.rel,jsonData.opts.rels.rel);
+			parentfieldSetElement.appendChild(containerDiv);
+		}
 	}
-
-	AddOnChangeListnerToDropDown();
 
 	// Bind messageObject properties
 	if (jsonData.opts.tblid && jsonData.opts.tblid["#text"]) {
@@ -1312,7 +1312,12 @@ function AddDropDownToFieldSetAsPerRelsList(currRel,allRels){
 	// if 'currRel.child["#text"]' contain any value that mean current rel is parent of other rel. 
 	if (currRel.child["#text"]) {
 		parentRelIdtoChildRelVal[currRel.fldname["#text"]] = findRelByfldname(allRels,currRel.child["#text"]);
-		currDropDown.setAttribute('data-ParentDropDown', 'true'); 
+	}
+
+	if (currRel.parent["#text"] && currRel.parent["#text"] == 1) {
+		$(currDropDown).change(function() {
+			FilterChildRelOptOnChangeParentDD(currDropDown.id);
+		});
 	}
 
 	// if 'currRel.hidden["#text"]' contain any value that mean current rel is a child rel. 
@@ -1358,20 +1363,6 @@ function findRelByfldname(rels, fldname) {
 	}
 }
 
-function AddOnChangeListnerToDropDown(){
-	let allDropdownList = $('#dropDownFieldAsPerGroup select[data-ParentDropDown]');
-	allDropdownList.each(function() {
-		const titleDD = $(this).attr('data-ParentDropDown');
-		const id = $(this).attr('id');
-
-		if (titleDD === 'true') {
-			$(this).change(function() {
-				FilterChildRelOptOnChangeParentDD(id);
-			});
-		}
-	});
-}
-
 function stringToutf8ToBase64(content) {
 	//This method first encode string content to UTF* then encode it to Base64.
 	// Because UTF-8 encoding ensures that all characters, including non-ASCII and special symbols, are properly represented. 
@@ -1392,7 +1383,7 @@ function FilterChildRelOptOnChangeParentDD(dropdownID){
 	let parentDropDownvalue = document.getElementById(dropdownID).value;
 	let childRel = parentRelIdtoChildRelVal[dropdownID];
 	const hiddenSelect = document.getElementById(childRel.fldname["#text"]);
-	if (parentDropDownvalue == 0){
+	if (parentDropDownvalue == 0) {
 		AddChooseAboveItemFirstDDOption(hiddenSelect);
 	} else {
 		if (hiddenSelect) {
