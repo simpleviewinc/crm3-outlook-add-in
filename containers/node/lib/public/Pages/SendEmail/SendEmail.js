@@ -1410,6 +1410,14 @@ function FilterChildRelOptOnChangeParentDD(dropdownID){
 							hiddenSelect.appendChild(option);
 						}
 					});
+				} else {
+					let ddValue = childRel.data.row;
+					if (ddValue && ddValue.ID && ddValue.ID["#text"] && ddValue.DISPLAY && ddValue.DISPLAY["#text"] && parentDropDownvalue == ddValue.PARENTID["#text"]) {
+						const option = document.createElement("option");
+						option.value = ddValue.ID["#text"];
+						option.text = ddValue.DISPLAY["#text"];
+						hiddenSelect.appendChild(option);
+					}
 				}
 			}
 		}
