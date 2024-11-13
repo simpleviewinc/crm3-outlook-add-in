@@ -160,7 +160,8 @@ $(document).ready(function () {
 	$('#skipit').on('click', () => {
 		DisableButtonById("#skipit");
 		DisableButtonById("#diffContact");
-		DisableButtonById("#sendEmail");	
+		DisableButtonById("#sendEmail");
+		DisableButtonById("#SendCancel");
 		const id = $('#EmailId').val();
 		if (window.opener && !window.opener.closed) {
 			if (typeof window.opener.setCategoryToEmail === 'function') {
@@ -181,24 +182,28 @@ $(document).ready(function () {
 					EnableButtonById("#skipit");
 					EnableButtonById("#diffContact");
 					EnableButtonById("#sendEmail");
+					EnableButtonById("#SendCancel");
 					checkMessageObjectFields(messageObject);
 				}).catch(() => {
 					$("#sendEmailLoader").hide();
 					EnableButtonById("#skipit");
 					EnableButtonById("#diffContact");
 					EnableButtonById("#sendEmail");
+					EnableButtonById("#SendCancel");
 				});
 			} else {
 				console.error("Parent window method setCategoryToEmail is not defined.");
 				EnableButtonById("#skipit");
 				EnableButtonById("#diffContact");
 				EnableButtonById("#sendEmail");
+				EnableButtonById("#SendCancel");
 			}
 		} else {
 			console.error("Parent window is not available.");
 			EnableButtonById("#skipit");
 			EnableButtonById("#diffContact");
 			EnableButtonById("#sendEmail");
+			EnableButtonById("#SendCancel");
 		}
 	});
 
@@ -214,6 +219,7 @@ $(document).ready(function () {
 		DisableButtonById("#skipit");
 		DisableButtonById("#diffContact");
 		DisableButtonById("#sendEmail");
+		DisableButtonById("#SendCancel");
 		let loader = $("#sendEmailLoader");
 		const emailid = $('#EmailId').val();
 		window.opener.fetchMimeContentOfAllEmail(emailid,loader).then((EmailMIMEContent) => {
@@ -238,6 +244,7 @@ $(document).ready(function () {
 			EnableButtonById("#skipit");
 			EnableButtonById("#diffContact");
 			EnableButtonById("#sendEmail");
+			EnableButtonById("#SendCancel");
 		})
 	});
 
@@ -543,11 +550,13 @@ function SendTheEmail() {
 				EnableButtonById("#skipit");
 				EnableButtonById("#diffContact");
 				EnableButtonById("#sendEmail");
+				EnableButtonById("#SendCancel");
 				checkMessageObjectFields(messageObject);
 			}).catch(() => {
 				EnableButtonById("#skipit");
 				EnableButtonById("#diffContact");
 				EnableButtonById("#sendEmail");
+				EnableButtonById("#SendCancel");
 			});			
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
@@ -582,6 +591,7 @@ function SendTheEmail() {
 			EnableButtonById("#skipit");
 			EnableButtonById("#diffContact");
 			EnableButtonById("#sendEmail");
+			EnableButtonById("#SendCancel");
 			CloseAll();
 		});
 
@@ -605,8 +615,8 @@ function checkMessageObjectFields() {
 	messageObject.typeid = $("#trace-type").val();
 
 	// Initialize arrays for missing required and optional fields
-	let requiredFields = ['groupid', 'userid', 'acctid', 'contactid', 'priorityid', 'typeid'];
-	let remainingFields = [ 'tblid', 'recid', 'relflds', 'relfldvals'];
+	let requiredFields = ['groupid', 'userid', 'contactid', 'priorityid', 'typeid'];
+	let remainingFields = ['acctid', 'tblid', 'recid', 'relflds', 'relfldvals'];
 
 	let missingRequired = [];
 	let missingOptional = [];
@@ -627,7 +637,7 @@ function checkMessageObjectFields() {
 
 	// Check remaining optional fields
 	remainingFields.forEach(function (field) {
-		if (isNullOrEmpty(messageObject[field] || messageObject[field] == 0)) {
+		if (isNullOrEmpty(messageObject[field]) || messageObject[field] == 0) {
 			missingOptional.push(field.toUpperCase());
 		}
 	});
