@@ -465,7 +465,7 @@ function decodeFromBase64(base64Str) {
 }
 
 function validateMessageObject(messageObject) {
-	// Checking if each optional field exists and is not null, otherwise assign an empty string
+	// Checking if each optional field exists and is not null, otherwise assign an empty string or default value
 	messageObject.duedate = messageObject.duedate || '';
 	messageObject.subject = messageObject.subject || '';
 	messageObject.body = messageObject.body || '';
@@ -475,6 +475,7 @@ function validateMessageObject(messageObject) {
 	messageObject.recid = messageObject.recid || '';
 	messageObject.relflds = messageObject.relflds || '';
 	messageObject.relfldvals = messageObject.relfldvals || '';
+	messageObject.acctID = messageObject.acctID || 0;
 
 	return messageObject;
 }
@@ -614,12 +615,10 @@ function checkMessageObjectFields() {
 	messageObject.priorityid = $("#priority").val();
 	messageObject.typeid = $("#trace-type").val();
 
-	// Initialize arrays for missing required and optional fields
+	// Initialize arrays for missing required fields
 	let requiredFields = ['groupid', 'userid', 'contactid', 'priorityid', 'typeid'];
-	let remainingFields = ['acctid', 'tblid', 'recid', 'relflds', 'relfldvals'];
 
 	let missingRequired = [];
-	let missingOptional = [];
 
 	// Function to check if the value is null or empty
 	function isNullOrEmpty(value) {
@@ -635,13 +634,6 @@ function checkMessageObjectFields() {
 		}
 	});
 
-	// Check remaining optional fields
-	remainingFields.forEach(function (field) {
-		if (isNullOrEmpty(messageObject[field]) || messageObject[field] == 0) {
-			missingOptional.push(field.toUpperCase());
-		}
-	});
-
 	// Display message in a div using jQuery
 	if (missingRequired.length > 0) {
 		const requiredMessage = missingRequired.length === 1
@@ -650,14 +642,6 @@ function checkMessageObjectFields() {
 
 		$('#messageDiv').text(requiredMessage);
 		DisableButtonById("#sendEmail");
-	} else if (missingOptional.length > 0) {
-		EnableButtonById("#sendEmail");
-
-		const optionalMessage = missingOptional.length === 1
-			? `Optional field ${missingOptional[0]} is missing for this contact.`
-			: `Optional fields ${missingOptional.join(', ')} are missing for this contact.`;
-
-		$('#messageDiv').text(optionalMessage);
 	} else {
 		EnableButtonById("#sendEmail");
 		$('#messageDiv').text("");

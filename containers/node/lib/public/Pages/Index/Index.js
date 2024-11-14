@@ -245,10 +245,32 @@ function decodeFromBase64(base64Str) {
 	// Parse the JSON string into an object
 	return JSON.parse(jsonString);
 }
+
+function showSelectAtLeastOneMailPopup() {
+	let dialogUrl = window.location.origin + '/Pages/Dialog/SelectEmailWarningPopup.html';
+	Office.context.ui.displayDialogAsync(dialogUrl, { width: 30, height: 25,  displayInIframe: true }, function(result) {
+		if (result.status === Office.AsyncResultStatus.Succeeded) {
+			let dialog = result.value;
+			dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
+				if (arg.message === 'close') {
+					dialog.close();
+				}
+			});
+		} else {
+			console.error('Dialog failed to open:', result.error.message);
+		}
+	});
+	
+}
+
 // Attach click event handlers for buttons
 function attachClickEventHandlers() {
 	$('#send-email-btn').on('click', () => {
-		openPopup('../SendEmail/SendEmail.html', 'Send Email');
+		if (selectedEmails.length < 1) {
+			showSelectAtLeastOneMailPopup();
+		} else {
+			openPopup('../SendEmail/SendEmail.html', 'Send Email');
+		}
 	});
 
 	$('#sync-email-btn').on('click', () => {

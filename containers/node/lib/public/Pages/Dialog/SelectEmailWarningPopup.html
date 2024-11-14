@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>No Email Selected Dialog</title>
+    <link rel="stylesheet" href="../../Content/Common/Outlook-CRM-AddOn.css">
+</head>
+<body>
+    <div class="EmailSelectedDialog">
+        <h1>No Email Selected</h1>
+        <p>You must select at least 1 email to send!</p>
+        <button onclick="closeDialog()" class="btnIndex"><p>OK</p></button>
+    </div>
+
+    <script>
+        function closeDialog() {
+            Office.context.ui.messageParent('close');
+        }
+    </script>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+</body>
+</html>
