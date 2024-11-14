@@ -419,3 +419,17 @@ button {
     font-size: 15px;
     line-height: 32px;
 }
+
+/*========== No Email Selected Dialog ==========*/
+
+.EmailSelectedDialog{
+    overflow: auto;
+}
+
+.EmailSelectedDialog button.btnIndex{
+    margin-left: 0px;        
+}
+
+.EmailSelectedDialog h1{
+    margin-top: 0px;        
+}
