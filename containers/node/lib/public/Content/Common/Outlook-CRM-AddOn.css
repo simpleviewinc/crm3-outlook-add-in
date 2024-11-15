@@ -46,6 +46,7 @@ input, select, option {
     border: 1px solid #ccc;
     border-radius: 4px; /* Optional: for rounded corners */
     box-sizing: border-box; /* Include padding and border in the input's width */
+    max-width: 300px;
 }
 
 .button-container {
@@ -350,6 +351,33 @@ tr:hover {
     margin-left: 190px !important;
 }
 
+.GroupContactContainer{
+    display: flex;
+    max-width: 80vw;
+    gap: 10%;
+}
+
+.groupLblContainer{
+    max-width: 70%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.contactLblContainer{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.CompanyContainer{
+    display: block;
+    max-width: 80vw;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; 
+}
+
 /* Hide the loader initially */
 .loader {
     border: 16px solid #BEBEBE;
@@ -431,5 +459,5 @@ button {
 }
 
 .EmailSelectedDialog h1{
-    margin-top: 0px;        
+    margin-top: 30px;        
 }
