@@ -530,8 +530,9 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 			const requestUrl = Office.context.mailbox.restUrl + `/v2.0/me/mailfolders/${mailFolder}/messages`;
 
 			// Get selected days to sync
-			const now = new Date();
-			const startDate = new Date(now.getTime() - (daysToSync + 1) * 24 * 60 * 60 * 1000);
+			const startDate = new Date();
+			startDate.setDate(startDate.getDate() - daysToSync);
+			startDate.setHours(0, 0, 0, 0);
 			const startDateISOString = startDate.toISOString();
 
 			// Construct the query to filter emails within the selected timeframe,

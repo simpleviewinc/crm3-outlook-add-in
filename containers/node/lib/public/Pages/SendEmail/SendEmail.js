@@ -250,7 +250,7 @@ $(document).ready(function () {
 
 	$('#loader').hide();
 	$("#searchContacts").click(function () {
-		if ($('#name').val().length < 3 && $('#company').val().length < 3) {
+		if ($('#name').val().replace(/\s+/g, '').length < 3 && $('#company').val().replace(/\s+/g, '').length < 3) {
 			$('#NameCompanyErrorMsg').removeClass('hidden');
 		} else {
 			$('#NameCompanyErrorMsg').addClass('hidden');
