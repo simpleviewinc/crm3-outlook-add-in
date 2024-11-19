@@ -1045,7 +1045,7 @@ function BindClickOnRowForSearch() {
 		const selectedText = $('#group-name option:selected').text();
 
 		$('#groupLbl').text(selectedText);
-		$('#companyLbl').text(rowData["Company"]);
+		$('#companyLbl').text(rowData["Account/Event"] || 'N/A');
 		$('#contactLbl').text(rowData["Contact Name"]);
 
 		// Log the row data to the console
@@ -1085,7 +1085,7 @@ function BindRowSelectFunction() {
 			rowData[key] = value;
 		});
 		$('#groupLbl').text(rowData.Group);
-		$('#companyLbl').text(rowData["Company Event"]);
+		$('#companyLbl').text(rowData["Account/Event"] || 'N/A');
 		$('#contactLbl').text(rowData["Contact Name"]);
 
 		// Log the row data to the console
