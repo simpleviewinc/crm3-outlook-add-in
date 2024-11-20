@@ -246,9 +246,9 @@ function decodeFromBase64(base64Str) {
 	return JSON.parse(jsonString);
 }
 
-function showSelectAtLeastOneMailPopup() {
-	let dialogUrl = window.location.origin + '/Pages/Dialog/SelectEmailWarningPopup.html';
-	Office.context.ui.displayDialogAsync(dialogUrl, { width: 30, height: 25,  displayInIframe: true }, function(result) {
+function showOutlookPopup(data,width,height) {
+	let dialogUrl = window.location.origin + '/Pages/Dialog/GenericPopup.html' + '?data=' + encodeURIComponent(JSON.stringify(data));
+	Office.context.ui.displayDialogAsync(dialogUrl, { width: width, height: height,  displayInIframe: true }, function(result) {
 		if (result.status === Office.AsyncResultStatus.Succeeded) {
 			let dialog = result.value;
 			dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
@@ -259,15 +259,14 @@ function showSelectAtLeastOneMailPopup() {
 		} else {
 			console.error('Dialog failed to open:', result.error.message);
 		}
-	});
-	
+	});	
 }
 
 // Attach click event handlers for buttons
 function attachClickEventHandlers() {
 	$('#send-email-btn').on('click', () => {
 		if (selectedEmails.length < 1) {
-			showSelectAtLeastOneMailPopup();
+			showOutlookPopup({Popuptoshow : 'EmailSelectedDialog'},30,25);
 		} else {
 			openPopup('../SendEmail/SendEmail.html', 'Send Email');
 		}

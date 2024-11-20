@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>No Email Selected Dialog</title>
+    <link rel="stylesheet" href="../../Content/Common/Outlook-CRM-AddOn.css">
+</head>
+<body>
+    <div id="EmailSelectedDialog" class="hidden PopUpBody">
+        <h1>No Email Selected</h1>
+        <p>You must select at least 1 email to send!</p>
+        <button onclick="closeDialog()" class="btnIndex"><p>OK</p></button>
+    </div>
+
+    <div id="EmailSyncCompletedDialog" class="hidden PopUpBody">
+        <h1>Outlook Email Sync Completed!</h1>
+        <p>Successfully sent:</p>
+        <p id="InboundEmails" class="m0"></p>
+        <p id="OutboundEmails" class="m0"></p>
+        <button onclick="closeDialog()" class="btnIndex"><p>Done</p></button>
+    </div>
+
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
+    <script src="../../Scripts/jquery-3.6.0.js" type="text/javascript"></script>
+    <script>
+        Office.initialize = function (reason) {
+            $(document).ready(function () {
+                const urlParams = new URLSearchParams(window.location.search);
+                const data = JSON.parse(decodeURIComponent(urlParams.get('data')));
+                document.getElementById(data.Popuptoshow).classList.remove('hidden');
+
+                if (data.Popuptoshow === 'EmailSyncCompletedDialog') {
+                    document.getElementById('InboundEmails').textContent = data.InboundEmails + " Inbound Email(s)";
+                    document.getElementById('OutboundEmails').textContent = data.OutboundEmails + " Outbound Email(s)";
+                }
+            });
+        };
+        function closeDialog() {
+                Office.context.ui.messageParent('close');
+        }        
+    </script>
+</body>
+</html>
