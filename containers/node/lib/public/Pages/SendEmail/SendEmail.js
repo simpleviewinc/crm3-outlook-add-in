@@ -165,6 +165,8 @@ $(document).ready(function () {
 	});
 	
 	$('#skipit').on('click', () => {
+		$('#searchTable tbody tr').removeClass('selected');
+		$('#contactTable tbody tr').removeClass('selected');
 		DisableButtonById("#skipit");
 		DisableButtonById("#diffContact");
 		DisableButtonById("#sendEmail");
@@ -179,15 +181,17 @@ $(document).ready(function () {
 					removeFirstItem(currentSelectedData);
 					if (currentSelectedData && currentSelectedData.length > 0){
 						ProcessSelectedData(currentSelectedData);
+						$("#sendEmailLoader").hide();
+						EnableButtonById("#skipit");
+						EnableButtonById("#diffContact");
+						EnableButtonById("#sendEmail");
+						EnableButtonById("#SendCancel");
+						// checkMessageObjectFields execute only on SendEmail screen
+						if ($('#selectContact').hasClass('active'))
+							checkMessageObjectFields(messageObject);
 					} else {
 						CloseAll();
 					}
-					$("#sendEmailLoader").hide();
-					EnableButtonById("#skipit");
-					EnableButtonById("#diffContact");
-					EnableButtonById("#sendEmail");
-					EnableButtonById("#SendCancel");
-					checkMessageObjectFields(messageObject);
 				}).catch(() => {
 					$("#sendEmailLoader").hide();
 					EnableButtonById("#skipit");
