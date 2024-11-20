@@ -548,6 +548,7 @@ function SendTheEmail() {
 				$("#sendEmailLoader").hide();
 				alert("Email sent with trace id: " + parseInt(decodedString));
 				removeFirstItem(currentSelectedData);
+				// count the number of sent email to CRM
 				if (EmailSyncCompletedDialogObj.isSyncEmail){
 					if (messageObject.IsInboxTab)
 						EmailSyncCompletedDialogObj.NumberOfInboundEmails = EmailSyncCompletedDialogObj.NumberOfInboundEmails + 1;
@@ -572,7 +573,7 @@ function SendTheEmail() {
 			});			
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
-			let errorMessage = "Some error has occurred";
+			let errorMessage = "";
 			if (jqXHR.responseText.includes('faultstring')) {
 				const parser = new DOMParser();
 				const xmlDoc = parser.parseFromString(jqXHR.responseText, "application/xml");
@@ -594,6 +595,8 @@ function SendTheEmail() {
 				} else if (getErrorSting.includes(':')) {
 					errorMessage = getErrorSting;
 				}
+			} else {
+				errorMessage = errorThrown;
 			}
 		
 			// Log the response text for debugging
@@ -604,7 +607,12 @@ function SendTheEmail() {
 			EnableButtonById("#diffContact");
 			EnableButtonById("#sendEmail");
 			EnableButtonById("#SendCancel");
-			CloseAll();
+			removeFirstItem(currentSelectedData);
+			if (currentSelectedData && currentSelectedData.length > 0){
+				ProcessSelectedData(currentSelectedData);
+			}
+			else
+				CloseAll();
 		});
 
 }
@@ -616,12 +624,15 @@ function CloseAll() {
 				let dataObj = {
 					Popuptoshow:"EmailSyncCompletedDialog", 
 					InboundEmails:EmailSyncCompletedDialogObj.NumberOfInboundEmails, 
-					OutboundEmails:EmailSyncCompletedDialogObj.NumberOfOutboundEmails
+					OutboundEmails:EmailSyncCompletedDialogObj.NumberOfOutboundEmails,
+					IsCloseTaskPanel:true
 				}
 				window.opener.showOutlookPopup(dataObj,35,30);
+				window.close();
+			} else {
+				window.close();
+				window.opener.CloseTheTaskPane();
 			}
-			window.close();
-			//window.opener.CloseTheTaskPane();
 		} else {
 			console.error("Parent window method setCategoryToEmail is not defined.");
 		}

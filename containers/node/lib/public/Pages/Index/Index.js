@@ -254,6 +254,8 @@ function showOutlookPopup(data,width,height) {
 			dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
 				if (arg.message === 'close') {
 					dialog.close();
+					if (data.IsCloseTaskPanel)
+						CloseTheTaskPane();
 				}
 			});
 		} else {
