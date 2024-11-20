@@ -38,7 +38,7 @@
                                 <tr>
                                     <th>Group</th>
                                     <th>Contact Name</th>
-                                    <th>Company Event</th>
+                                    <th>Account/Event</th>
                                     <th>Type</th>
                                     <th>Address</th>
                                     <th>Email Address</th>
@@ -61,12 +61,12 @@
                             <input type="text" id="name" name="name" maxlength="50" placeholder="Enter Contact Name">
                         </div>
                         <div class="input-container">
-                            <label for="company">Company :</label>
-                            <input type="text" id="company" name="company" maxlength="50" placeholder="Enter Company Name">
+                            <label for="company">Account/Event :</label>
+                            <input type="text" id="company" name="company" maxlength="50" placeholder="Enter Account/Event Name">
                             <button id="searchContacts">Search for Contacts</button>
                         </div>
                         <div id="NameCompanyErrorMsg" class="InputErrorMsg hidden">
-                            Please provide either a Contact Name or a Company which is 3 characters or longer.
+                            Please provide either a Contact Name or a Account/Event Name which is 3 characters or longer.
                         </div>
                         <div class="box grid active" id="box3">
                             <div id="loader" class="loader"></div>
@@ -74,7 +74,7 @@
                                 <thead>
                                     <tr>
                                         <th>Contact Name</th>
-                                        <th>Company</th>
+                                        <th>Account/Event</th>
                                         <th>Type</th>
                                         <th>Address</th>
                                         <th>Email Address</th>
@@ -112,7 +112,7 @@
                             </div>
                         </div>
                         <div class="input-container CompanyContainer">
-                            <label class="bold">Company/Event :</label>
+                            <label class="bold">Account/Event :</label>
                             <label id="companyLbl"></label>
                         </div>
                         <!-- Adding dropDown As per selected group from JS -->

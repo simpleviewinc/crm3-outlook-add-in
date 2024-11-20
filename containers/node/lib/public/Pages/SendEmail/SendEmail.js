@@ -19,6 +19,12 @@
 	currentSelectedData = [],
 	IsInboxTab = false;
 
+let EmailSyncCompletedDialogObj = {
+	isSyncEmail : false,
+	NumberOfInboundEmails : 0,
+	NumberOfOutboundEmails : 0
+};
+
 let parentRelIdtoChildRelVal = {};
 let listOfRelfIdvalsDynamicObj = {};
 let index = 1;
@@ -29,6 +35,7 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 	console.log("init popup: " + isSyncEmail);
 
 	if (isSyncEmail) {
+		EmailSyncCompletedDialogObj.isSyncEmail = true;
 		$("#syncEmailUI").show();
 		$("#sendEmailUI").hide();
 		$(document).ready(function () {
@@ -158,6 +165,8 @@ $(document).ready(function () {
 	});
 	
 	$('#skipit').on('click', () => {
+		$('#searchTable tbody tr').removeClass('selected');
+		$('#contactTable tbody tr').removeClass('selected');
 		DisableButtonById("#skipit");
 		DisableButtonById("#diffContact");
 		DisableButtonById("#sendEmail");
@@ -172,18 +181,17 @@ $(document).ready(function () {
 					removeFirstItem(currentSelectedData);
 					if (currentSelectedData && currentSelectedData.length > 0){
 						ProcessSelectedData(currentSelectedData);
+						$("#sendEmailLoader").hide();
+						EnableButtonById("#skipit");
+						EnableButtonById("#diffContact");
+						EnableButtonById("#sendEmail");
+						EnableButtonById("#SendCancel");
+						// checkMessageObjectFields execute only on SendEmail screen
+						if ($('#selectContact').hasClass('active'))
+							checkMessageObjectFields(messageObject);
+					} else {
+						CloseAll();
 					}
-					else {
-						setTimeout(function () {
-							CloseAll();
-						},1000); 
-					}
-					$("#sendEmailLoader").hide();
-					EnableButtonById("#skipit");
-					EnableButtonById("#diffContact");
-					EnableButtonById("#sendEmail");
-					EnableButtonById("#SendCancel");
-					checkMessageObjectFields(messageObject);
 				}).catch(() => {
 					$("#sendEmailLoader").hide();
 					EnableButtonById("#skipit");
@@ -250,7 +258,7 @@ $(document).ready(function () {
 
 	$('#loader').hide();
 	$("#searchContacts").click(function () {
-		if ($('#name').val().length < 3 && $('#company').val().length < 3) {
+		if ($('#name').val().replace(/\s+/g, '').length < 3 && $('#company').val().replace(/\s+/g, '').length < 3) {
 			$('#NameCompanyErrorMsg').removeClass('hidden');
 		} else {
 			$('#NameCompanyErrorMsg').addClass('hidden');
@@ -544,8 +552,16 @@ function SendTheEmail() {
 				$("#sendEmailLoader").hide();
 				alert("Email sent with trace id: " + parseInt(decodedString));
 				removeFirstItem(currentSelectedData);
-				if (currentSelectedData && currentSelectedData.length > 0)
+				// count the number of sent email to CRM
+				if (EmailSyncCompletedDialogObj.isSyncEmail){
+					if (messageObject.IsInboxTab)
+						EmailSyncCompletedDialogObj.NumberOfInboundEmails = EmailSyncCompletedDialogObj.NumberOfInboundEmails + 1;
+					else
+						EmailSyncCompletedDialogObj.NumberOfOutboundEmails = EmailSyncCompletedDialogObj.NumberOfOutboundEmails + 1;
+				}
+				if (currentSelectedData && currentSelectedData.length > 0){
 					ProcessSelectedData(currentSelectedData);
+				}
 				else
 					CloseAll();
 				EnableButtonById("#skipit");
@@ -561,7 +577,7 @@ function SendTheEmail() {
 			});			
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
-			let errorMessage = "Some error has occurred";
+			let errorMessage = "";
 			if (jqXHR.responseText.includes('faultstring')) {
 				const parser = new DOMParser();
 				const xmlDoc = parser.parseFromString(jqXHR.responseText, "application/xml");
@@ -583,6 +599,8 @@ function SendTheEmail() {
 				} else if (getErrorSting.includes(':')) {
 					errorMessage = getErrorSting;
 				}
+			} else {
+				errorMessage = errorThrown;
 			}
 		
 			// Log the response text for debugging
@@ -593,7 +611,12 @@ function SendTheEmail() {
 			EnableButtonById("#diffContact");
 			EnableButtonById("#sendEmail");
 			EnableButtonById("#SendCancel");
-			CloseAll();
+			removeFirstItem(currentSelectedData);
+			if (currentSelectedData && currentSelectedData.length > 0){
+				ProcessSelectedData(currentSelectedData);
+			}
+			else
+				CloseAll();
 		});
 
 }
@@ -601,8 +624,19 @@ function SendTheEmail() {
 function CloseAll() {
 	if (window.opener && !window.opener.closed) {
 		if (typeof window.opener.CloseTheTaskPane === 'function') {
-			window.opener.CloseTheTaskPane();
-			window.close(); // Optionally close the popup after sending data
+			if (EmailSyncCompletedDialogObj.isSyncEmail) {
+				let dataObj = {
+					Popuptoshow:"EmailSyncCompletedDialog", 
+					InboundEmails:EmailSyncCompletedDialogObj.NumberOfInboundEmails, 
+					OutboundEmails:EmailSyncCompletedDialogObj.NumberOfOutboundEmails,
+					IsCloseTaskPanel:true
+				}
+				window.opener.showOutlookPopup(dataObj,35,30);
+				window.close();
+			} else {
+				window.close();
+				window.opener.CloseTheTaskPane();
+			}
 		} else {
 			console.error("Parent window method setCategoryToEmail is not defined.");
 		}
@@ -1045,7 +1079,7 @@ function BindClickOnRowForSearch() {
 		const selectedText = $('#group-name option:selected').text();
 
 		$('#groupLbl').text(selectedText);
-		$('#companyLbl').text(rowData["Company"]);
+		$('#companyLbl').text(rowData["Account/Event"] || 'N/A');
 		$('#contactLbl').text(rowData["Contact Name"]);
 
 		// Log the row data to the console
@@ -1085,7 +1119,7 @@ function BindRowSelectFunction() {
 			rowData[key] = value;
 		});
 		$('#groupLbl').text(rowData.Group);
-		$('#companyLbl').text(rowData["Company Event"]);
+		$('#companyLbl').text(rowData["Account/Event"] || 'N/A');
 		$('#contactLbl').text(rowData["Contact Name"]);
 
 		// Log the row data to the console
