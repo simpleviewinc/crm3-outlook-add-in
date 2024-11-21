@@ -559,7 +559,28 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 					if (response['@odata.nextLink']) {
 						fetchEmails(response['@odata.nextLink'], allEmails);
 					} else {
-						let validEmails = allEmails.filter(email => email.ReceivedDateTime);
+						let validEmails = allEmails.filter(email => {
+							// filter valid date email
+							if (email.ReceivedDateTime) {
+								if (isInbox) {
+									// Exclude calendar event and other event mail
+									if (email['@odata.type'] && email['@odata.type'].toLowerCase().includes("#microsoft.outlookservices.event")) {
+										return false; // exclude calendar event messages
+									}
+								
+									// Exclude group mail (check if current user is in 'To','Cc','Bcc' recipients)
+									let CurrentLoggedInUser = Office.context.mailbox.userProfile.emailAddress.toLowerCase();
+									if (email.ToRecipients && 
+										(email.ToRecipients.some(currRec => currRec.EmailAddress.Address.toLowerCase() === CurrentLoggedInUser) ||
+										email.CcRecipients.some(currCcRec => currCcRec.EmailAddress.Address.toLowerCase() === CurrentLoggedInUser))) {
+										return true; 
+									}
+									return false;
+								}
+								return true;
+							}
+							return false;
+						});
 
 						// Sort validEmails based on receivedDateTime
 						validEmails.sort((a, b) => {
