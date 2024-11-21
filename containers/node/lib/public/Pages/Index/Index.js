@@ -578,10 +578,9 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 									return false;
 								}
 								return true;
-							}						  
+							}					  
 							return false;
-						  });
-						  
+						});  
 
 						// Sort validEmails based on receivedDateTime
 						validEmails.sort((a, b) => {
