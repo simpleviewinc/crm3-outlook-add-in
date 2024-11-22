@@ -248,11 +248,12 @@ $(document).ready(function () {
 			}
 		}).catch((error) => {
 			console.error("Error fetching MIME content:", error);
-			window.alert("Something went wrong while fetching the MIME content of email from Outlook API. Please try again.")
-			EnableButtonById("#skipit");
-			EnableButtonById("#diffContact");
-			EnableButtonById("#sendEmail");
-			EnableButtonById("#SendCancel");
+			createDialog("Something went wrong while fetching the MIME content of email from Outlook API. Please try again.", function() {
+				EnableButtonById("#skipit");
+				EnableButtonById("#diffContact");
+				EnableButtonById("#sendEmail");
+				EnableButtonById("#SendCancel");
+			});
 		})
 	});
 
@@ -550,25 +551,26 @@ function SendTheEmail() {
 				let getMatchesReturn = response.getElementsByTagName("sendEmailReturn");
 				const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
 				$("#sendEmailLoader").hide();
-				alert("Email sent with trace id: " + parseInt(decodedString));
-				removeFirstItem(currentSelectedData);
-				// count the number of sent email to CRM
-				if (EmailSyncCompletedDialogObj.isSyncEmail){
-					if (messageObject.IsInboxTab)
-						EmailSyncCompletedDialogObj.NumberOfInboundEmails = EmailSyncCompletedDialogObj.NumberOfInboundEmails + 1;
+				createDialog("Email sent with trace id: " + parseInt(decodedString), function() {
+					removeFirstItem(currentSelectedData);
+					// count the number of sent email to CRM
+					if (EmailSyncCompletedDialogObj.isSyncEmail){
+						if (messageObject.IsInboxTab)
+							EmailSyncCompletedDialogObj.NumberOfInboundEmails = EmailSyncCompletedDialogObj.NumberOfInboundEmails + 1;
+						else
+							EmailSyncCompletedDialogObj.NumberOfOutboundEmails = EmailSyncCompletedDialogObj.NumberOfOutboundEmails + 1;
+					}
+					if (currentSelectedData && currentSelectedData.length > 0){
+						ProcessSelectedData(currentSelectedData);
+						EnableButtonById("#skipit");
+						EnableButtonById("#diffContact");
+						EnableButtonById("#sendEmail");
+						EnableButtonById("#SendCancel");
+						checkMessageObjectFields(messageObject);
+					}
 					else
-						EmailSyncCompletedDialogObj.NumberOfOutboundEmails = EmailSyncCompletedDialogObj.NumberOfOutboundEmails + 1;
-				}
-				if (currentSelectedData && currentSelectedData.length > 0){
-					ProcessSelectedData(currentSelectedData);
-				}
-				else
-					CloseAll();
-				EnableButtonById("#skipit");
-				EnableButtonById("#diffContact");
-				EnableButtonById("#sendEmail");
-				EnableButtonById("#SendCancel");
-				checkMessageObjectFields(messageObject);
+						CloseAll();
+				});
 			}).catch(() => {
 				EnableButtonById("#skipit");
 				EnableButtonById("#diffContact");
@@ -605,18 +607,18 @@ function SendTheEmail() {
 		
 			// Log the response text for debugging
 			$("#sendEmailLoader").hide();
-
-			alert("Simpleview API error: " + errorMessage);
-			EnableButtonById("#skipit");
-			EnableButtonById("#diffContact");
-			EnableButtonById("#sendEmail");
-			EnableButtonById("#SendCancel");
-			removeFirstItem(currentSelectedData);
-			if (currentSelectedData && currentSelectedData.length > 0){
-				ProcessSelectedData(currentSelectedData);
-			}
-			else
-				CloseAll();
+			createDialog("Simpleview API error: " + errorMessage, function() {
+				removeFirstItem(currentSelectedData);
+				if (currentSelectedData && currentSelectedData.length > 0){
+					ProcessSelectedData(currentSelectedData);
+					EnableButtonById("#skipit");
+					EnableButtonById("#diffContact");
+					EnableButtonById("#sendEmail");
+					EnableButtonById("#SendCancel");
+				}
+				else
+					CloseAll();
+			});
 		});
 
 }

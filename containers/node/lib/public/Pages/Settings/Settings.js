@@ -11,7 +11,7 @@ $(document).ready(function () {
 		if (data != null) {
 			if (data.userId != null && data.userId != undefined && data.userId != '') {
 				$('#emailSettings').show();
-				$('#Submit').hide();
+				$('#LoginSubmitBtn').hide();
 				$('#logout').show();
 				$("#settingLoader").hide();
 				UserId = data.userId;
@@ -80,24 +80,24 @@ $(document).ready(function () {
 				//console.log(decodedString);
 				if (decodedString == '-1.0') {
 					$("#settingLoader").hide();
-					alert("Credentials not valid.");
+					createDialog("Credentials not valid.", function() {});
 				}
 				else {
 					$("#settingLoader").hide();
-					alert("Login successful.");
-					UserId = parseInt(decodedString);
-					$('#emailSettings').show();
-					$('#Submit').hide();
-					$('#logout').show();
-					ApiUrl = GetProxyUrl(crmUrl);
-					GetTaskTypes();
-					GetPriorityType();
+					createDialog("Login successful.", function() {
+						UserId = parseInt(decodedString);
+						$('#emailSettings').show();
+						$('#LoginSubmitBtn').hide();
+						$('#logout').show();
+						ApiUrl = GetProxyUrl(crmUrl);
+						GetTaskTypes();
+						GetPriorityType();
+					});
 				}
 			})
 			.fail(function (jqXHR, textStatus, errorThrown) {
 				$("#settingLoader").hide();
-				alert("Url or credentials not valid.");
-				console.error('Error:', textStatus, errorThrown);
+				createDialog("Url or credentials not valid.", function() {console.error('Error:', textStatus, errorThrown);});
 			});
 	}
 
@@ -266,8 +266,16 @@ $(document).ready(function () {
 		return tempDiv.textContent || tempDiv.innerText || "";
 	}
 
-	$("#Submit").click(function () {
-		GetUserIdByLogin($("#crm-url").val(), $("#crm-login").val(), $("#crm-password").val());
+	$("#LoginSubmitBtn").click(function () {
+		if (!$("#crm-url").val()) {
+			createDialog("CRM URL is required.", function () {});
+		} else if (!$("#crm-login").val()) {
+			createDialog("Login is required.", function () {});
+		} else if (!$("#crm-password").val()) {
+			createDialog("Password is required.", function () {});
+		} else {
+			GetUserIdByLogin($("#crm-url").val(), $("#crm-login").val(), $("#crm-password").val());
+		}
 	});
 
 	$("#saveUpdateSettings").click(function () {
@@ -301,42 +309,45 @@ $(document).ready(function () {
 		console.log('setting localStorage');
 		localStorage.setItem("crm", formDataEncodeString);
 
-		alert("Settings updated.");
-		if (window.opener && !window.opener.closed) {
-			if (typeof window.opener.ReloadTaskPane === 'function') {
-				console.log('window.opener.CloseTheTaskPane');
-				window.opener.ReloadTaskPane(false);
-				//window.close(); // Optionally close the popup after sending data
+		
+		createDialog("Settings updated.", function() {
+			if (window.opener && !window.opener.closed) {
+				if (typeof window.opener.ReloadTaskPane === 'function') {
+					console.log('window.opener.CloseTheTaskPane');
+					window.opener.ReloadTaskPane(false);
+					//window.close(); // Optionally close the popup after sending data
+				} else {
+					console.error("Parent window method setCategoryToEmail is not defined.");
+				}
+				if (typeof window.opener.SetLocalStorageItem === 'function') {
+					console.log('window.opener.CloseTheTaskPane');
+					window.opener.SetLocalStorageItem(formDataString);
+					//window.close(); // Optionally close the popup after sending data
+				} else {
+					console.error("Parent window method SetLocalStorageItem is not defined.");
+				}
+	
 			} else {
-				console.error("Parent window method setCategoryToEmail is not defined.");
+				console.error("Parent window is not available.");
 			}
-			if (typeof window.opener.SetLocalStorageItem === 'function') {
-				console.log('window.opener.CloseTheTaskPane');
-				window.opener.SetLocalStorageItem(formDataString);
-				//window.close(); // Optionally close the popup after sending data
-			} else {
-				console.error("Parent window method SetLocalStorageItem is not defined.");
-			}
-
-		} else {
-			console.error("Parent window is not available.");
-		}
+		});
 	});
 
 	$("#reset").click(function () {
 		localStorage.removeItem('crm');
-		alert("Settings removed.");
-		window.location.reload();
-		if (window.opener && !window.opener.closed) {
-			if (typeof window.opener.ReloadTaskPane === 'function') {
-				console.log('window.opener.CloseTheTaskPane');
-				window.opener.ReloadTaskPane(true);
-				//window.close(); // Optionally close the popup after sending data
+		createDialog("Settings removed.", function() {
+			window.location.reload();
+			if (window.opener && !window.opener.closed) {
+				if (typeof window.opener.ReloadTaskPane === 'function') {
+					console.log('window.opener.CloseTheTaskPane');
+					window.opener.ReloadTaskPane(true);
+					//window.close(); // Optionally close the popup after sending data
+				} else {
+					console.error("Parent window method setCategoryToEmail is not defined.");
+				}
 			} else {
-				console.error("Parent window method setCategoryToEmail is not defined.");
+				console.error("Parent window is not available.");
 			}
-		} else {
-			console.error("Parent window is not available.");
-		}
+		});
 	});
 });

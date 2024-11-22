@@ -67,10 +67,10 @@ function GetCrmUrlFromLocalStorage() {
 		if (url.endsWith(".simpleviewcrm.com")) {
 			return url;
 		}
-		alert("Url " + url + " not valid");
+		createDialog("Url " + url + " not valid",function() {});
+	} else {
+		createDialog("configuration data not found",function() {});
 	}
-	alert("configuration data not found");
-	return;
 }
 
 
@@ -78,8 +78,7 @@ function ValidateCRMUrl(url) {
 	if (url.endsWith(".simpleviewcrm.com")) {
 		return true;
 	} else {
-		alert("Url " + url + " not valid");
-		return false;
+		createDialog("Url " + url + " not valid.", function() {});
 	}
 }
 
@@ -124,5 +123,68 @@ function addNoneOptionToDropDown(element){
 	element.value = 0;
 }
 
+function createDialog(msg, callbackFunction) {
+	// Create the backdrop overlay (background dimming)
+	const overlay = document.createElement('div');
+	overlay.style.position = 'fixed';
+	overlay.style.top = '0';
+	overlay.style.left = '0';
+	overlay.style.width = '100vw';
+	overlay.style.height = '100vh';
+	overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'; // Semi-transparent black
+	overlay.style.zIndex = '999'; // Ensure it's behind the dialog but above the body content
+	
+	// Create the dialog container
+	const dialog = document.createElement('div');
+	dialog.style.position = 'fixed';
+	dialog.style.width = '30vw';
+	dialog.style.top = '50%';
+	dialog.style.left = '50%';
+	dialog.style.transform = 'translate(-50%, -50%)';
+	dialog.style.padding = '20px';
+	dialog.style.backgroundColor = 'white';
+	dialog.style.boxShadow = '0 14px 18px rgba(0,0,0,0.3)';
+	dialog.style.zIndex = '1000';
+	dialog.style.borderRadius = '8px';
+	
+	// Create the message paragraph
+	const message = document.createElement('p');
+	message.style.fontSize = '16px';
+	message.style.overflowWrap = 'break-word';
+	message.textContent = msg;
+	
+	// Create the OK button
+	const okButton = document.createElement('button');
+	okButton.style.padding = '10px 20px';
+	okButton.style.marginTop = '15px';
+	okButton.style.backgroundColor = '#4CAF50';
+	okButton.style.color = 'white';
+	okButton.style.border = 'none';
+	okButton.style.borderRadius = '5px';
+	okButton.style.cursor = 'pointer';
+	okButton.textContent = 'OK';
+	okButton.style.float = 'right';
+	
+	// Append the message, and OK button to the dialog
+	dialog.appendChild(message);
+	dialog.appendChild(okButton);
+	
+	// Append the overlay and dialog to the body
+	document.body.appendChild(overlay);
+	document.body.appendChild(dialog);
+	
+	okButton.focus();
+	
+	// Add click event to OK button to remove the dialog
+	okButton.addEventListener('click', () => {
+		document.body.removeChild(dialog);
+		document.body.removeChild(overlay);  // Remove the overlay as well
+		callbackFunction();
+	});
+}
+  
+  
+
 window.GetDataFromLocalStorage = GetDataFromLocalStorage;
 window.addNoneOptionToDropDown = addNoneOptionToDropDown;
+window.createDialog = createDialog;
