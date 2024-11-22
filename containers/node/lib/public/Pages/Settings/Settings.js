@@ -11,7 +11,7 @@ $(document).ready(function () {
 		if (data != null) {
 			if (data.userId != null && data.userId != undefined && data.userId != '') {
 				$('#emailSettings').show();
-				$('#Submit').hide();
+				$('#LoginSubmitBtn').hide();
 				$('#logout').show();
 				$("#settingLoader").hide();
 				UserId = data.userId;
@@ -87,7 +87,7 @@ $(document).ready(function () {
 					createDialog("Login successful.", function() {
 						UserId = parseInt(decodedString);
 						$('#emailSettings').show();
-						$('#Submit').hide();
+						$('#LoginSubmitBtn').hide();
 						$('#logout').show();
 						ApiUrl = GetProxyUrl(crmUrl);
 						GetTaskTypes();
@@ -266,8 +266,16 @@ $(document).ready(function () {
 		return tempDiv.textContent || tempDiv.innerText || "";
 	}
 
-	$("#Submit").click(function () {
-		GetUserIdByLogin($("#crm-url").val(), $("#crm-login").val(), $("#crm-password").val());
+	$("#LoginSubmitBtn").click(function () {
+		if (!$("#crm-url").val()) {
+			createDialog("CRM URL is required.", function () {});
+		} else if (!$("#crm-login").val()) {
+			createDialog("Login is required.", function () {});
+		} else if (!$("#crm-password").val()) {
+			createDialog("Password is required.", function () {});
+		} else {
+			GetUserIdByLogin($("#crm-url").val(), $("#crm-login").val(), $("#crm-password").val());
+		}
 	});
 
 	$("#saveUpdateSettings").click(function () {
