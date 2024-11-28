@@ -200,18 +200,15 @@ Office.onReady((info) => {
 			$('#sync-email-btn').prop('disabled', true);
 
 			attachClickEventHandlers();
-			fetchSelectedEmails(false);
-			Office.context.mailbox.addHandlerAsync(Office.EventType.SelectedItemsChanged, () => fetchSelectedEmails(true));
+			UpdateMailCount();
 
 			const data = GetDataFromLocalStorageAndSetApiUrlGlobal();
 			window.ApiUrlVal = ApiUrl;
 			if (data != null) {
-				// data = decodeFromBase64(resval);
-				if (data != null) {
-					$('#sent-flag-color').val(data.sentFlagColor);
-					$('#skip-flag-color').val(data.skipFlagColor);
-					$('#days-to-sync').val(data.daysToSync);
-				}
+				$('#sent-flag-color').val(data.sentFlagColor);
+				$('#skip-flag-color').val(data.skipFlagColor);
+				$('#days-to-sync').val(data.daysToSync);
+			
 				fetchEmailsWithCategoryAndTimeFilter(true, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
 				fetchEmailsWithCategoryAndTimeFilter(false, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
 			}
@@ -667,4 +664,29 @@ function fetchMimeContentOfAllEmail(EmailIdTogetMIME,loader) {
 			}
 		});
 	});
+}
+
+function UpdateMailCount() {
+	let selectedEmailCurr = 0;
+	let conversationCountCurr = new Set();
+	setInterval(() => {
+		Office.context.mailbox.getSelectedItemsAsync(function (result) {
+			let IsSelectedMailChange = false;
+			let conversationCount = new Set();
+			result.value.forEach(emailItem => {
+				if (!conversationCountCurr.has(emailItem.conversationId)) {
+					IsSelectedMailChange = true;
+				}
+				conversationCount.add(emailItem.conversationId);
+			});
+			// Total email selected
+			let selectedEmailChanged = result.value.length;
+
+			if (conversationCount.size != conversationCountCurr.size || selectedEmailChanged != selectedEmailCurr || IsSelectedMailChange) {
+				conversationCountCurr = conversationCount;
+				selectedEmailCurr = selectedEmailChanged;
+				fetchSelectedEmails(true);
+			} 
+		});
+	}, 500);
 }

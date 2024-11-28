@@ -315,6 +315,7 @@ $(document).ready(function () {
 				if (typeof window.opener.ReloadTaskPane === 'function') {
 					console.log('window.opener.CloseTheTaskPane');
 					window.opener.ReloadTaskPane(false);
+					$('#saveUpdateSettings').text("Update");
 					//window.close(); // Optionally close the popup after sending data
 				} else {
 					console.error("Parent window method setCategoryToEmail is not defined.");
