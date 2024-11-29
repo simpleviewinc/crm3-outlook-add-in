@@ -669,10 +669,12 @@ function fetchMimeContentOfAllEmail(EmailIdTogetMIME,loader) {
 function UpdateMailCount() {
 	let selectedEmailCurr = 0;
 	let conversationCountCurr = new Set();
+	let firstEmailSelectedIdCurr = '';
 	setInterval(() => {
 		Office.context.mailbox.getSelectedItemsAsync(function (result) {
 			let IsSelectedMailChange = false;
 			let conversationCount = new Set();
+			let firstEmailSelectedId = '';
 			result.value.forEach(emailItem => {
 				if (!conversationCountCurr.has(emailItem.conversationId)) {
 					IsSelectedMailChange = true;
@@ -681,10 +683,15 @@ function UpdateMailCount() {
 			});
 			// Total email selected
 			let selectedEmailChanged = result.value.length;
+			if (selectedEmailChanged === 1) {
+				firstEmailSelectedId = result.value[0].itemId
+			}
 
-			if (conversationCount.size != conversationCountCurr.size || selectedEmailChanged != selectedEmailCurr || IsSelectedMailChange) {
+			if (conversationCount.size != conversationCountCurr.size || selectedEmailChanged != selectedEmailCurr || IsSelectedMailChange 
+				|| (firstEmailSelectedIdCurr && firstEmailSelectedId && firstEmailSelectedId !== firstEmailSelectedIdCurr)) {
 				conversationCountCurr = conversationCount;
 				selectedEmailCurr = selectedEmailChanged;
+				firstEmailSelectedIdCurr = firstEmailSelectedId;
 				fetchSelectedEmails(true);
 			} 
 		});
