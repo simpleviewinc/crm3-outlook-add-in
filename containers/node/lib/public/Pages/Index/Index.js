@@ -684,7 +684,7 @@ function UpdateMailCount() {
 			let conversationCount = new Set();
 			let firstEmailSelectedId = '';
 
-			if (Array.isArray(result.value)) {
+			if (Array.isArray(result.value) && result.value.length <= 50) {
 				result.value.forEach(emailItem => {
 					if (!conversationCountCurr.has(emailItem.conversationId)) {
 						IsSelectedMailChange = true;
