@@ -255,6 +255,12 @@ function showOutlookPopup(data,width,height) {
 						CloseTheTaskPane();
 				}
 			});
+			if (data.IsCloseTaskPanel) {
+				dialog.addEventHandler(Office.EventType.DialogEventReceived, function (event) {
+					if (data.IsCloseTaskPanel && event.error === 12006)
+						CloseTheTaskPane();
+				});
+			}
 		} else {
 			console.error('Dialog failed to open:', result.error.message);
 		}
@@ -349,33 +355,35 @@ function fetchSelectedEmails(refresh) {
 			}
 
 			retryCount = 0; // Reset retry count on success
-			const promises = asyncResult.value.map(item => getSpecificEmailDetails(item.itemId));
-			Promise.all(promises).then(() => {
-				if (CheckSettings()) {
-					console.log("Enabling----");
-					updateEmailCount();
-					$('#send-email-btn').prop('disabled', false);
-					$('#send-email-btn').removeClass('disabled');
-					if (Array.isArray(window.inboxEmails) && Array.isArray(window.sentEmails)) {
-						$('#indexLoader').hide();
+			GetOutlookApiAccessToken().then((accessToken) => {
+				const promises = asyncResult.value.map(item => getSpecificEmailDetails(item.itemId,accessToken));
+				Promise.all(promises).then(() => {
+					if (CheckSettings()) {
+						console.log("Enabling----");
+						updateEmailCount();
+						$('#send-email-btn').prop('disabled', false);
+						$('#send-email-btn').removeClass('disabled');
+						if (!$('#sync-email-btn').hasClass('disabled')) {
+							$('#indexLoader').hide();
+						}
+						$('#fetching').hide();
+						$('#noOfEmails').show();
+						$('#errMsg').hide();
 					}
-					$('#fetching').hide();
-					$('#noOfEmails').show();
-					$('#errMsg').hide();
-				}
-				processing = false;
-				// If there was a pending refresh while processing, call the function again
-				if (refreshPending) {
-					refreshPending = false;
-					fetchSelectedEmails(true);
-				}
-			}).catch(() => {
-				processing = false;
-				// If there was a pending refresh while processing, call the function again
-				if (refreshPending) {
-					refreshPending = false;
-					fetchSelectedEmails(true);
-				}
+					processing = false;
+					// If there was a pending refresh while processing, call the function again
+					if (refreshPending) {
+						refreshPending = false;
+						fetchSelectedEmails(true);
+					}
+				}).catch(() => {
+					processing = false;
+					// If there was a pending refresh while processing, call the function again
+					if (refreshPending) {
+						refreshPending = false;
+						fetchSelectedEmails(true);
+					}
+				});
 			});
 		});
 	}
@@ -391,87 +399,84 @@ function updateEmailCount() {
 	}
 }
 // Get specific email details
-function getSpecificEmailDetails(id) {
+function getSpecificEmailDetails(id,accessToken) {
 	return new Promise((resolve, reject) => {
 		if (id) {
-			Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
-				if (result.status === "succeeded") {
-					const accessToken = result.value;
-					let correctedId = id.replace(/\//g, '-').replace(/\+/g, '_'); // This might not be needed
-					const encodedId = encodeURIComponent(correctedId); // URL encode the corrected ID
-					const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${encodedId}`;
-	
-					// Function to perform AJAX request with exponential backoff
-					// eslint-disable-next-line no-inner-declarations
-					function fetchWithRetry(url, headers, retries = MAX_RETRIES, delay = INITIAL_DELAY) {
-						return new Promise((resolve, reject) => {
-							$.ajax({
-								url: url,
-								dataType: 'json',
-								headers: headers
-							}).done((data) => {
-								resolve(data);
-							}).fail((error) => {
-								if (error.status === 429 && retries > 0) {
-									setTimeout(() => {
-										fetchWithRetry(url, headers, retries - 1, delay * 2).then(resolve).catch(reject);
-									}, delay);
-								} else {
-									reject(error);
-								}
-							});
-						});
-					}
-	
-					const headers = {
-						'Authorization': `Bearer ${accessToken}`,
-						'Accept': 'application/json',
-						'Prefer': `outlook.body-content-type="text"`
-					};
-	
-					fetchWithRetry(requestUrl, headers)
-						.then((emailData) => {
-							window.selectedEmailData[id] = emailData;
-	
-							const parentFolderId = emailData.ParentFolderId;
-							const folderUrl = `${Office.context.mailbox.restUrl}/v2.0/me/mailFolders/${parentFolderId}`;
-	
-							return fetchWithRetry(folderUrl, headers).then(folderData => {
-								return { emailData, folderData };
-							});
-						})
-						.then(({ emailData, folderData }) => {
-							const folderName = folderData.DisplayName;
-	
-							const rowData = {
-								id: emailData.Id,
-								subject: emailData.Subject,
-								receivedDate: emailData.ReceivedDateTime,
-								body: emailData.Body.Content,
-								isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\')),
-								fromEmail: (!(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))) ? emailData.From.EmailAddress.Address : emailData.ToRecipients[0].EmailAddress.Address
-							};
-	
-							const exists = selectedEmails.some(email => email.id === rowData.id);
-							if (!exists) {
-								selectedEmails.push(rowData);
-							}
-	
-							console.log(`Email is in folder: ${folderName}`);
-							resolve();
-						})
-						.catch((error) => {
-							console.error("Error fetching data:", error);
-							if (error.responseJSON) {
-								console.error("Error details:", error.responseJSON);
-							}
+			let correctedId = id.replace(/\//g, '-').replace(/\+/g, '_'); // This might not be needed
+			const encodedId = encodeURIComponent(correctedId); // URL encode the corrected ID
+			const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${encodedId}`;
+
+			// Function to perform AJAX request with exponential backoff
+			// eslint-disable-next-line no-inner-declarations
+			function fetchWithRetry(url, headers, retries = MAX_RETRIES, delay = INITIAL_DELAY) {
+				return new Promise((resolve, reject) => {
+					$.ajax({
+						url: url,
+						dataType: 'json',
+						headers: headers
+					}).done((data) => {
+						resolve(data);
+					}).fail((error) => {
+						if (error.status === 429 && retries > 0) {
+							setTimeout(() => {
+								fetchWithRetry(url, headers, retries - 1, delay * 2).then(resolve).catch(reject);
+							}, delay);
+						} else if (error.status === 401 && error.responseJSON && error.responseJSON.error.code === "TokenExpired") {
+							GetOutlookApiAccessToken().then((Token) => {
+								headers['Authorization'] = `Bearer ${Token}`;
+								fetchWithRetry(url, headers, retries - 1, delay * 2).then(resolve).catch(reject);
+							}).catch((error) => reject(error))
+						} else {
 							reject(error);
-						});
-				} else {
-					console.error(`Error getting callback token: ${result.error.message}`);
-					reject(new Error(result.error.message));
-				}
-			});
+						}
+					});
+				});
+			}
+
+			const headers = {
+				'Authorization': `Bearer ${accessToken}`,
+				'Accept': 'application/json',
+				'Prefer': `outlook.body-content-type="text"`
+			};
+
+			fetchWithRetry(requestUrl, headers)
+				.then((emailData) => {
+					window.selectedEmailData[id] = emailData;
+
+					const parentFolderId = emailData.ParentFolderId;
+					const folderUrl = `${Office.context.mailbox.restUrl}/v2.0/me/mailFolders/${parentFolderId}`;
+
+					return fetchWithRetry(folderUrl, headers).then(folderData => {
+						return { emailData, folderData };
+					});
+				})
+				.then(({ emailData, folderData }) => {
+					const folderName = folderData.DisplayName;
+
+					const rowData = {
+						id: emailData.Id,
+						subject: emailData.Subject,
+						receivedDate: emailData.ReceivedDateTime,
+						body: emailData.Body.Content,
+						isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\')),
+						fromEmail: (!(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))) ? emailData.From.EmailAddress.Address : emailData.ToRecipients[0].EmailAddress.Address
+					};
+
+					const exists = selectedEmails.some(email => email.id === rowData.id);
+					if (!exists) {
+						selectedEmails.push(rowData);
+					}
+
+					console.log(`Email is in folder: ${folderName}`);
+					resolve();
+				})
+				.catch((error) => {
+					console.error("Error fetching data:", error);
+					if (error.responseJSON) {
+						console.error("Error details:", error.responseJSON);
+					}
+					reject(error);
+				});
 		} else {
 			resolve();
 		}
@@ -599,7 +604,10 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 						if (CheckSettings() && Array.isArray(window.inboxEmails) && Array.isArray(window.sentEmails)) {
 							$('#sync-email-btn').removeClass('disabled');
 							$('#sync-email-btn').prop('disabled', false);
-							$('#indexLoader').hide();
+
+							if (!$('#send-email-btn').hasClass('disabled')){
+								$('#indexLoader').hide();
+							}
 						}
 					}
 				}).fail(function (jqXHR, textStatus, errorThrown) {
@@ -670,30 +678,55 @@ function UpdateMailCount() {
 	let selectedEmailCurr = 0;
 	let conversationCountCurr = new Set();
 	let firstEmailSelectedIdCurr = '';
-	setInterval(() => {
+	const intervalId = setInterval(() => {
 		Office.context.mailbox.getSelectedItemsAsync(function (result) {
 			let IsSelectedMailChange = false;
 			let conversationCount = new Set();
 			let firstEmailSelectedId = '';
-			result.value.forEach(emailItem => {
-				if (!conversationCountCurr.has(emailItem.conversationId)) {
-					IsSelectedMailChange = true;
-				}
-				conversationCount.add(emailItem.conversationId);
-			});
-			// Total email selected
-			let selectedEmailChanged = result.value.length;
-			if (selectedEmailChanged === 1) {
-				firstEmailSelectedId = result.value[0].itemId
-			}
 
-			if (conversationCount.size != conversationCountCurr.size || selectedEmailChanged != selectedEmailCurr || IsSelectedMailChange 
-				|| (firstEmailSelectedIdCurr && firstEmailSelectedId && firstEmailSelectedId !== firstEmailSelectedIdCurr)) {
-				conversationCountCurr = conversationCount;
-				selectedEmailCurr = selectedEmailChanged;
-				firstEmailSelectedIdCurr = firstEmailSelectedId;
-				fetchSelectedEmails(true);
-			} 
+			if (Array.isArray(result.value) && result.value.length <= 50) {
+				result.value.forEach(emailItem => {
+					if (!conversationCountCurr.has(emailItem.conversationId)) {
+						IsSelectedMailChange = true;
+					}
+					conversationCount.add(emailItem.conversationId);
+				});
+				// Total email selected
+				let selectedEmailChanged = result.value.length;
+				if (selectedEmailChanged === 1) {
+					firstEmailSelectedId = result.value[0].itemId
+				}
+	
+				if (conversationCount.size != conversationCountCurr.size || selectedEmailChanged != selectedEmailCurr || IsSelectedMailChange 
+					|| (firstEmailSelectedIdCurr && firstEmailSelectedId && firstEmailSelectedId !== firstEmailSelectedIdCurr)) {
+					conversationCountCurr = conversationCount;
+					selectedEmailCurr = selectedEmailChanged;
+					firstEmailSelectedIdCurr = firstEmailSelectedId;
+					fetchSelectedEmails(true);
+				}
+			} else {
+				clearInterval(intervalId);
+				showOutlookPopup({Popuptoshow : 'SelectedEmailLimitExceed',IsCloseTaskPanel : true},30,25);
+			}
 		});
 	}, 500);
+}
+
+function GetOutlookApiAccessToken(maxRetries = 3) {
+	return new Promise((resolve, reject) => {
+		function tryGetToken(retriesLeft) {
+			Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
+				if (result.status === "succeeded") {
+					resolve(result.value);
+				} else {
+					if (retriesLeft > 0) {
+						tryGetToken(retriesLeft - 1);
+					} else {
+						reject(result.error || "Failed to get Outlook API access token after multiple retries.");
+					}
+				}
+			});
+		}
+		tryGetToken(maxRetries);
+	});
 }
