@@ -1492,15 +1492,15 @@ function toggleClearAllButton() {
 }
 
 function toggleSyncButton(event) {
-    const inboxCheckboxes = document.querySelectorAll('#inboxTable .row-checkbox:checked');
-    const sentBoxCheckboxes = document.querySelectorAll('#sentBoxTable .row-checkbox:checked');
-    
-    // Enable button if there are any selected checkboxes
-    if (inboxCheckboxes.length > 0 || sentBoxCheckboxes.length > 0) {
-        EnableButtonById('#SyncOk');
-    } else {
-        DisableButtonById('#SyncOk');
-    }
+	const inboxCheckboxes = document.querySelectorAll('#inboxTable .row-checkbox:checked');
+	const sentBoxCheckboxes = document.querySelectorAll('#sentBoxTable .row-checkbox:checked');
+
+	// Enable button if there are any selected checkboxes
+	if (inboxCheckboxes.length > 0 || sentBoxCheckboxes.length > 0) {
+		EnableButtonById('#SyncOk');
+	} else {
+		DisableButtonById('#SyncOk');
+	}
 	// Handle row selection and deselection
 	if (event) {
 		toggleSelectAllButton();
@@ -1515,7 +1515,7 @@ function toggleSyncButton(event) {
 }
 
 function AddOnRowSelectListener(selector) {
-    document.querySelectorAll(selector).forEach(checkbox => {
-        checkbox.addEventListener('change',toggleSyncButton)
-    });
+	document.querySelectorAll(selector).forEach(checkbox => {
+		checkbox.addEventListener('change',toggleSyncButton)
+	});
 }
