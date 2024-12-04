@@ -39,6 +39,10 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 		$("#syncEmailUI").show();
 		$("#sendEmailUI").hide();
 		$(document).ready(function () {
+			DisableButtonById('#SyncOk');
+			DisableButtonById('#ClearAllInbox');
+			DisableButtonById('#ClearAllSentBox');
+
 			setTimeout(() => {
 				if (typeof window.inboxEmails !== 'undefined' && Object.keys(window.inboxEmails).length > 0) {
 					const tableBody = document.querySelector("#inboxTable tbody");
@@ -60,7 +64,9 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 						subjectCell.textContent = email.Subject;
 						receivedDateCellToDisplay.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
 						receivedCellUtc.textContent = email.ReceivedDateTime;
-					});
+					});	
+
+					AddOnRowSelectListener('#inboxTable .row-checkbox');
 				} else {
 					const tableBody = document.querySelector("#inboxTable tbody");
 					const row = tableBody.insertRow();
@@ -70,6 +76,7 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 					indexCell.style.textAlign = "center";
 					indexCell.style.padding = "10px";
 					console.log("No data found in inbox.");
+					DisableButtonById('#selectAllInbox');
 				}
 			}, 1000); // Delay of 1 second to ensure data is available
 
@@ -99,7 +106,9 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 							AllToRecipients = AllToRecipients + (index > 0 ? ', ' : '') + element.EmailAddress.Address;
 						});
 						toCell.textContent = AllToRecipients;
-					});
+					});					
+
+					AddOnRowSelectListener('#sentBoxTable .row-checkbox');
 				} else {
 					const tableBody = document.querySelector("#sentBoxTable tbody");
 					const row = tableBody.insertRow();
@@ -109,6 +118,7 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 					indexCell.style.textAlign = "center";
 					indexCell.style.padding = "10px";
 					console.log("No data found in sent box.");
+					DisableButtonById('#selectAllSentBox');
 				}
 			}, 1000); // Delay of 1 second to ensure data is available
 		});
@@ -157,11 +167,17 @@ $(document).ready(function () {
 	$('.select-all-button').click(function () {
 		const targetTable = $(this).data('target');
 		$(targetTable).find('input[type="checkbox"]').prop('checked', true).closest('tr').addClass('selected');
+		EnableButtonById('#SyncOk');
+		toggleSelectAllButton();
+		toggleClearAllButton();
 	});
 
 	$('.clear-all-button').click(function () {
 		const targetTable = $(this).data('target');
 		$(targetTable).find('input[type="checkbox"]').prop('checked', false).closest('tr').removeClass('selected');
+		toggleSyncButton();
+		toggleClearAllButton();
+		toggleSelectAllButton();
 	});
 	
 	$('#skipit').on('click', () => {
@@ -272,7 +288,9 @@ $(document).ready(function () {
 		currentSelectedData = getSelectedRowsData();
 		console.log("Selected Rows Data:-  ");
 		console.log(currentSelectedData);
-		ProcessSelectedData(currentSelectedData);
+		if (Array.isArray(currentSelectedData) && currentSelectedData.length > 0) {
+			ProcessSelectedData(currentSelectedData);
+		}
 	});
 
 	$('#selectBtn').on('click', function () {
@@ -1447,4 +1465,57 @@ function FilterChildRelOptOnChangeParentDD(dropdownID){
 	if (childRel.child["#text"]) {
 		FilterChildRelOptOnChangeParentDD(childRel.fldname["#text"]);
 	}
+}
+
+function toggleSelectAllButton() {
+	let buttonId = $('#showGrid3').hasClass('active') ? '#selectAllInbox' : '#selectAllSentBox';
+
+	const targetTable = $(buttonId).data('target');
+	const rowCount = $(targetTable).find('tbody tr').length;
+	const selectedCount = $(targetTable).find('input[type="checkbox"]:checked').length;
+	if (rowCount === selectedCount) {
+		DisableButtonById(buttonId);
+	} else {
+		EnableButtonById(buttonId);
+	}
+}
+
+function toggleClearAllButton() {
+	let buttonId = $('#showGrid3').hasClass('active') ? '#ClearAllInbox' : '#ClearAllSentBox';	
+	const targetTable = $(buttonId).data('target');
+	const selectedCount = $(targetTable).find('tbody tr input[type="checkbox"]:checked').length;
+	if (selectedCount <= 0) {
+		DisableButtonById(buttonId);
+	} else {
+		EnableButtonById(buttonId);
+	}
+}
+
+function toggleSyncButton(event) {
+	const inboxCheckboxes = document.querySelectorAll('#inboxTable .row-checkbox:checked');
+	const sentBoxCheckboxes = document.querySelectorAll('#sentBoxTable .row-checkbox:checked');
+
+	// Enable button if there are any selected checkboxes
+	if (inboxCheckboxes.length > 0 || sentBoxCheckboxes.length > 0) {
+		EnableButtonById('#SyncOk');
+	} else {
+		DisableButtonById('#SyncOk');
+	}
+	// Handle row selection and deselection
+	if (event) {
+		toggleSelectAllButton();
+		toggleClearAllButton();
+		const row = event.target.closest('tr'); 
+		if (event.target.checked) {
+			row.classList.add('selected');
+		} else {
+			row.classList.remove('selected');
+		}
+	}
+}
+
+function AddOnRowSelectListener(selector) {
+	document.querySelectorAll(selector).forEach(checkbox => {
+		checkbox.addEventListener('change',toggleSyncButton)
+	});
 }
