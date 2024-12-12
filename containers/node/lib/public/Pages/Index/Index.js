@@ -199,7 +199,7 @@ Office.onReady((info) => {
 			$('#sync-email-btn').addClass('disabled');
 			$('#sync-email-btn').prop('disabled', true);
 
-			attachClickEventHandlers();
+			attachClickEventHandlers();	
 			UpdateMailCount();
 
 			const data = GetDataFromLocalStorageAndSetApiUrlGlobal();
@@ -684,7 +684,7 @@ function UpdateMailCount() {
 			let conversationCount = new Set();
 			let firstEmailSelectedId = '';
 
-			if (Array.isArray(result.value) && result.value.length <= 50) {
+			if (Array.isArray(result.value) && result.value.length > 0 && result.value.length <= 50) {
 				result.value.forEach(emailItem => {
 					if (!conversationCountCurr.has(emailItem.conversationId)) {
 						IsSelectedMailChange = true;
@@ -694,7 +694,7 @@ function UpdateMailCount() {
 				// Total email selected
 				let selectedEmailChanged = result.value.length;
 				if (selectedEmailChanged === 1) {
-					firstEmailSelectedId = result.value[0].itemId
+					firstEmailSelectedId = result.value[0].itemId;
 				}
 	
 				if (conversationCount.size != conversationCountCurr.size || selectedEmailChanged != selectedEmailCurr || IsSelectedMailChange 
@@ -705,8 +705,21 @@ function UpdateMailCount() {
 					fetchSelectedEmails(true);
 				}
 			} else {
-				clearInterval(intervalId);
-				showOutlookPopup({Popuptoshow : 'SelectedEmailLimitExceed',IsCloseTaskPanel : true},30,25);
+				// Handle the case where no emails are selected or the selection exceeds the limit of 50
+				if (result.value && result.value.length === 0) {
+					let isMultiselectActivate = JSON.parse(Office.context.mailbox.officeAppContext.get_hostCustomMessage()).scenario;
+					if (isMultiselectActivate === "MultiSelect") {
+						clearInterval(intervalId);
+						showOutlookPopup({Popuptoshow : 'UnableProcesRequest',IsCloseTaskPanel : true},30,25);
+					} else if (selectedEmailCurr === 0) {
+						// Avoid repeated calls to fetchSelectedEmails when Add-in is opened without selecting emails
+						selectedEmailCurr = -1;
+						fetchSelectedEmails(true);
+					}
+				} else {
+					clearInterval(intervalId);
+					showOutlookPopup({Popuptoshow : 'SelectedEmailLimitExceed',IsCloseTaskPanel : true},30,25);
+				}
 			}
 		});
 	}, 500);
