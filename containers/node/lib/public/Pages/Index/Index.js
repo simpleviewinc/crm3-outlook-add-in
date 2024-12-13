@@ -193,13 +193,14 @@ Office.onReady((info) => {
 			$('#indexLoader').hide();
 			$('#fetching').hide();
 			$('#noOfEmails').hide();
+			$('#SelectAllMessagesNote').hide();
 			$('#errMsg').hide();
 			$('#send-email-btn').addClass('disabled');
 			$('#send-email-btn').prop('disabled', true);
 			$('#sync-email-btn').addClass('disabled');
 			$('#sync-email-btn').prop('disabled', true);
 
-			attachClickEventHandlers();
+			attachClickEventHandlers();	
 			UpdateMailCount();
 
 			const data = GetDataFromLocalStorageAndSetApiUrlGlobal();
@@ -271,7 +272,7 @@ function showOutlookPopup(data,width,height) {
 function attachClickEventHandlers() {
 	$('#send-email-btn').on('click', () => {
 		if (selectedEmails.length < 1) {
-			showOutlookPopup({Popuptoshow : 'EmailSelectedDialog'},30,25);
+			showOutlookPopup({Popuptoshow : 'EmailSelectedDialog'},35,35);
 		} else {
 			openPopup('../SendEmail/SendEmail.html', 'Send Email');
 		}
@@ -330,6 +331,7 @@ function fetchSelectedEmails(refresh) {
 		$('#indexLoader').show();
 		$('#fetching').show();
 		$('#noOfEmails').hide();
+		$('#SelectAllMessagesNote').hide();
 		$('#errMsg').hide();
 		
 		Office.context.mailbox.getSelectedItemsAsync((asyncResult) => {
@@ -356,7 +358,15 @@ function fetchSelectedEmails(refresh) {
 
 			retryCount = 0; // Reset retry count on success
 			GetOutlookApiAccessToken().then((accessToken) => {
-				const promises = asyncResult.value.map(item => getSpecificEmailDetails(item.itemId,accessToken));
+				const promises = asyncResult.value.map(item => {
+					console.log("refreshPending : ",refreshPending);
+					if (refreshPending) {
+						return new Promise((resolve,reject) => {
+							resolve();
+						})
+					} else 
+						return getSpecificEmailDetails(item.itemId,accessToken)
+				});
 				Promise.all(promises).then(() => {
 					if (CheckSettings()) {
 						console.log("Enabling----");
@@ -368,6 +378,9 @@ function fetchSelectedEmails(refresh) {
 						}
 						$('#fetching').hide();
 						$('#noOfEmails').show();
+						if (selectedEmails.length === 0) {
+							$('#SelectAllMessagesNote').show();
+						}
 						$('#errMsg').hide();
 					}
 					processing = false;
@@ -685,24 +698,29 @@ function UpdateMailCount() {
 			let firstEmailSelectedId = '';
 
 			if (Array.isArray(result.value) && result.value.length <= 50) {
-				result.value.forEach(emailItem => {
-					if (!conversationCountCurr.has(emailItem.conversationId)) {
-						IsSelectedMailChange = true;
-					}
-					conversationCount.add(emailItem.conversationId);
-				});
-				// Total email selected
-				let selectedEmailChanged = result.value.length;
-				if (selectedEmailChanged === 1) {
-					firstEmailSelectedId = result.value[0].itemId
-				}
-	
-				if (conversationCount.size != conversationCountCurr.size || selectedEmailChanged != selectedEmailCurr || IsSelectedMailChange 
-					|| (firstEmailSelectedIdCurr && firstEmailSelectedId && firstEmailSelectedId !== firstEmailSelectedIdCurr)) {
-					conversationCountCurr = conversationCount;
-					selectedEmailCurr = selectedEmailChanged;
-					firstEmailSelectedIdCurr = firstEmailSelectedId;
+				if (result.value.length === 0 && selectedEmailCurr >= 0) {
+					selectedEmailCurr = -1;
 					fetchSelectedEmails(true);
+				} else if (result.value.length > 0) {
+					result.value.forEach(emailItem => {
+						if (!conversationCountCurr.has(emailItem.conversationId)) {
+							IsSelectedMailChange = true;
+						}
+						conversationCount.add(emailItem.conversationId);
+					});
+					// Total email selected
+					let selectedEmailChanged = result.value.length;
+					if (selectedEmailChanged === 1) {
+						firstEmailSelectedId = result.value[0].itemId;
+					}
+		
+					if (conversationCount.size != conversationCountCurr.size || selectedEmailChanged != selectedEmailCurr || IsSelectedMailChange 
+						|| (firstEmailSelectedIdCurr && firstEmailSelectedId && firstEmailSelectedId !== firstEmailSelectedIdCurr)) {
+						conversationCountCurr = conversationCount;
+						selectedEmailCurr = selectedEmailChanged;
+						firstEmailSelectedIdCurr = firstEmailSelectedId;
+						fetchSelectedEmails(true);
+					}
 				}
 			} else {
 				clearInterval(intervalId);
