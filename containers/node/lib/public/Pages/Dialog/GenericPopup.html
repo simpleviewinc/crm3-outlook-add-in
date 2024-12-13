@@ -6,8 +6,11 @@
 </head>
 <body>
     <div id="EmailSelectedDialog" class="hidden PopUpBody">
-        <h1>No Email Selected</h1>
-        <p>You must select at least 1 email to send!</p>
+        <h1>Unable to process your request</h1>
+        <p>An error occured due to one of the following conditions:</p>
+        <p class="m0">You must select at least 1 email to send.</p>
+        <p class="m0">"Select All Messages" in Outlook is not currently supported.</p>
+        <p class="m0">Please manually select up to 50 emails at a time in Outlook to proceed.</p>
         <button onclick="closeDialog()" class="btnIndex"><p>OK</p></button>
     </div>
 
@@ -22,12 +25,6 @@
     <div id="SelectedEmailLimitExceed" class="hidden PopUpBody">
         <h1>Selected email limit exceeded</h1>
         <p>You can select up to 50 emails at a time in Outlook. Please reduce your selection to proceed.</p>
-        <button onclick="closeDialog()" class="btnIndex"><p>Close</p></button>
-    </div>
-
-    <div id="UnableProcesRequest" class="hidden PopUpBody">
-        <h1>Unable to process your request</h1>
-        <p>Please manually select up to 50 emails at a time in Outlook to proceed.</p>
         <button onclick="closeDialog()" class="btnIndex"><p>Close</p></button>
     </div>
 
