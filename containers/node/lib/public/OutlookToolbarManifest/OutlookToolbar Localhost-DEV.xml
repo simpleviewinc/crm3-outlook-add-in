@@ -9,8 +9,8 @@
 	<ProviderName>Simpleview Localhost</ProviderName>
 	<DefaultLocale>en-US</DefaultLocale>
 	<!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
-	<DisplayName DefaultValue="Simpleview LH"/>
-	<Description DefaultValue="Simpleview LH"/>
+	<DisplayName DefaultValue="CRM Add-in for Outlook - LH"/>
+	<Description DefaultValue="CRM Add-in for Outlook - LH"/>
 	<IconUrl DefaultValue="https://outlook.dev.simpleviewinc.com/Images/sv-icon-64.png"/>
 	<HighResolutionIconUrl DefaultValue="https://outlook.dev.simpleviewinc.com/Images/sv-icon-128.png"/>
 	<SupportUrl DefaultValue="https://www.simpleviewinc.com/products/simpleview-cms/"/>
@@ -87,11 +87,11 @@
 					<bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/Pages/Index/Index.html"/>
 				</bt:Urls>
 				<bt:ShortStrings>
-					<bt:String id="GroupLabel" DefaultValue="SimpleView LH"/>
+					<bt:String id="GroupLabel" DefaultValue="Simpleview LH"/>
 					<bt:String id="TaskpaneButton.Label" DefaultValue="CRM LH"/>
 				</bt:ShortStrings>
 				<bt:LongStrings>
-					<bt:String id="TaskpaneButton.Tooltip" DefaultValue="Localhost Send messages to SimpleView CRM."/>
+					<bt:String id="TaskpaneButton.Tooltip" DefaultValue="Localhost Send messages to Simpleview CRM."/>
 				</bt:LongStrings>
 			</Resources>
 		</VersionOverrides>

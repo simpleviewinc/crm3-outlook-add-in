@@ -6,11 +6,11 @@
 	<Id>b9c2a2d7-f251-46f5-a9b8-e735810dadc1</Id>
 	<!-- Version. Updates from the store only get triggered if there is a version change. -->
 	<Version>1.0.0.1</Version>
-	<ProviderName>Simpleview</ProviderName>
+	<ProviderName>Granicus Denver</ProviderName>
 	<DefaultLocale>en-US</DefaultLocale>
 	<!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
-	<DisplayName DefaultValue="Simpleview CRM"/>
-	<Description DefaultValue="Simpleview CRM"/>
+	<DisplayName DefaultValue="CRM Add-in for Outlook"/>
+	<Description DefaultValue="CRM Add-in for Outlook"/>
 	<IconUrl DefaultValue="https://outlook.simpleviewinc.com/Images/sv-icon-64.png"/>
 	<HighResolutionIconUrl DefaultValue="https://outlook.simpleviewinc.com/Images/sv-icon-128.png"/>
 	<SupportUrl DefaultValue="https://www.simpleviewinc.com/products/simpleview-cms/"/>
@@ -86,11 +86,11 @@
 					<bt:Url id="Taskpane.Url" DefaultValue="https://outlook.simpleviewinc.com/Pages/Index/Index.html"/>
 				</bt:Urls>
 				<bt:ShortStrings>
-					<bt:String id="GroupLabel" DefaultValue="SimpleView"/>
+					<bt:String id="GroupLabel" DefaultValue="Simpleview"/>
 					<bt:String id="TaskpaneButton.Label" DefaultValue="CRM"/>
 				</bt:ShortStrings>
 				<bt:LongStrings>
-					<bt:String id="TaskpaneButton.Tooltip" DefaultValue="Send messages to SimpleView CRM."/>
+					<bt:String id="TaskpaneButton.Tooltip" DefaultValue="Send messages to Simpleview CRM."/>
 				</bt:LongStrings>
 			</Resources>
 		</VersionOverrides>

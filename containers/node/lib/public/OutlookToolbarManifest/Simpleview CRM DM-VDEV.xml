@@ -6,11 +6,11 @@
 	<Id>50c0fe30-6f24-422b-9539-57361e4cbc30</Id>
 	<!-- Version. Updates from the store only get triggered if there is a version change. -->
 	<Version>1.4.1.1</Version>
-	<ProviderName>Simpleview DM-VDEV 1.4.1.1</ProviderName>
+	<ProviderName>SGranicus Denver</ProviderName>
 	<DefaultLocale>en-US</DefaultLocale>
 	<!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
-	<DisplayName DefaultValue="Simpleview DM-VDEV"/>
-	<Description DefaultValue="Simpleview DM-VDEV"/>
+	<DisplayName DefaultValue="CRM Add-in for Outlook - DM-VDEV"/>
+	<Description DefaultValue="CRM Add-in for Outlook - DM-VDEV"/>
 	<IconUrl DefaultValue="https://simpleviewcrmdev.vdev.digitalmettle.com/Images/sv-icon-64.png"/>
 	<HighResolutionIconUrl DefaultValue="https://simpleviewcrmdev.vdev.digitalmettle.com/Images/sv-icon-128.png"/>
 	<SupportUrl DefaultValue="http://www.contoso.com"/>
@@ -86,11 +86,11 @@
 					<bt:Url id="Taskpane.Url" DefaultValue="https://simpleviewcrmdev.vdev.digitalmettle.com/Pages/Index/Index.html"/>
 				</bt:Urls>
 				<bt:ShortStrings>
-					<bt:String id="GroupLabel" DefaultValue="SimpleView DM-VDEV"/>
+					<bt:String id="GroupLabel" DefaultValue="Simpleview DM-VDEV"/>
 					<bt:String id="TaskpaneButton.Label" DefaultValue="DM-VDEV"/>
 				</bt:ShortStrings>
 				<bt:LongStrings>
-					<bt:String id="TaskpaneButton.Tooltip" DefaultValue="DM-VDEV Send messages to SimpleView CRM."/>
+					<bt:String id="TaskpaneButton.Tooltip" DefaultValue="DM-VDEV Send messages to Simpleview CRM."/>
 				</bt:LongStrings>
 			</Resources>
 		</VersionOverrides>
