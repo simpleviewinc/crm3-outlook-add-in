@@ -6,7 +6,7 @@
 	<Id>50c0fe30-6f24-422b-9539-57361e4cbc30</Id>
 	<!-- Version. Updates from the store only get triggered if there is a version change. -->
 	<Version>1.4.1.1</Version>
-	<ProviderName>SGranicus Denver</ProviderName>
+	<ProviderName>Granicus Denver</ProviderName>
 	<DefaultLocale>en-US</DefaultLocale>
 	<!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
 	<DisplayName DefaultValue="CRM Add-in for Outlook - DM-VDEV"/>

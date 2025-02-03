@@ -6,7 +6,7 @@
 	<Id>a7201f5a-467e-4794-b1b3-f8ef743cfa6c</Id>
 	<!-- Version. Updates from the store only get triggered if there is a version change. -->
 	<Version>1.5.0.1</Version>
-	<ProviderName>Simpleview Localhost</ProviderName>
+	<ProviderName>Granicus Denver</ProviderName>
 	<DefaultLocale>en-US</DefaultLocale>
 	<!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
 	<DisplayName DefaultValue="CRM Add-in for Outlook - LH"/>
