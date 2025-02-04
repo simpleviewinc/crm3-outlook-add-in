@@ -81,11 +81,11 @@
     <Content Include="Images\Icon64.png" />
     <Content Include="Images\Icon80.png" />
     <Content Include="Images\logo.ico" />
-    <Content Include="Images\sv-icon-128.png" />
-    <Content Include="Images\sv-icon-16.png" />
-    <Content Include="Images\sv-icon-32.png" />
-    <Content Include="Images\sv-icon-64.png" />
-    <Content Include="Images\sv-icon-80.png" />
+    <Content Include="Images\sv-gran-icon-128.png" />
+    <Content Include="Images\sv-gran-icon-16.png" />
+    <Content Include="Images\sv-gran-icon-32.png" />
+    <Content Include="Images\sv-gran-icon-64.png" />
+    <Content Include="Images\sv-gran-icon-80.png" />
     <Content Include="OutlookToolbarManifest\OutlookToolbar Localhost-DEV.xml" />
     <Content Include="OutlookToolbarManifest\Simpleview CRM DM-VDEV.xml" />
     <Content Include="OutlookToolbarManifest\Simpleview CRM Outlook Toolbar QA.xml" />
