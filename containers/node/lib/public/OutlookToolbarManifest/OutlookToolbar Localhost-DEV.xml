@@ -9,8 +9,8 @@
 	<ProviderName>Granicus Denver</ProviderName>
 	<DefaultLocale>en-US</DefaultLocale>
 	<!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
-	<DisplayName DefaultValue="CRM Add-in for Outlook - LH"/>
-	<Description DefaultValue="CRM Add-in for Outlook - LH"/>
+	<DisplayName DefaultValue="Simpleview CRM Integration for Outlook - LH"/>
+	<Description DefaultValue="Simpleview CRM Integration for Outlook - LH"/>
 	<IconUrl DefaultValue="https://outlook.dev.simpleviewinc.com/Images/sv-gran-icon-64.png"/>
 	<HighResolutionIconUrl DefaultValue="https://outlook.dev.simpleviewinc.com/Images/sv-gran-icon-128.png"/>
 	<SupportUrl DefaultValue="https://www.simpleviewinc.com/products/simpleview-cms/"/>
