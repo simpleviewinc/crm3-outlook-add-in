@@ -258,7 +258,7 @@ function showOutlookPopup(data,width,height) {
 			});
 			if (data.IsCloseTaskPanel) {
 				dialog.addEventHandler(Office.EventType.DialogEventReceived, function (event) {
-					if (data.IsCloseTaskPanel && event.error === 12006)
+					if (data.IsCloseTaskPanel && event.error === 12006) 
 						CloseTheTaskPane();
 				});
 			}
@@ -359,7 +359,6 @@ function fetchSelectedEmails(refresh) {
 			retryCount = 0; // Reset retry count on success
 			GetOutlookApiAccessToken().then((accessToken) => {
 				const promises = asyncResult.value.map(item => {
-					console.log("refreshPending : ",refreshPending);
 					if (refreshPending) {
 						return new Promise((resolve,reject) => {
 							resolve();
@@ -722,9 +721,11 @@ function UpdateMailCount() {
 						fetchSelectedEmails(true);
 					}
 				}
-			} else {
+			} else if (Array.isArray(result.value) && result.value.length > 50) {
 				clearInterval(intervalId);
 				showOutlookPopup({Popuptoshow : 'SelectedEmailLimitExceed',IsCloseTaskPanel : true},30,25);
+			} else {
+				clearInterval(intervalId);
 			}
 		});
 	}, 500);
