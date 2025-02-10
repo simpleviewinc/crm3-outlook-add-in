@@ -724,9 +724,7 @@ function UpdateMailCount() {
 			} else if (Array.isArray(result.value) && result.value.length > 50) {
 				clearInterval(intervalId);
 				showOutlookPopup({Popuptoshow : 'SelectedEmailLimitExceed',IsCloseTaskPanel : true},30,25);
-			} else {
-				clearInterval(intervalId);
-			}
+			} 
 		});
 	}, 500);
 }
