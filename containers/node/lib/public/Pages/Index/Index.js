@@ -12,6 +12,7 @@ window.userId = '';
 let emailQueue = [];
 let isProcessingQueue = false;
 let retryDelay = 1000; // Initial delay of 1 second
+let IsResetTaskPaneUICall = false;
 
 // Retry logic with exponential backoff
 function retryCategoryUpdate(emailId, isSentFlag, retryCount = 0) {
@@ -185,36 +186,13 @@ function CheckSettings() {
 	return false;
 }
 
+if (isOfficeJsLoaded()) {
+	ResetTheTaskPaneUI();
+}
+
 Office.onReady((info) => {
 	if (info.host === Office.HostType.Outlook) {
-		$(document).ready(() => {
-			console.log("office is ready");
-			console.log('loaded index.js version DEV 1.5');
-			$('#indexLoader').hide();
-			$('#fetching').hide();
-			$('#noOfEmails').hide();
-			$('#SelectAllMessagesNote').hide();
-			$('#errMsg').hide();
-			$('#send-email-btn').addClass('disabled');
-			$('#send-email-btn').prop('disabled', true);
-			$('#sync-email-btn').addClass('disabled');
-			$('#sync-email-btn').prop('disabled', true);
-
-			attachClickEventHandlers();	
-			UpdateMailCount();
-
-			const data = GetDataFromLocalStorageAndSetApiUrlGlobal();
-			window.ApiUrlVal = ApiUrl;
-			if (data != null) {
-				$('#sent-flag-color').val(data.sentFlagColor);
-				$('#skip-flag-color').val(data.skipFlagColor);
-				$('#days-to-sync').val(data.daysToSync);
-			
-				fetchEmailsWithCategoryAndTimeFilter(true, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
-				fetchEmailsWithCategoryAndTimeFilter(false, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
-			}
-
-		});
+		ResetTheTaskPaneUI();
 	}
 });
 
@@ -746,4 +724,43 @@ function GetOutlookApiAccessToken(maxRetries = 3) {
 		}
 		tryGetToken(maxRetries);
 	});
+}
+
+function ResetTheTaskPaneUI(){
+	if (!IsResetTaskPaneUICall) {
+		IsResetTaskPaneUICall = true;
+		$(document).ready(() => {
+			console.log("office is ready");
+			console.log('loaded index.js version DEV 1.5');
+			$('#indexLoader').hide();
+			$('#fetching').hide();
+			$('#noOfEmails').hide();
+			$('#SelectAllMessagesNote').hide();
+			$('#errMsg').hide();
+			$('#send-email-btn').addClass('disabled');
+			$('#send-email-btn').prop('disabled', true);
+			$('#sync-email-btn').addClass('disabled');
+			$('#sync-email-btn').prop('disabled', true);
+	
+			attachClickEventHandlers();	
+			UpdateMailCount();
+	
+			const data = GetDataFromLocalStorageAndSetApiUrlGlobal();
+			window.ApiUrlVal = ApiUrl;
+			if (data != null) {
+				$('#sent-flag-color').val(data.sentFlagColor);
+				$('#skip-flag-color').val(data.skipFlagColor);
+				$('#days-to-sync').val(data.daysToSync);
+			
+				fetchEmailsWithCategoryAndTimeFilter(true, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
+				fetchEmailsWithCategoryAndTimeFilter(false, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
+			}
+	
+		});
+
+	}
+}
+
+function isOfficeJsLoaded() {
+	return typeof Office !== "undefined" && typeof Office.context !== "undefined";
 }
