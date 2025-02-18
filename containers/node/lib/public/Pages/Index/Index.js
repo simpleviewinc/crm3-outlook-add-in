@@ -8,7 +8,7 @@ window.ApiUrlVal = '';
 window.ApiUrl = '';
 window.userId = '';
 
-console.log('loading index.js version DEV 1.6.2');
+console.log('loading index.js version 1.6.4');
 
 let emailQueue = [];
 let isProcessingQueue = false;
@@ -191,7 +191,7 @@ function CheckSettings() {
 	return false;
 }
 
-console.log('check isOfficeJsLoaded');
+//console.log('check isOfficeJsLoaded');
 if (isOfficeJsLoaded()) {
 	console.log('isOfficeJsLoaded -- yes');
 	ResetTheTaskPaneUI();
@@ -200,12 +200,12 @@ if (isOfficeJsLoaded()) {
 }
 
 Office.onReady((info) => {
-	console.log('Office.onReady raw');
+	console.log('Office.onReady called');
 	if (info.host === Office.HostType.Outlook) {
-		console.log('host check passed');
+		//console.log('host check passed');
 		ResetTheTaskPaneUI();
 	} else {
-		console.log('host check failed');
+		//console.log('host check failed');
 	}
 });
 
@@ -740,9 +740,9 @@ function GetOutlookApiAccessToken(maxRetries = 3) {
 }
 
 function ResetTheTaskPaneUI(){
-	console.log('ResetTheTaskPaneUI 1');
+	//console.log('ResetTheTaskPaneUI 1');
 	if (!IsResetTaskPaneUICall) {
-		console.log('ResetTheTaskPaneUI 2');
+		//console.log('ResetTheTaskPaneUI 2');
 		IsResetTaskPaneUICall = true;
 		$(document).ready(() => {
 			console.log("office is ready");
@@ -774,14 +774,14 @@ function ResetTheTaskPaneUI(){
 		}
 		
 		);
-		console.log('ResetTheTaskPaneUI 3');
+		//console.log('ResetTheTaskPaneUI 3');
 	}
 }
 
 function isOfficeJsLoaded() {
-	console.log(Office);
-	console.log(Office.context);
+	//console.log(Office);
+	//console.log(Office.context);
 	return typeof Office !== "undefined" && typeof Office.context !== "undefined";
 }
 
-console.log('loaded index.js version DEV 1.6.2');
+console.log('loaded index.js version 1.6.4');
