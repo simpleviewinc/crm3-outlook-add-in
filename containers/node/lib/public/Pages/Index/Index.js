@@ -780,6 +780,7 @@ function ResetTheTaskPaneUI(){
 
 function isOfficeJsLoaded() {
 	console.log(Office);
+	console.log(Office.context);
 	return typeof Office !== "undefined" && typeof Office.context !== "undefined";
 }
 
