@@ -8,7 +8,7 @@ window.ApiUrlVal = '';
 window.ApiUrl = '';
 window.userId = '';
 
-console.log('loading index.js version DEV 1.6');
+console.log('loading index.js version DEV 1.6.2');
 
 let emailQueue = [];
 let isProcessingQueue = false;
@@ -779,7 +779,8 @@ function ResetTheTaskPaneUI(){
 }
 
 function isOfficeJsLoaded() {
+	console.log(Office);
 	return typeof Office !== "undefined" && typeof Office.context !== "undefined";
 }
 
-console.log('loaded index.js version DEV 1.6');
+console.log('loaded index.js version DEV 1.6.2');
