@@ -38,6 +38,8 @@ app.get('/status/', (req, res) => {
 *** @apiUrl: Must be valid CRM URL (e.g. https://demo.simpleviewcrm.com)
 *** POST body data should be in `text/xml` format
 *** The request body size (including email attachments) is limited to 20mb
+*** Note: nginx also has a `client_max_body_size` set to 20mb
+***	If the `limit` param on this route is increased over 20mb, a PR will also need to be submitted to sv-kube-proxy to update `client_max_body_size`
 ***/
 app.post('/submit/', bodyParser.raw({ type: 'text/xml', limit: '20mb' }), routeErrorHandler(async (req, res, next) => {
 	const { apiUrl } = req.query;

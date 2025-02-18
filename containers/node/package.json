@@ -1,7 +1,7 @@
 {
 	"name": "crm3-outlook-add-in",
 	"version": "1.0.0",
-	"description": "CRM30 - Outlook Web Add-In",
+	"description": "CRM30 - Simpleview CRM Integration for Outlook",
 	"author": "Jordan Kennedy",
 	"main": "server.js",
 	"scripts": {
