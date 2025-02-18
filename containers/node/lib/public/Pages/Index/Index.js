@@ -195,7 +195,7 @@ console.log('check isOfficeJsLoaded');
 if (isOfficeJsLoaded()) {
 	console.log('isOfficeJsLoaded -- yes');
 	ResetTheTaskPaneUI();
-}else{
+} else {
 	console.log('isOfficeJsLoaded -- no');
 }
 
@@ -204,7 +204,7 @@ Office.onReady((info) => {
 	if (info.host === Office.HostType.Outlook) {
 		console.log('host check passed');
 		ResetTheTaskPaneUI();
-	}else{
+	} else {
 		console.log('host check failed');
 	}
 });
@@ -774,7 +774,7 @@ function ResetTheTaskPaneUI(){
 		}
 		
 		);
-        console.log('ResetTheTaskPaneUI 3');
+		console.log('ResetTheTaskPaneUI 3');
 	}
 }
 
