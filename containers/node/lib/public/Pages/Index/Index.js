@@ -775,6 +775,7 @@ function ResetTheTaskPaneUI(){
 		
 		);
 		//console.log('ResetTheTaskPaneUI 3');
+		IsResetTaskPaneUICall = false;
 	}
 }
 
