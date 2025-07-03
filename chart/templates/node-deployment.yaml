@@ -7,6 +7,7 @@ kind: Deployment
 metadata:
   name: {{ $fullName }}
 spec:
+  replicas: {{ .Values.replicas }} 
   selector:
     matchLabels:
       name: {{ $fullName }}
