@@ -183,7 +183,12 @@ function createDialog(msg, callbackFunction) {
 	});
 }
   
-  
+function decodeFromBase64(base64Str) {
+	const jsonString = atob(base64Str);
+
+	// Parse the JSON string into an object
+	return JSON.parse(jsonString);
+}
 
 window.GetDataFromLocalStorage = GetDataFromLocalStorage;
 window.addNoneOptionToDropDown = addNoneOptionToDropDown;
