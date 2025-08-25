@@ -35,7 +35,7 @@ $(document).ready(function () {
 		$('#logout').hide();
 		$("#settingLoader").hide();
 		$('#saveUpdateSettings').text("Save");
-	}	
+	}
 
 	function GetUserIdByLogin(crmUrl, email, password) {
 		if (crmUrl.endsWith('/')) {
@@ -46,7 +46,7 @@ $(document).ready(function () {
 		//if (url == '')
 		//	return;
 		password = password.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-		
+
 		$("#settingLoader").show();
 		const settings = {
 			url: GetProxyUrl(crmUrl),
@@ -73,18 +73,18 @@ $(document).ready(function () {
 				//console.log(response);
 				// const parser = new DOMParser();
 				//const xmlDoc = parser.parseFromString(response, "application/xml");
-				
+
 				let getMatchesReturn = response.getElementsByTagName("checkLoginReturn");
 				//console.log(getMatchesReturn);
 				const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
 				//console.log(decodedString);
 				if (decodedString == '-1.0') {
 					$("#settingLoader").hide();
-					createDialog("Credentials not valid.", function() {});
+					createDialog("Credentials not valid.", function () { });
 				}
 				else {
 					$("#settingLoader").hide();
-					createDialog("Login successful.", function() {
+					createDialog("Login successful.", function () {
 						UserId = parseInt(decodedString);
 						$('#emailSettings').show();
 						$('#LoginSubmitBtn').hide();
@@ -97,7 +97,7 @@ $(document).ready(function () {
 			})
 			.fail(function (jqXHR, textStatus, errorThrown) {
 				$("#settingLoader").hide();
-				createDialog("Url or credentials not valid.", function() {console.error('Error:', textStatus, errorThrown);});
+				createDialog("Url or credentials not valid.", function () { console.error('Error:', textStatus, errorThrown); });
 			});
 	}
 
@@ -268,11 +268,11 @@ $(document).ready(function () {
 
 	$("#LoginSubmitBtn").click(function () {
 		if (!$("#crm-url").val()) {
-			createDialog("CRM URL is required.", function () {});
+			createDialog("CRM URL is required.", function () { });
 		} else if (!$("#crm-login").val()) {
-			createDialog("Login is required.", function () {});
+			createDialog("Login is required.", function () { });
 		} else if (!$("#crm-password").val()) {
-			createDialog("Password is required.", function () {});
+			createDialog("Password is required.", function () { });
 		} else {
 			GetUserIdByLogin($("#crm-url").val(), $("#crm-login").val(), $("#crm-password").val());
 		}
@@ -309,8 +309,8 @@ $(document).ready(function () {
 		console.log('setting localStorage');
 		localStorage.setItem("crm", formDataEncodeString);
 
-		
-		createDialog("Settings updated.", function() {
+
+		createDialog("Settings updated.", function () {
 			if (window.opener && !window.opener.closed) {
 				if (typeof window.opener.ReloadTaskPane === 'function') {
 					console.log('window.opener.CloseTheTaskPane');
@@ -318,7 +318,7 @@ $(document).ready(function () {
 					$('#saveUpdateSettings').text("Update");
 					//window.close(); // Optionally close the popup after sending data
 				} else {
-					console.error("Parent window method setCategoryToEmail is not defined.");
+					console.error("Parent window method ReloadTaskPane is not defined.");
 				}
 				if (typeof window.opener.SetLocalStorageItem === 'function') {
 					console.log('window.opener.CloseTheTaskPane');
@@ -327,7 +327,7 @@ $(document).ready(function () {
 				} else {
 					console.error("Parent window method SetLocalStorageItem is not defined.");
 				}
-	
+
 			} else {
 				console.error("Parent window is not available.");
 			}
@@ -336,7 +336,7 @@ $(document).ready(function () {
 
 	$("#reset").click(function () {
 		localStorage.removeItem('crm');
-		createDialog("Settings removed.", function() {
+		createDialog("Settings removed.", function () {
 			window.location.reload();
 			if (window.opener && !window.opener.closed) {
 				if (typeof window.opener.ReloadTaskPane === 'function') {
@@ -344,7 +344,7 @@ $(document).ready(function () {
 					window.opener.ReloadTaskPane(true);
 					//window.close(); // Optionally close the popup after sending data
 				} else {
-					console.error("Parent window method setCategoryToEmail is not defined.");
+					console.error("Parent window method ReloadTaskPane is not defined.");
 				}
 			} else {
 				console.error("Parent window is not available.");
