@@ -5,20 +5,18 @@
 	"author": "Jordan Kennedy",
 	"main": "server.js",
 	"scripts": {
-		"start": "http-server ./ -S -C ~/.office-addin-dev-certs/localhost.crt -K ~/.office-addin-dev-certs/localhost.key -p 3000"
+		"start": "node lib/server.js",
+		"test": "mocha lib/test/ --recursive",
+		"style": "eslint ."
 	},
 	"dependencies": {
-		"@azure/msal-browser": "^3.30.0",
 		"axios": "1.7.7",
-		"express": "4.20.0",
-		"office-addin-dev-certs": "^2.0.3"
+		"express": "4.20.0"
 	},
 	"devDependencies": {
 		"@simpleview/assertlib": "1.2.0",
 		"@simpleview/mochalib": "2.0.2",
-		"esbuild": "^0.25.9",
 		"eslint": "8.35.0",
-		"http-server": "^14.1.1",
 		"mocha": "10.2.0"
 	}
 }

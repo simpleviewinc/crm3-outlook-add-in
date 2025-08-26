@@ -1,20 +1,20 @@
 ﻿let messageObject = {
-	groupid: '',
-	userid: '',
-	acctid: '',
-	contactid: '',
-	duedate: new Date().toLocaleDateString("en-US"),
-	typeid: '',
-	priorityid: '',
-	subject: '',
-	body: '',
-	attachment: '',
-	attachmentcontent: '',
-	tblid: '',
-	recid: '',
-	relflds: '',
-	relfldvals: ''
-},
+		groupid: '',
+		userid: '',
+		acctid: '',
+		contactid: '',
+		duedate: new Date().toLocaleDateString("en-US"),
+		typeid: '',
+		priorityid: '',
+		subject: '',
+		body: '',
+		attachment: '',
+		attachmentcontent: '',
+		tblid: '',
+		recid: '',
+		relflds: '',
+		relfldvals: ''
+	},
 	ApiUrl,
 	currentSelectedData = [],
 	IsInboxTab = false;
@@ -384,7 +384,7 @@ function ProcessSelectedData(data) {
 	$('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
 
 	let sentOrReceivedText = data[0].isInbox ? 'Received: ' : 'Sent: ';
-	$('#received').text(sentOrReceivedText + data[0].receivedDate);
+	$('#received').text(sentOrReceivedText + new Date(data[0].receivedDate).toLocaleString());
 
 	$('#EmailId').val(data[0].id);
 	messageObject.body = data[0].body;
@@ -540,7 +540,7 @@ function SendTheEmail() {
 						  <userid>` + messageObject.userid + `</userid>
 						  <acctid>` + messageObject.acctid + `</acctid>
 						  <contactid>` + messageObject.contactid + `</contactid>
-						  <duedate>` + messageObject.duedate + `</duedate>
+						  <duedate>` + new Date(messageObject.duedate).toLocaleString()  + `</duedate>
 						  <typeid>` + messageObject.typeid + `</typeid>
 						  <priorityid>` + messageObject.priorityid + `</priorityid>
 						  <subject>` + mailSubject + `</subject>

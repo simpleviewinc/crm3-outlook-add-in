@@ -431,107 +431,6 @@ async function fetchSelectedEmails(refresh) {
 	await tryFetchSelectedItems(); // Initial attempt to fetch selected items
 }
 
-
-// Fetch selected emails with retry logic
-function fetchSelectedEmails1(refresh) {
-	console.log("Disabling----");
-	// Queue the refresh if we're already processing
-	if (processing) {
-		refreshPending = refreshPending || refresh;
-		return;
-	}
-
-	processing = true;
-
-	// Clear selectedEmails if refresh is true
-	if (refresh) {
-		selectedEmails = [];
-		window.selectedEmailData = {}; // Reset the data store
-	}
-
-	// Function to attempt fetching selected items with retry
-	function tryFetchSelectedItems() {
-		$('#send-email-btn').prop('disabled', true);
-		$('#send-email-btn').addClass('disabled');
-		let storage = GetDataFromLocalStorageAndSetApiUrlGlobal();
-		if (storage == null || storage == undefined || Object.keys(storage).length === 0) {
-			return;
-		}
-		else {
-			$('#initialMsg').hide();
-		}
-		$('#indexLoader').show();
-		$('#fetching').show();
-		$('#noOfEmails').hide();
-		$('#SelectAllMessagesNote').hide();
-		$('#errMsg').hide();
-
-		Office.context.mailbox.getSelectedItemsAsync((asyncResult) => {
-			if (asyncResult.status === Office.AsyncResultStatus.Failed) {
-				console.error(`Error getting selected items: ${asyncResult.error.message}`);
-				processing = false;
-
-				// Retry logic
-				if (retryCount < MAX_RETRIES) {
-					retryCount++;
-					console.log(`Retrying after error. Attempt ${retryCount} of ${MAX_RETRIES}.`);
-					tryFetchSelectedItems(); // Retry fetching selected items
-				} else {
-					console.error(`Max retries (${MAX_RETRIES}) exceeded. Unable to fetch selected items.`);
-					retryCount = 0; // Reset retry count for next attempt
-					// Handle failure (e.g., show error message)
-					$('#indexLoader').hide();
-					$('#fetching').hide();
-					$('#errMsg').show();
-				}
-
-				return;
-			}
-
-			retryCount = 0; // Reset retry count on success
-			const promises = asyncResult.value.map(item => {
-				if (refreshPending) {
-					return new Promise((resolve, reject) => {
-						resolve();
-					})
-				} else
-					return getSpecificEmailDetails(item.itemId, GraphApiAccessToken)
-			});
-			Promise.all(promises).then(() => {
-				if (CheckSettings()) {
-					console.log("Enabling----");
-					updateEmailCount();
-					$('#send-email-btn').prop('disabled', false);
-					$('#send-email-btn').removeClass('disabled');
-					if (!$('#sync-email-btn').hasClass('disabled')) {
-						$('#indexLoader').hide();
-					}
-					$('#fetching').hide();
-					$('#noOfEmails').show();
-					if (selectedEmails.length === 0) {
-						$('#SelectAllMessagesNote').show();
-					}
-					$('#errMsg').hide();
-				}
-				processing = false;
-				// If there was a pending refresh while processing, call the function again
-				if (refreshPending) {
-					refreshPending = false;
-					fetchSelectedEmails(true);
-				}
-			}).catch(() => {
-				processing = false;
-				// If there was a pending refresh while processing, call the function again
-				if (refreshPending) {
-					refreshPending = false;
-					fetchSelectedEmails(true);
-				}
-			});
-		});
-	}
-	tryFetchSelectedItems(); // Initial attempt to fetch selected items
-}
-
 function updateEmailCount() {
 	const emailCount = selectedEmails.length;
 	if (emailCount === 1) {
@@ -549,7 +448,7 @@ function getSpecificEmailDetails(id, accessToken) {
 			const requestUrl = `${GraphApiUrl}/${correctedId}`;
 
 			// Function to perform AJAX request with exponential backoff
-			function fetchWithRetry(url, headers, retries = MAX_RETRIES, delay = 1000) {
+			const  fetchWithRetry = (url, headers, retries = MAX_RETRIES, delay = 1000) => {
 				return new Promise((resolve, reject) => {
 					$.ajax({
 						url: url,
@@ -599,87 +498,6 @@ function getSpecificEmailDetails(id, accessToken) {
 						body: emailData.body.content,
 						isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\')),
 						fromEmail: (!(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))) ? emailData.from.emailAddress.address : emailData.toRecipients[0].emailAddress.address
-					};
-
-					const exists = selectedEmails.some(email => email.id === rowData.id);
-					if (!exists) {
-						selectedEmails.push(rowData);
-					}
-
-					console.log(`Email is in folder: ${folderName}`);
-					resolve();
-				})
-				.catch((error) => {
-					console.error("Error fetching data:", error);
-					if (error.responseJSON) {
-						console.error("Error details:", error.responseJSON);
-					}
-					reject(error);
-				});
-		} else {
-			resolve();
-		}
-	});
-}
-function getSpecificEmailDetails1(id, accessToken) {
-	return new Promise((resolve, reject) => {
-		if (id) {
-			let correctedId = id.replace(/\//g, '-').replace(/\+/g, '_'); // This might not be needed
-			const encodedId = encodeURIComponent(correctedId); // URL encode the corrected ID
-			const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${encodedId}`;
-
-			// Function to perform AJAX request with exponential backoff
-			// eslint-disable-next-line no-inner-declarations
-			function fetchWithRetry(url, headers, retries = MAX_RETRIES, delay = INITIAL_DELAY) {
-				return new Promise((resolve, reject) => {
-					$.ajax({
-						url: url,
-						dataType: 'json',
-						headers: headers
-					}).done((data) => {
-						resolve(data);
-					}).fail((error) => {
-						if (error.status === 429 && retries > 0) {
-							setTimeout(() => {
-								fetchWithRetry(url, headers, retries - 1, delay * 2).then(resolve).catch(reject);
-							}, delay);
-						} else if (error.status === 401 && error.responseJSON && error.responseJSON.error.code === "TokenExpired") {
-							headers['Authorization'] = `Bearer ${GraphApiAccessToken}`;
-							fetchWithRetry(url, headers, retries - 1, delay * 2).then(resolve).catch(reject);
-						} else {
-							reject(error);
-						}
-					});
-				});
-			}
-
-			const headers = {
-				'Authorization': `Bearer ${accessToken}`,
-				'Accept': 'application/json',
-				'Prefer': `outlook.body-content-type="text"`
-			};
-
-			fetchWithRetry(requestUrl, headers)
-				.then((emailData) => {
-					window.selectedEmailData[id] = emailData;
-
-					const parentFolderId = emailData.ParentFolderId;
-					const folderUrl = `${Office.context.mailbox.restUrl}/v2.0/me/mailFolders/${parentFolderId}`;
-
-					return fetchWithRetry(folderUrl, headers).then(folderData => {
-						return { emailData, folderData };
-					});
-				})
-				.then(({ emailData, folderData }) => {
-					const folderName = folderData.DisplayName;
-
-					const rowData = {
-						id: emailData.Id,
-						subject: emailData.Subject,
-						receivedDate: emailData.ReceivedDateTime,
-						body: emailData.Body.Content,
-						isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\')),
-						fromEmail: (!(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))) ? emailData.From.EmailAddress.Address : emailData.ToRecipients[0].EmailAddress.Address
 					};
 
 					const exists = selectedEmails.some(email => email.id === rowData.id);
@@ -839,109 +657,6 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 
 	fetchEmails(requestUrl + filterQuery);
 }
-function fetchEmailsWithCategoryAndTimeFilter1(isInbox, daysToSync, sentCategoryColor, skipCategoryColor) {
-	const storage = GetDataFromLocalStorageAndSetApiUrlGlobal();
-	if (storage == null || storage == undefined || Object.keys(storage).length === 0) {
-		return;
-	}
-	Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
-		if (result.status === "succeeded") {
-			const accessToken = result.value;
-			const mailFolder = isInbox ? 'inbox' : 'sentitems';
-			const requestUrl = Office.context.mailbox.restUrl + `/v2.0/me/mailfolders/${mailFolder}/messages`;
-
-			// Get selected days to sync
-			const startDate = new Date();
-			startDate.setDate(startDate.getDate() - daysToSync);
-			startDate.setHours(0, 0, 0, 0);
-			const startDateISOString = startDate.toISOString();
-
-			// Construct the query to filter emails within the selected timeframe,
-			// excluding those with the skip or sent categories
-			let filterQuery = `?$filter=receivedDateTime ge ${startDateISOString}` +
-				` and not(categories/any(c:c eq '${sentCategoryColor}'))` +
-				` and not(categories/any(c:c eq '${skipCategoryColor}'))`;
-
-			// Function to fetch emails with pagination
-			// eslint-disable-next-line no-inner-declarations
-			function fetchEmails(url, allEmails = []) {
-				$.ajax({
-					url: url,
-					type: 'GET',
-					contentType: 'application/json',
-					headers: {
-						'Authorization': 'Bearer ' + accessToken,
-						'Prefer': `outlook.body-content-type="text"`
-					}
-				}).done(function (response) {
-					allEmails = allEmails.concat(response.value);
-
-					if (response['@odata.nextLink']) {
-						fetchEmails(response['@odata.nextLink'], allEmails);
-					} else {
-						let validEmails = allEmails.filter(email => {
-							// filter valid date email
-							if (email.ReceivedDateTime) {
-								if (isInbox) {
-									// Exclude calendar event and other event mail
-									if (email['@odata.type'] && email['@odata.type'].toLowerCase().includes("#microsoft.outlookservices.event")) {
-										return false; // exclude calendar event messages
-									}
-
-									// Exclude group mail (check if current user is in 'To','Cc','Bcc' recipients)
-									let CurrentLoggedInUser = Office.context.mailbox.userProfile.emailAddress.toLowerCase();
-									if (email.ToRecipients &&
-										(email.ToRecipients.some(currRec => currRec.EmailAddress.Address.toLowerCase() === CurrentLoggedInUser) ||
-											email.CcRecipients.some(currCcRec => currCcRec.EmailAddress.Address.toLowerCase() === CurrentLoggedInUser))) {
-										return true;
-									}
-									return false;
-								}
-								return true;
-							}
-							return false;
-						});
-
-						// Sort validEmails based on receivedDateTime
-						validEmails.sort((a, b) => {
-							const dateA = new Date(a.ReceivedDateTime);
-							const dateB = new Date(b.ReceivedDateTime);
-							return dateB - dateA;
-						});
-						allEmails = validEmails;
-						if (isInbox) {
-							window.inboxEmails = allEmails;
-							console.log("Inbox emails from the selected timeframe:");
-							console.log(window.inboxEmails);
-
-						} else {
-							window.sentEmails = allEmails;
-							console.log("Sent emails from the selected timeframe:");
-							console.log(window.sentEmails);
-						}
-						if (CheckSettings() && Array.isArray(window.inboxEmails) && Array.isArray(window.sentEmails)) {
-							$('#sync-email-btn').removeClass('disabled');
-							$('#sync-email-btn').prop('disabled', false);
-
-							if (!$('#send-email-btn').hasClass('disabled')) {
-								$('#indexLoader').hide();
-							}
-						}
-					}
-				}).fail(function (jqXHR, textStatus, errorThrown) {
-					console.error("Error fetching emails:", textStatus, errorThrown);
-					console.error("Response text:", jqXHR.responseText);
-					$('#sync-email-btn').removeClass('disabled');
-					$('#sync-email-btn').prop('disabled', false);
-				});
-			}
-
-			fetchEmails(requestUrl + filterQuery);
-		} else {
-			console.error("Error getting callback token:", result.error.message);
-		}
-	});
-}
 
 window.fetchMimeContentOfAllEmail = function (EmailIdTogetMIME, loader) {
 	loader.show();
@@ -1029,25 +744,6 @@ async function UpdateMailCount() {
 	}, 500);
 }
 
-function GetOutlookApiAccessToken1(maxRetries = 3) {
-	return new Promise((resolve, reject) => {
-		function tryGetToken(retriesLeft) {
-			Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
-				if (result.status === "succeeded") {
-					resolve(result.value);
-				} else {
-					if (retriesLeft > 0) {
-						tryGetToken(retriesLeft - 1);
-					} else {
-						reject(result.error || "Failed to get Outlook API access token after multiple retries.");
-					}
-				}
-			});
-		}
-		tryGetToken(maxRetries);
-	});
-}
-
 function ResetTheTaskPaneUI() {
 	//console.log('ResetTheTaskPaneUI 1');
 	if (!IsResetTaskPaneUICall) {
@@ -1086,12 +782,6 @@ function ResetTheTaskPaneUI() {
 		//console.log('ResetTheTaskPaneUI 3');
 		IsResetTaskPaneUICall = false;
 	}
-}
-
-function isOfficeJsLoaded() {
-	//console.log(Office);
-	//console.log(Office.context);
-	return typeof Office !== "undefined" && typeof Office.context !== "undefined";
 }
 
 console.log('loaded index.js version 1.6.4');
