@@ -540,7 +540,7 @@ function SendTheEmail() {
 						  <userid>` + messageObject.userid + `</userid>
 						  <acctid>` + messageObject.acctid + `</acctid>
 						  <contactid>` + messageObject.contactid + `</contactid>
-						  <duedate>` + new Date(messageObject.duedate).toLocaleString()  + `</duedate>
+						  <duedate>` + new Date(messageObject.duedate).toLocaleDateString('en-US')  + `</duedate>
 						  <typeid>` + messageObject.typeid + `</typeid>
 						  <priorityid>` + messageObject.priorityid + `</priorityid>
 						  <subject>` + mailSubject + `</subject>
