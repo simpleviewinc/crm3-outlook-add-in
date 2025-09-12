@@ -10,7 +10,6 @@ common_config: &common_config
     branches:
       only:
         - develop
-        - staging
         - master
         - qa
         - /pull.*/
@@ -31,3 +30,4 @@ workflows:
           requires:
             - circleci-config/gce_build_deploy_kubernetes
             - circleci-config/gce_test_kubernetes
+
