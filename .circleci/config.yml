@@ -1,47 +1,33 @@
+---
 version: 2.1
+
+orbs:
+  circleci-config: simpleviewinc/circleci-config@1
+
+common_config: &common_config
+  context: default
+  filters:
+    branches:
+      only:
+        - develop
+        - master
+        - qa
+        - /pull.*/
+
 workflows:
   build:
     jobs:
-      - build:
-          context: default
+      - circleci-config/gce_build_deploy_kubernetes: *common_config
+      - circleci-config/gce_test_kubernetes:
+          <<: *common_config
           filters:
             branches:
-              only:
-                - develop
-                - master
-                - qa
-                - /pull.*/
-orbs:
-  slack: circleci/slack@4.4.0
-jobs:
-  build:
-    docker:
-      - image: gcr.io/sv-shared-231700/sv-deploy-gce
-        auth:
-          username: _json_key
-          password: $GCLOUD_SERVICE_KEY
-    working_directory: /repo
-    steps:
-      - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
-          version: docker23
-      - run:
-          name: Setup Environment Variables
-          command: |
-            echo 'export BRANCH_NAME="$CIRCLE_BRANCH"' >> $BASH_ENV
-            echo 'export REPO_NAME="$CIRCLE_PROJECT_REPONAME"' >> $BASH_ENV
-            echo 'export ZONE="$ZONE"' >> $BASH_ENV
-            echo 'export PROJECT_ID="$PROJECT_ID"' >> $BASH_ENV
-      - run:
-          name: build/deploy/test
-          command: |
-            node /app/lib/default.js
-      - slack/notify:
-          channel: C07NM7E3HSR
-          event: fail
-          template: basic_fail_1
-      - slack/notify:
-          channel: C07NM7E3HSR
-          event: pass
-          template: basic_success_1
+              only: /pull.*/
+          requires:
+            - circleci-config/gce_build_deploy_kubernetes
+      - circleci-config/complete:
+          <<: *common_config
+          requires:
+            - circleci-config/gce_build_deploy_kubernetes
+            - circleci-config/gce_test_kubernetes
+
