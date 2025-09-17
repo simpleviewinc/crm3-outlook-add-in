@@ -1,5 +1,6 @@
 ﻿'use strict';
 /* global Office, GetDataFromLocalStorageAndSetApiUrlGlobal, ApiUrl*/
+const { createNestablePublicClientApplication } = msal;
 window.MatchedData = {};
 window.selectedEmailData = {}; // Global Variable to store the selected emails data
 window.inboxEmails = {};
@@ -7,6 +8,7 @@ window.sentEmails = {};
 window.ApiUrlVal = '';
 window.ApiUrl = '';
 window.userId = '';
+window.GraphApiUrl = 'https://graph.microsoft.com/v1.0/me/messages';
 
 console.log('loading index.js version 1.6.4');
 
@@ -15,8 +17,10 @@ let isProcessingQueue = false;
 let retryDelay = 1000; // Initial delay of 1 second
 let IsResetTaskPaneUICall = false;
 
+let pca = undefined;
+let GraphApiAccessToken = null;
 
-//$(document).ready(() => {});
+
 
 // Retry logic with exponential backoff
 function retryCategoryUpdate(emailId, isSentFlag, retryCount = 0) {
@@ -42,49 +46,41 @@ function retryCategoryUpdate(emailId, isSentFlag, retryCount = 0) {
 }
 
 // Set category to email with retry logic
-function setCategoryToEmail(emailId, isSentFlag) {
+window.setCategoryToEmail = function (emailId, isSentFlag) {
 	console.log("Set category called for email:", emailId);
-	return new Promise((resolve,reject) => {
-		Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
-			if (result.status === "succeeded") {
-				const accessToken = result.value;
-				const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${emailId}`;
-	
-				// Determine category color based on flag
-				let categoryColor = 'Yellow category'; // initialized with some valid value 
-				let data = GetDataFromLocalStorageAndSetApiUrlGlobal();
-				if (data != null) {
-					categoryColor = isSentFlag ? data.sentFlagColor : data.skipFlagColor;
-				}
-				
-				// Construct the payload to set the category
-				const categoryData = {
-					"Categories": [categoryColor]
-				};
-	
-				// Make the PATCH request to update the email with the category
-				$.ajax({
-					url: requestUrl,
-					type: 'PATCH',
-					contentType: 'application/json',
-					headers: {
-						'Authorization': `Bearer ${accessToken}`
-					},
-					data: JSON.stringify(categoryData)
-				}).done(function (response) {
-					console.log(`Email ${emailId} category set successfully:`, response);
-					resolve();
-				}).fail(function (jqXHR, textStatus, errorThrown) {
-					console.error(`Error setting category for email ${emailId}:`, textStatus, errorThrown);
-					console.error("Response text:", jqXHR.responseText);
-	
-					// Retry logic with exponential backoff
-					retryCategoryUpdate(emailId, isSentFlag).then(resolve).catch(reject);
-				});
-			} else {
-				console.error("Error getting callback token:", result.error.message);
-				reject();
-			}
+	return new Promise((resolve, reject) => {
+		const requestUrl = `${GraphApiUrl}/${emailId}`;
+
+		// Determine category color based on flag
+		let categoryColor = 'Yellow category'; // initialized with some valid value 
+		let data = GetDataFromLocalStorageAndSetApiUrlGlobal();
+		if (data != null) {
+			categoryColor = isSentFlag ? data.sentFlagColor : data.skipFlagColor;
+		}
+
+		// Construct the payload to set the category
+		const categoryData = {
+			"Categories": [categoryColor]
+		};
+
+		// Make the PATCH request to update the email with the category
+		$.ajax({
+			url: requestUrl,
+			type: 'PATCH',
+			contentType: 'application/json',
+			headers: {
+				'Authorization': `Bearer ${GraphApiAccessToken}`
+			},
+			data: JSON.stringify(categoryData)
+		}).done(function (response) {
+			console.log(`Email ${emailId} category set successfully:`, response);
+			resolve();
+		}).fail(function (jqXHR, textStatus, errorThrown) {
+			console.error(`Error setting category for email ${emailId}:`, textStatus, errorThrown);
+			console.error("Response text:", jqXHR.responseText);
+
+			// Retry logic with exponential backoff
+			retryCategoryUpdate(emailId, isSentFlag).then(resolve).catch(reject);
 		});
 	});
 }
@@ -107,7 +103,7 @@ function processQueue() {
 			categoryColor = data.skipFlagColor;
 		}
 	}
-	
+
 
 	Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
 		if (result.status === "succeeded") {
@@ -191,18 +187,17 @@ function CheckSettings() {
 	return false;
 }
 
-//console.log('check isOfficeJsLoaded');
-if (isOfficeJsLoaded()) {
-	console.log('isOfficeJsLoaded -- yes');
-	ResetTheTaskPaneUI();
-} else {
-	console.log('isOfficeJsLoaded -- no');
-}
-
-Office.onReady((info) => {
+Office.onReady(async (info) => {
 	console.log('Office.onReady called');
 	if (info.host === Office.HostType.Outlook) {
-		//console.log('host check passed');
+		// Initialize the public client application
+		pca = await createNestablePublicClientApplication({
+			auth: {
+				clientId: "f366e055-628e-45fe-9b6d-aefcfe1a5159",
+				authority: "https://login.microsoftonline.com/common"
+			},
+		});
+		await GetOutlookApiAccessToken();
 		ResetTheTaskPaneUI();
 	} else {
 		//console.log('host check failed');
@@ -210,17 +205,17 @@ Office.onReady((info) => {
 });
 
 // eslint-disable-next-line no-unused-vars
-function CloseTheTaskPane() {
+window.CloseTheTaskPane = function () {
 	Office.context.ui.closeContainer();
 }
 
 // eslint-disable-next-line no-unused-vars
-function SetLocalStorageItem(settings) {
+window.SetLocalStorageItem = function (settings) {
 	localStorage.setItem("crm", btoa(settings));
 }
 
 // eslint-disable-next-line no-unused-vars
-function ReloadTaskPane(isRemoveSettings) {
+window.ReloadTaskPane = function (isRemoveSettings) {
 	console.log("removed settings");
 	if (isRemoveSettings)
 		localStorage.removeItem('crm');
@@ -228,16 +223,11 @@ function ReloadTaskPane(isRemoveSettings) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function decodeFromBase64(base64Str) {
-	const jsonString = atob(base64Str);
 
-	// Parse the JSON string into an object
-	return JSON.parse(jsonString);
-}
 
-function showOutlookPopup(data,width,height) {
+window.showOutlookPopup = function (data, width, height) {
 	let dialogUrl = window.location.origin + '/Pages/Dialog/GenericPopup.html' + '?data=' + encodeURIComponent(JSON.stringify(data));
-	Office.context.ui.displayDialogAsync(dialogUrl, { width: width, height: height,  displayInIframe: true }, function(result) {
+	Office.context.ui.displayDialogAsync(dialogUrl, { width: width, height: height, displayInIframe: true }, function (result) {
 		if (result.status === Office.AsyncResultStatus.Succeeded) {
 			let dialog = result.value;
 			dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
@@ -249,21 +239,21 @@ function showOutlookPopup(data,width,height) {
 			});
 			if (data.IsCloseTaskPanel) {
 				dialog.addEventHandler(Office.EventType.DialogEventReceived, function (event) {
-					if (data.IsCloseTaskPanel && event.error === 12006) 
+					if (data.IsCloseTaskPanel && event.error === 12006)
 						CloseTheTaskPane();
 				});
 			}
 		} else {
 			console.error('Dialog failed to open:', result.error.message);
 		}
-	});	
+	});
 }
 
 // Attach click event handlers for buttons
 function attachClickEventHandlers() {
 	$('#send-email-btn').on('click', () => {
 		if (selectedEmails.length < 1) {
-			showOutlookPopup({Popuptoshow : 'EmailSelectedDialog'},35,35);
+			showOutlookPopup({ Popuptoshow: 'EmailSelectedDialog' }, 35, 35);
 		} else {
 			openPopup('../SendEmail/SendEmail.html', 'Send Email');
 		}
@@ -291,9 +281,55 @@ let processing = false;
 let refreshPending = false;
 
 
-// Fetch selected emails with retry logic
-function fetchSelectedEmails(refresh) {
+
+
+
+
+// Updated GetOutlookApiAccessToken using NAA
+async function GetOutlookApiAccessToken(maxRetries = 3) {
+	const tokenRequest = {
+		scopes: ["Mail.Read", "User.Read", "openid", "profile", "Mail.ReadWrite"],
+	};
+
+	let retriesLeft = maxRetries;
+	let delay = 0;
+	while (retriesLeft > 0 && GraphApiAccessToken === null) {
+		try {
+			console.log("Trying to acquire token silently...");
+			const userAccount = await pca.acquireTokenSilent(tokenRequest);
+			console.log("Acquired token silently.");
+			GraphApiAccessToken = userAccount.accessToken;
+			delay = new Date(userAccount.expiresOn) - Date.now() - 2 * 60 * 60 * 1000;
+		} catch (error) {
+			console.log(`Unable to acquire token silently: ${error}`);
+
+			// Try interactive acquisition if silent fails
+			try {
+				console.log("Trying to acquire token interactively...");
+				const userAccount = await pca.acquireTokenPopup(tokenRequest);
+				console.log("Acquired token interactively.");
+				GraphApiAccessToken = userAccount.accessToken;
+				delay = new Date(userAccount.expiresOn) - Date.now() - 2 * 60 * 60 * 1000;
+			} catch (popupError) {
+				console.log(`Unable to acquire token interactively: ${popupError}`);
+				retriesLeft--;
+
+				if (retriesLeft === 0) {
+					throw new Error("Failed to get Outlook API access token after multiple retries.");
+				}
+			}
+		}
+	}
+	setTimeout(async () => {
+		await GetOutlookApiAccessToken();
+	}, delay)
+	return;
+}
+
+// Updated fetchSelectedEmails function
+async function fetchSelectedEmails(refresh) {
 	console.log("Disabling----");
+
 	// Queue the refresh if we're already processing
 	if (processing) {
 		refreshPending = refreshPending || refresh;
@@ -309,11 +345,12 @@ function fetchSelectedEmails(refresh) {
 	}
 
 	// Function to attempt fetching selected items with retry
-	function tryFetchSelectedItems() {
+	async function tryFetchSelectedItems() {
 		$('#send-email-btn').prop('disabled', true);
 		$('#send-email-btn').addClass('disabled');
 		let storage = GetDataFromLocalStorageAndSetApiUrlGlobal();
 		if (storage == null || storage == undefined || Object.keys(storage).length === 0) {
+			processing = false;
 			return;
 		}
 		else {
@@ -324,8 +361,8 @@ function fetchSelectedEmails(refresh) {
 		$('#noOfEmails').hide();
 		$('#SelectAllMessagesNote').hide();
 		$('#errMsg').hide();
-		
-		Office.context.mailbox.getSelectedItemsAsync((asyncResult) => {
+
+		Office.context.mailbox.getSelectedItemsAsync(async (asyncResult) => {
 			if (asyncResult.status === Office.AsyncResultStatus.Failed) {
 				console.error(`Error getting selected items: ${asyncResult.error.message}`);
 				processing = false;
@@ -334,11 +371,11 @@ function fetchSelectedEmails(refresh) {
 				if (retryCount < MAX_RETRIES) {
 					retryCount++;
 					console.log(`Retrying after error. Attempt ${retryCount} of ${MAX_RETRIES}.`);
-					tryFetchSelectedItems(); // Retry fetching selected items
+					await tryFetchSelectedItems(); // Retry fetching selected items
 				} else {
 					console.error(`Max retries (${MAX_RETRIES}) exceeded. Unable to fetch selected items.`);
 					retryCount = 0; // Reset retry count for next attempt
-					// Handle failure (e.g., show error message)
+					// Handle failure
 					$('#indexLoader').hide();
 					$('#fetching').hide();
 					$('#errMsg').show();
@@ -348,49 +385,50 @@ function fetchSelectedEmails(refresh) {
 			}
 
 			retryCount = 0; // Reset retry count on success
-			GetOutlookApiAccessToken().then((accessToken) => {
+			try {
 				const promises = asyncResult.value.map(item => {
 					if (refreshPending) {
-						return new Promise((resolve,reject) => {
-							resolve();
-						})
-					} else 
-						return getSpecificEmailDetails(item.itemId,accessToken)
+						return Promise.resolve();
+					}
+					return getSpecificEmailDetails(item.itemId, GraphApiAccessToken);
 				});
-				Promise.all(promises).then(() => {
-					if (CheckSettings()) {
-						console.log("Enabling----");
-						updateEmailCount();
-						$('#send-email-btn').prop('disabled', false);
-						$('#send-email-btn').removeClass('disabled');
-						if (!$('#sync-email-btn').hasClass('disabled')) {
-							$('#indexLoader').hide();
-						}
-						$('#fetching').hide();
-						$('#noOfEmails').show();
-						if (selectedEmails.length === 0) {
-							$('#SelectAllMessagesNote').show();
-						}
-						$('#errMsg').hide();
+
+				await Promise.all(promises);
+				if (CheckSettings()) {
+					console.log("Enabling----");
+					updateEmailCount();
+					$('#send-email-btn').prop('disabled', false);
+					$('#send-email-btn').removeClass('disabled');
+					if (!$('#sync-email-btn').hasClass('disabled')) {
+						$('#indexLoader').hide();
 					}
-					processing = false;
-					// If there was a pending refresh while processing, call the function again
-					if (refreshPending) {
-						refreshPending = false;
-						fetchSelectedEmails(true);
+					$('#fetching').hide();
+					$('#noOfEmails').show();
+					if (selectedEmails.length === 0) {
+						$('#SelectAllMessagesNote').show();
 					}
-				}).catch(() => {
-					processing = false;
-					// If there was a pending refresh while processing, call the function again
-					if (refreshPending) {
-						refreshPending = false;
-						fetchSelectedEmails(true);
-					}
-				});
-			});
+					$('#errMsg').hide();
+				}
+				processing = false;
+
+				// If there was a pending refresh while processing, call the function again
+				if (refreshPending) {
+					refreshPending = false;
+					await fetchSelectedEmails(true);
+				}
+			} catch (error) {
+				console.error(`Error processing emails: ${error}`);
+				processing = false;
+				// If there was a pending refresh while processing, call the function again
+				if (refreshPending) {
+					refreshPending = false;
+					await fetchSelectedEmails(true);
+				}
+			}
 		});
 	}
-	tryFetchSelectedItems(); // Initial attempt to fetch selected items
+
+	await tryFetchSelectedItems(); // Initial attempt to fetch selected items
 }
 
 function updateEmailCount() {
@@ -402,16 +440,15 @@ function updateEmailCount() {
 	}
 }
 // Get specific email details
-function getSpecificEmailDetails(id,accessToken) {
+
+function getSpecificEmailDetails(id, accessToken) {
 	return new Promise((resolve, reject) => {
 		if (id) {
 			let correctedId = id.replace(/\//g, '-').replace(/\+/g, '_'); // This might not be needed
-			const encodedId = encodeURIComponent(correctedId); // URL encode the corrected ID
-			const requestUrl = `${Office.context.mailbox.restUrl}/v2.0/me/messages/${encodedId}`;
+			const requestUrl = `${GraphApiUrl}/${correctedId}`;
 
 			// Function to perform AJAX request with exponential backoff
-			// eslint-disable-next-line no-inner-declarations
-			function fetchWithRetry(url, headers, retries = MAX_RETRIES, delay = INITIAL_DELAY) {
+			const  fetchWithRetry = (url, headers, retries = MAX_RETRIES, delay = 1000) => {
 				return new Promise((resolve, reject) => {
 					$.ajax({
 						url: url,
@@ -424,11 +461,9 @@ function getSpecificEmailDetails(id,accessToken) {
 							setTimeout(() => {
 								fetchWithRetry(url, headers, retries - 1, delay * 2).then(resolve).catch(reject);
 							}, delay);
-						} else if (error.status === 401 && error.responseJSON && error.responseJSON.error.code === "TokenExpired") {
-							GetOutlookApiAccessToken().then((Token) => {
-								headers['Authorization'] = `Bearer ${Token}`;
-								fetchWithRetry(url, headers, retries - 1, delay * 2).then(resolve).catch(reject);
-							}).catch((error) => reject(error))
+						} else if (error.status === 401 && error.responseJSON && error.responseJSON.error && error.responseJSON.error.code === "InvalidAuthenticationToken") {
+							headers['Authorization'] = `Bearer ${GraphApiAccessToken}`;
+							fetchWithRetry(url, headers, retries - 1, delay * 2).then(resolve).catch(reject);
 						} else {
 							reject(error);
 						}
@@ -439,30 +474,30 @@ function getSpecificEmailDetails(id,accessToken) {
 			const headers = {
 				'Authorization': `Bearer ${accessToken}`,
 				'Accept': 'application/json',
-				'Prefer': `outlook.body-content-type="text"`
+				'Prefer': 'outlook.body-content-type="text"'
 			};
 
 			fetchWithRetry(requestUrl, headers)
 				.then((emailData) => {
 					window.selectedEmailData[id] = emailData;
 
-					const parentFolderId = emailData.ParentFolderId;
-					const folderUrl = `${Office.context.mailbox.restUrl}/v2.0/me/mailFolders/${parentFolderId}`;
+					const parentFolderId = emailData.parentFolderId;
+					const folderUrl = `https://graph.microsoft.com/v1.0/me/mailFolders/${parentFolderId}`;
 
 					return fetchWithRetry(folderUrl, headers).then(folderData => {
 						return { emailData, folderData };
 					});
 				})
 				.then(({ emailData, folderData }) => {
-					const folderName = folderData.DisplayName;
+					const folderName = folderData.displayName;
 
 					const rowData = {
-						id: emailData.Id,
-						subject: emailData.Subject,
-						receivedDate: emailData.ReceivedDateTime,
-						body: emailData.Body.Content,
+						id: emailData.id,
+						subject: emailData.subject,
+						receivedDate: emailData.receivedDateTime,
+						body: emailData.body.content,
 						isInbox: !(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\')),
-						fromEmail: (!(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))) ? emailData.From.EmailAddress.Address : emailData.ToRecipients[0].EmailAddress.Address
+						fromEmail: (!(folderName.startsWith('Sent Items') || folderName.startsWith('Sent Items/') || folderName.startsWith('Sent Items\\'))) ? emailData.from.emailAddress.address : emailData.toRecipients[0].emailAddress.address
 					};
 
 					const exists = selectedEmails.some(email => email.id === rowData.id);
@@ -524,160 +559,149 @@ function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
 	});
 }
 
+
 function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryColor, skipCategoryColor) {
 	const storage = GetDataFromLocalStorageAndSetApiUrlGlobal();
-	if (storage == null || storage == undefined || Object.keys(storage).length === 0) {
+	if (!storage || Object.keys(storage).length === 0) {
 		return;
 	}
-	Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
-		if (result.status === "succeeded") {
-			const accessToken = result.value;
-			const mailFolder = isInbox ? 'inbox' : 'sentitems';
-			const requestUrl = Office.context.mailbox.restUrl + `/v2.0/me/mailfolders/${mailFolder}/messages`;
 
-			// Get selected days to sync
-			const startDate = new Date();
-			startDate.setDate(startDate.getDate() - daysToSync);
-			startDate.setHours(0, 0, 0, 0);
-			const startDateISOString = startDate.toISOString();
+	const mailFolder = isInbox ? 'inbox' : 'sentitems';
+	const requestUrl = `https://graph.microsoft.com/v1.0/me/mailFolders/${mailFolder}/messages`;
 
-			// Construct the query to filter emails within the selected timeframe,
-			// excluding those with the skip or sent categories
-			let filterQuery = `?$filter=receivedDateTime ge ${startDateISOString}` +
-				` and not(categories/any(c:c eq '${sentCategoryColor}'))` +
-				` and not(categories/any(c:c eq '${skipCategoryColor}'))`;
+	// Get selected days to sync
+	const startDate = new Date();
+	startDate.setDate(startDate.getDate() - daysToSync);
+	startDate.setHours(0, 0, 0, 0);
+	const startDateISOString = startDate.toISOString();
 
-			// Function to fetch emails with pagination
-			// eslint-disable-next-line no-inner-declarations
-			function fetchEmails(url, allEmails = []) {
-				$.ajax({
-					url: url,
-					type: 'GET',
-					contentType: 'application/json',
-					headers: {
-						'Authorization': 'Bearer ' + accessToken,
-						'Prefer': `outlook.body-content-type="text"`
-					}
-				}).done(function (response) {
-					allEmails = allEmails.concat(response.value);
+	// Construct the query to filter emails within the selected timeframe,
+	// excluding those with the skip or sent categories
+	let filterQuery = `?$filter=receivedDateTime ge ${startDateISOString}` +
+		` and not(categories/any(c:c eq '${sentCategoryColor}'))` +
+		` and not(categories/any(c:c eq '${skipCategoryColor}'))`;
 
-					if (response['@odata.nextLink']) {
-						fetchEmails(response['@odata.nextLink'], allEmails);
-					} else {
-						let validEmails = allEmails.filter(email => {
-							// filter valid date email
-							if (email.ReceivedDateTime) {
-								if (isInbox) {
-									// Exclude calendar event and other event mail
-									if (email['@odata.type'] && email['@odata.type'].toLowerCase().includes("#microsoft.outlookservices.event")) {
-										return false; // exclude calendar event messages
-									}
-								
-									// Exclude group mail (check if current user is in 'To','Cc','Bcc' recipients)
-									let CurrentLoggedInUser = Office.context.mailbox.userProfile.emailAddress.toLowerCase();
-									if (email.ToRecipients && 
-										(email.ToRecipients.some(currRec => currRec.EmailAddress.Address.toLowerCase() === CurrentLoggedInUser) ||
-										email.CcRecipients.some(currCcRec => currCcRec.EmailAddress.Address.toLowerCase() === CurrentLoggedInUser))) {
-										return true; 
-									}
-									return false;
-								}
+	// Function to fetch emails with pagination
+	function fetchEmails(url, allEmails = []) {
+		$.ajax({
+			url: url,
+			type: 'GET',
+			contentType: 'application/json',
+			headers: {
+				'Authorization': `Bearer ${GraphApiAccessToken}`,
+				'Prefer': `outlook.body-content-type="text"`
+			}
+		}).done(function (response) {
+			allEmails = allEmails.concat(response.value);
+
+			if (response['@odata.nextLink']) {
+				fetchEmails(response['@odata.nextLink'], allEmails);
+			} else {
+				let validEmails = allEmails.filter(email => {
+					// Filter valid date email
+					if (email.receivedDateTime) {
+						if (isInbox) {
+							// Exclude calendar event and other event mail
+							if (email['@odata.type'] && email['@odata.type'].toLowerCase().includes("#microsoft.graph.eventMessage")) {
+								return false; // exclude calendar event messages
+							}
+
+							// Exclude group mail (check if current user is in 'to','cc','bcc' recipients)
+							let CurrentLoggedInUser = Office.context.mailbox.userProfile.emailAddress.toLowerCase();
+							if (email.toRecipients &&
+								(email.toRecipients.some(currRec => currRec.emailAddress.address.toLowerCase() === CurrentLoggedInUser) ||
+									email.ccRecipients.some(currCcRec => currCcRec.emailAddress.address.toLowerCase() === CurrentLoggedInUser))) {
 								return true;
 							}
 							return false;
-						});
-
-						// Sort validEmails based on receivedDateTime
-						validEmails.sort((a, b) => {
-							const dateA = new Date(a.ReceivedDateTime);
-							const dateB = new Date(b.ReceivedDateTime);
-							return dateB - dateA;
-						});
-						allEmails = validEmails;
-						if (isInbox) {
-							window.inboxEmails = allEmails;
-							console.log("Inbox emails from the selected timeframe:");
-							console.log(window.inboxEmails);
-
-						} else {
-							window.sentEmails = allEmails;
-							console.log("Sent emails from the selected timeframe:");
-							console.log(window.sentEmails);
 						}
-						if (CheckSettings() && Array.isArray(window.inboxEmails) && Array.isArray(window.sentEmails)) {
-							$('#sync-email-btn').removeClass('disabled');
-							$('#sync-email-btn').prop('disabled', false);
-
-							if (!$('#send-email-btn').hasClass('disabled')){
-								$('#indexLoader').hide();
-							}
-						}
+						return true;
 					}
-				}).fail(function (jqXHR, textStatus, errorThrown) {
-					console.error("Error fetching emails:", textStatus, errorThrown);
-					console.error("Response text:", jqXHR.responseText);
+					return false;
+				});
+
+				// Sort validEmails based on receivedDateTime
+				validEmails.sort((a, b) => {
+					const dateA = new Date(a.receivedDateTime);
+					const dateB = new Date(b.receivedDateTime);
+					return dateB - dateA;
+				});
+				allEmails = validEmails;
+				if (isInbox) {
+					window.inboxEmails = allEmails;
+					console.log("Inbox emails from the selected timeframe:");
+					console.log(window.inboxEmails);
+				} else {
+					window.sentEmails = allEmails;
+					console.log("Sent emails from the selected timeframe:");
+					console.log(window.sentEmails);
+				}
+				if (CheckSettings() && Array.isArray(window.inboxEmails) && Array.isArray(window.sentEmails)) {
 					$('#sync-email-btn').removeClass('disabled');
 					$('#sync-email-btn').prop('disabled', false);
-				});
+
+					if (!$('#send-email-btn').hasClass('disabled')) {
+						$('#indexLoader').hide();
+					}
+				}
 			}
-			
-			fetchEmails(requestUrl + filterQuery);
-		} else {
-			console.error("Error getting callback token:", result.error.message);
-		}
-	});
+		}).fail(function (jqXHR, textStatus, errorThrown) {
+			console.error("Error fetching emails:", textStatus, errorThrown);
+			if (jqXHR.responseJSON) {
+				console.error("Error details:", jqXHR.responseJSON);
+			}
+			$('#sync-email-btn').removeClass('disabled');
+			$('#sync-email-btn').prop('disabled', false);
+		});
+	}
+
+	fetchEmails(requestUrl + filterQuery);
 }
 
-function fetchMimeContentOfAllEmail(EmailIdTogetMIME,loader) {
+window.fetchMimeContentOfAllEmail = function (EmailIdTogetMIME, loader) {
 	loader.show();
 	return new Promise((resolve, reject) => {
 		// Get access token from Office context
-		Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, function (result) {
-			if (result.status === "succeeded") {
-				const accessToken = result.value;
-				const url = `${Office.context.mailbox.restUrl}/v2.0/me/messages/`;
-				const retries = MAX_RETRIES;
-				const delay = INITIAL_DELAY;
-				const headers = {
-					'Authorization': `Bearer ${accessToken}`,
-					'Accept': 'application/json'
-				};
+		const retries = MAX_RETRIES;
+		const delay = INITIAL_DELAY;
+		const headers = {
+			'Authorization': `Bearer ${GraphApiAccessToken}`,
+			'Accept': 'application/json'
+		};
 
-				// Helper function to fetch MIME content for a single email with retry logic
-				const fetchEmailMimeContent = (emailId, retriesLeft, delay) => {
-					return new Promise((resolveEmail, rejectEmail) => {
-						$.ajax({
-							url: `${url}${emailId}/$value`,
-							dataType: 'text',
-							headers: headers
-						}).done((data) => {
-							console.log(emailId, " : mime fetched")
-							resolveEmail(data); // Resolve with the MIME content
-						}).fail((error) => {
-							if (error.status === 429 && retriesLeft > 0) {
-								setTimeout(() => {
-									fetchEmailMimeContent(emailId, retriesLeft - 1, delay * 2).then(resolveEmail).catch(rejectEmail);
-								}, delay);
-							} else {
-								rejectEmail(error);
-							}
-						});
-					});
-				};
-
-				fetchEmailMimeContent(EmailIdTogetMIME,retries,delay).then((mimedata) => {
-					loader.hide();
-					resolve(mimedata);
-				}).catch((error) => {
-					loader.hide();
-					reject(error);
+		// Helper function to fetch MIME content for a single email with retry logic
+		const fetchEmailMimeContent = (emailId, retriesLeft, delay) => {
+			return new Promise((resolveEmail, rejectEmail) => {
+				$.ajax({
+					url: `${GraphApiUrl}/${emailId}/$value`,
+					dataType: 'text',
+					headers: headers
+				}).done((data) => {
+					console.log(emailId, " : mime fetched")
+					resolveEmail(data); // Resolve with the MIME content
+				}).fail((error) => {
+					if (error.status === 429 && retriesLeft > 0) {
+						setTimeout(() => {
+							fetchEmailMimeContent(emailId, retriesLeft - 1, delay * 2).then(resolveEmail).catch(rejectEmail);
+						}, delay);
+					} else {
+						rejectEmail(error);
+					}
 				});
-			}
+			});
+		};
+
+		fetchEmailMimeContent(EmailIdTogetMIME, retries, delay).then((mimedata) => {
+			loader.hide();
+			resolve(mimedata);
+		}).catch((error) => {
+			loader.hide();
+			reject(error);
 		});
 	});
 }
 
-function UpdateMailCount() {
+async function UpdateMailCount() {
 	let selectedEmailCurr = 0;
 	let conversationCountCurr = new Set();
 	let firstEmailSelectedIdCurr = '';
@@ -703,8 +727,8 @@ function UpdateMailCount() {
 					if (selectedEmailChanged === 1) {
 						firstEmailSelectedId = result.value[0].itemId;
 					}
-		
-					if (conversationCount.size != conversationCountCurr.size || selectedEmailChanged != selectedEmailCurr || IsSelectedMailChange 
+
+					if (conversationCount.size != conversationCountCurr.size || selectedEmailChanged != selectedEmailCurr || IsSelectedMailChange
 						|| (firstEmailSelectedIdCurr && firstEmailSelectedId && firstEmailSelectedId !== firstEmailSelectedIdCurr)) {
 						conversationCountCurr = conversationCount;
 						selectedEmailCurr = selectedEmailChanged;
@@ -714,39 +738,20 @@ function UpdateMailCount() {
 				}
 			} else if (Array.isArray(result.value) && result.value.length > 50) {
 				clearInterval(intervalId);
-				showOutlookPopup({Popuptoshow : 'SelectedEmailLimitExceed',IsCloseTaskPanel : true},30,25);
-			} 
+				showOutlookPopup({ Popuptoshow: 'SelectedEmailLimitExceed', IsCloseTaskPanel: true }, 30, 25);
+			}
 		});
 	}, 500);
 }
 
-function GetOutlookApiAccessToken(maxRetries = 3) {
-	return new Promise((resolve, reject) => {
-		function tryGetToken(retriesLeft) {
-			Office.context.mailbox.getCallbackTokenAsync({ isRest: true }, (result) => {
-				if (result.status === "succeeded") {
-					resolve(result.value);
-				} else {
-					if (retriesLeft > 0) {
-						tryGetToken(retriesLeft - 1);
-					} else {
-						reject(result.error || "Failed to get Outlook API access token after multiple retries.");
-					}
-				}
-			});
-		}
-		tryGetToken(maxRetries);
-	});
-}
-
-function ResetTheTaskPaneUI(){
+function ResetTheTaskPaneUI() {
 	//console.log('ResetTheTaskPaneUI 1');
 	if (!IsResetTaskPaneUICall) {
 		//console.log('ResetTheTaskPaneUI 2');
 		IsResetTaskPaneUICall = true;
 		$(document).ready(() => {
 			console.log("office is ready");
-			
+
 			$('#indexLoader').hide();
 			$('#fetching').hide();
 			$('#noOfEmails').hide();
@@ -756,33 +761,27 @@ function ResetTheTaskPaneUI(){
 			$('#send-email-btn').prop('disabled', true);
 			$('#sync-email-btn').addClass('disabled');
 			$('#sync-email-btn').prop('disabled', true);
-	
-			attachClickEventHandlers();	
+
+			attachClickEventHandlers();
 			UpdateMailCount();
-	
+
 			const data = GetDataFromLocalStorageAndSetApiUrlGlobal();
 			window.ApiUrlVal = ApiUrl;
 			if (data != null) {
 				$('#sent-flag-color').val(data.sentFlagColor);
 				$('#skip-flag-color').val(data.skipFlagColor);
 				$('#days-to-sync').val(data.daysToSync);
-			
+
 				fetchEmailsWithCategoryAndTimeFilter(true, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
 				fetchEmailsWithCategoryAndTimeFilter(false, parseInt(data.daysToSync, 10), data.sentFlagColor, data.skipFlagColor);
 			}
-	
+
 		}
-		
+
 		);
 		//console.log('ResetTheTaskPaneUI 3');
 		IsResetTaskPaneUICall = false;
 	}
-}
-
-function isOfficeJsLoaded() {
-	//console.log(Office);
-	//console.log(Office.context);
-	return typeof Office !== "undefined" && typeof Office.context !== "undefined";
 }
 
 console.log('loaded index.js version 1.6.4');

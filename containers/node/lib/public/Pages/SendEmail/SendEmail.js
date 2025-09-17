@@ -20,9 +20,9 @@
 	IsInboxTab = false;
 
 let EmailSyncCompletedDialogObj = {
-	isSyncEmail : false,
-	NumberOfInboundEmails : 0,
-	NumberOfOutboundEmails : 0
+	isSyncEmail: false,
+	NumberOfInboundEmails: 0,
+	NumberOfOutboundEmails: 0
 };
 
 let parentRelIdtoChildRelVal = {};
@@ -54,17 +54,14 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 						const subjectCell = row.insertCell(2);
 						const receivedDateCellToDisplay = row.insertCell(3);
 						const bodyCell = row.insertCell(4);
-						const receivedCellUtc = row.insertCell(5);
-						receivedCellUtc.classList.add("hidden");
 
-						bodyCell.textContent = email.Body.Content;
+						bodyCell.textContent = email.body.content;
 						bodyCell.style.display = 'none';
-						indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
-						fromCell.textContent = email.From.EmailAddress.Address;
-						subjectCell.textContent = email.Subject;
-						receivedDateCellToDisplay.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
-						receivedCellUtc.textContent = email.ReceivedDateTime;
-					});	
+						indexCell.innerHTML = '<input type="checkbox" value=' + email.id + ' class="row-checkbox">';
+						fromCell.textContent = email.from.emailAddress.address;
+						subjectCell.textContent = email.subject;
+						receivedDateCellToDisplay.textContent = new Date(email.receivedDateTime).toLocaleString(); // Convert the received date to a readable format
+					});
 
 					AddOnRowSelectListener('#inboxTable .row-checkbox');
 				} else {
@@ -90,23 +87,20 @@ window.initPopup = function (isSyncEmail, selectedEmails) {
 						const subjectCell = row.insertCell(2);
 						const receivedCellToDisplay = row.insertCell(3);
 						const bodyCell = row.insertCell(4);
-						const receivedCellUtc = row.insertCell(5);
-						receivedCellUtc.classList.add("hidden");
 
-						bodyCell.textContent = email.Body.Content;
+						bodyCell.textContent = email.body.content;
 						bodyCell.style.display = 'none';
-						indexCell.innerHTML = '<input type="checkbox" value=' + email.Id + ' class="row-checkbox">';
-						subjectCell.textContent = email.Subject;
-						receivedCellToDisplay.textContent = new Date(email.ReceivedDateTime).toLocaleString(); // Convert the received date to a readable format
-						receivedCellUtc.textContent = email.ReceivedDateTime;
+						indexCell.innerHTML = '<input type="checkbox" value=' + email.id + ' class="row-checkbox">';
+						subjectCell.textContent = email.subject;
+						receivedCellToDisplay.textContent = new Date(email.receivedDateTime).toLocaleString(); // Convert the received date to a readable format
 
 						let AllToRecipients = "";
-						
-						email.ToRecipients.forEach((element, index) => {
-							AllToRecipients = AllToRecipients + (index > 0 ? ', ' : '') + element.EmailAddress.Address;
+
+						email.toRecipients.forEach((element, index) => {
+							AllToRecipients = AllToRecipients + (index > 0 ? ', ' : '') + element.emailAddress.address;
 						});
 						toCell.textContent = AllToRecipients;
-					});					
+					});
 
 					AddOnRowSelectListener('#sentBoxTable .row-checkbox');
 				} else {
@@ -179,7 +173,7 @@ $(document).ready(function () {
 		toggleClearAllButton();
 		toggleSelectAllButton();
 	});
-	
+
 	$('#skipit').on('click', () => {
 		$('#searchTable tbody tr').removeClass('selected');
 		$('#contactTable tbody tr').removeClass('selected');
@@ -195,7 +189,7 @@ $(document).ready(function () {
 
 				window.opener.setCategoryToEmail(id, false).then(() => {
 					removeFirstItem(currentSelectedData);
-					if (currentSelectedData && currentSelectedData.length > 0){
+					if (currentSelectedData && currentSelectedData.length > 0) {
 						ProcessSelectedData(currentSelectedData);
 						$("#sendEmailLoader").hide();
 						EnableButtonById("#skipit");
@@ -246,7 +240,7 @@ $(document).ready(function () {
 		DisableButtonById("#SendCancel");
 		let loader = $("#sendEmailLoader");
 		const emailid = $('#EmailId').val();
-		window.opener.fetchMimeContentOfAllEmail(emailid,loader).then((EmailMIMEContent) => {
+		window.opener.fetchMimeContentOfAllEmail(emailid, loader).then((EmailMIMEContent) => {
 			// set the parameters related to the attachement name and content by convert string to Base64
 			messageObject.attachment = messageObject.subject + ".eml";
 			messageObject.attachmentcontent = stringToutf8ToBase64(EmailMIMEContent);
@@ -264,7 +258,7 @@ $(document).ready(function () {
 			}
 		}).catch((error) => {
 			console.error("Error fetching MIME content:", error);
-			createDialog("Something went wrong while fetching the MIME content of email from Outlook API. Please try again.", function() {
+			createDialog("Something went wrong while fetching the MIME content of email from Outlook API. Please try again.", function () {
 				EnableButtonById("#skipit");
 				EnableButtonById("#diffContact");
 				EnableButtonById("#sendEmail");
@@ -374,7 +368,7 @@ function ProcessSelectedData(data) {
 		if (settings != null) {
 			outboundPrt.value = settings.outboundPriority;
 			outboundDD.value = settings.outboundTraceType;
-	
+
 		}
 	}
 	index++;
@@ -388,14 +382,14 @@ function ProcessSelectedData(data) {
 		$('.headings h5:nth-child(1)').text('To: ' + data[0].fromEmail);
 	}
 	$('.headings h5:nth-child(2)').text('Subject: ' + data[0].subject);
-	
+
 	let sentOrReceivedText = data[0].isInbox ? 'Received: ' : 'Sent: ';
 	$('#received').text(sentOrReceivedText + new Date(data[0].receivedDate).toLocaleString());
 
 	$('#EmailId').val(data[0].id);
 	messageObject.body = data[0].body;
 	messageObject.subject = data[0].subject;
-	messageObject.duedate = new Date(data[0].receivedDate).toLocaleDateString('en-US');
+	messageObject.duedate = data[0].receivedDate;
 	GetMatchingDataForSync(data[0].fromEmail, messageObject.userid);
 }
 
@@ -428,7 +422,7 @@ function getSelectedRowsData() {
 			// Get the text content from the sibling td elements
 			const email = row.cells[1].textContent;
 			const subject = row.cells[2].textContent;
-			const date = row.cells[5].textContent;
+			const date = row.cells[3].textContent;
 			const body = row.cells[4].textContent;
 
 			// Create an object with the row data
@@ -436,7 +430,7 @@ function getSelectedRowsData() {
 				id: checkboxValue,
 				fromEmail: email,
 				subject: subject,
-				receivedDate: new Date(date).toLocaleDateString('en-US'),
+				receivedDate: date,
 				body: body,
 				isInbox: isInbox
 			};
@@ -510,24 +504,24 @@ function validateMessageObject(messageObject) {
 function SendTheEmail() {
 	const id = $('#EmailId').val();
 	messageObject = validateMessageObject(messageObject);
-	
+
 	//replace '<' and '>' with '&lt;' and '&gt;' 
-	let mailSubject = messageObject.subject.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;").replace(/&nbsp;/g, " "); 
+	let mailSubject = messageObject.subject.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;").replace(/&nbsp;/g, " ");
 	let mailBody = messageObject.body.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;").replace(/&nbsp;/g, " ");
 	messageObject.attachment = messageObject.attachment.replace(/[^\w-_\x2E]+/g, "-");
 	let allDropdownList = $('#dropDownFieldAsPerGroup select');
 
-	allDropdownList.each(function() {
+	allDropdownList.each(function () {
 		const id = $(this).attr('id');
 		const value = String($(this).val());
-		
+
 		if (value != 0) {
 			// Create an object and push it to the array
 			listOfRelfIdvalsDynamicObj[id] = value;
 		}
 
 	});
-	
+
 	messageObject.relfldvals = JSON.stringify(listOfRelfIdvalsDynamicObj);
 	$("#sendEmailLoader").show();
 	const settings = {
@@ -546,7 +540,7 @@ function SendTheEmail() {
 						  <userid>` + messageObject.userid + `</userid>
 						  <acctid>` + messageObject.acctid + `</acctid>
 						  <contactid>` + messageObject.contactid + `</contactid>
-						  <duedate>` + messageObject.duedate + `</duedate>
+						  <duedate>` + new Date(messageObject.duedate).toLocaleDateString('en-US')  + `</duedate>
 						  <typeid>` + messageObject.typeid + `</typeid>
 						  <priorityid>` + messageObject.priorityid + `</priorityid>
 						  <subject>` + mailSubject + `</subject>
@@ -569,16 +563,16 @@ function SendTheEmail() {
 				let getMatchesReturn = response.getElementsByTagName("sendEmailReturn");
 				const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
 				$("#sendEmailLoader").hide();
-				createDialog("Email sent with trace id: " + parseInt(decodedString), function() {
+				createDialog("Email sent with trace id: " + parseInt(decodedString), function () {
 					removeFirstItem(currentSelectedData);
 					// count the number of sent email to CRM
-					if (EmailSyncCompletedDialogObj.isSyncEmail){
+					if (EmailSyncCompletedDialogObj.isSyncEmail) {
 						if (messageObject.IsInboxTab)
 							EmailSyncCompletedDialogObj.NumberOfInboundEmails = EmailSyncCompletedDialogObj.NumberOfInboundEmails + 1;
 						else
 							EmailSyncCompletedDialogObj.NumberOfOutboundEmails = EmailSyncCompletedDialogObj.NumberOfOutboundEmails + 1;
 					}
-					if (currentSelectedData && currentSelectedData.length > 0){
+					if (currentSelectedData && currentSelectedData.length > 0) {
 						ProcessSelectedData(currentSelectedData);
 						EnableButtonById("#skipit");
 						EnableButtonById("#diffContact");
@@ -594,27 +588,27 @@ function SendTheEmail() {
 				EnableButtonById("#diffContact");
 				EnableButtonById("#sendEmail");
 				EnableButtonById("#SendCancel");
-			});			
+			});
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
 			let errorMessage = "";
 			if (jqXHR.responseText.includes('faultstring')) {
 				const parser = new DOMParser();
 				const xmlDoc = parser.parseFromString(jqXHR.responseText, "application/xml");
-	
+
 				let getErrorSting = xmlDoc.getElementsByTagName("faultstring")[0].innerHTML;
 				console.log(getErrorSting);
-	
+
 				const bracketMatch = getErrorSting.match(/\[(.*?)\]/);
-				console.log("bracketMatch",bracketMatch)
+				console.log("bracketMatch", bracketMatch)
 				if (bracketMatch) {
-					const extractedString = bracketMatch[1]; 
-					console.log("bracketMatch",extractedString);
+					const extractedString = bracketMatch[1];
+					console.log("bracketMatch", extractedString);
 					// Further extract the relevant message after the colon
 					const messageMatch = extractedString.match(/:\s*(.*)/);
 					if (messageMatch) {
 						errorMessage = messageMatch[1].trim(); // Get the message after the colon
-						console.log("errorMessage",errorMessage);
+						console.log("errorMessage", errorMessage);
 					}
 				} else if (getErrorSting.includes(':')) {
 					errorMessage = getErrorSting;
@@ -622,12 +616,12 @@ function SendTheEmail() {
 			} else {
 				errorMessage = errorThrown;
 			}
-		
+
 			// Log the response text for debugging
 			$("#sendEmailLoader").hide();
-			createDialog("Simpleview API error: " + errorMessage, function() {
+			createDialog("Simpleview API error: " + errorMessage, function () {
 				removeFirstItem(currentSelectedData);
-				if (currentSelectedData && currentSelectedData.length > 0){
+				if (currentSelectedData && currentSelectedData.length > 0) {
 					ProcessSelectedData(currentSelectedData);
 					EnableButtonById("#skipit");
 					EnableButtonById("#diffContact");
@@ -646,12 +640,12 @@ function CloseAll() {
 		if (typeof window.opener.CloseTheTaskPane === 'function') {
 			if (EmailSyncCompletedDialogObj.isSyncEmail) {
 				let dataObj = {
-					Popuptoshow:"EmailSyncCompletedDialog", 
-					InboundEmails:EmailSyncCompletedDialogObj.NumberOfInboundEmails, 
-					OutboundEmails:EmailSyncCompletedDialogObj.NumberOfOutboundEmails,
-					IsCloseTaskPanel:true
+					Popuptoshow: "EmailSyncCompletedDialog",
+					InboundEmails: EmailSyncCompletedDialogObj.NumberOfInboundEmails,
+					OutboundEmails: EmailSyncCompletedDialogObj.NumberOfOutboundEmails,
+					IsCloseTaskPanel: true
 				}
-				window.opener.showOutlookPopup(dataObj,35,30);
+				window.opener.showOutlookPopup(dataObj, 35, 30);
 				window.close();
 			} else {
 				window.close();
@@ -713,12 +707,12 @@ function GetAttachedToDDInfo() {
 	if (resval != null) {
 		crmsettings = decodeFromBase64(resval);
 		if (messageObject.IsInboxTab) {
-			GetTaskTypes(crmsettings.inboundTraceType); 
+			GetTaskTypes(crmsettings.inboundTraceType);
 			GetPriorityType(crmsettings.inboundPriority);
 		} else {
-			GetTaskTypes(crmsettings.outboundTraceType); 
+			GetTaskTypes(crmsettings.outboundTraceType);
 			GetPriorityType(crmsettings.outboundPriority);
-		}		
+		}
 	}
 
 	//loading rels dropdown data
@@ -798,15 +792,15 @@ function parseXmlToJson(xml) {
 function bindDropDownsDataToSelect(jsonData) {
 	let parentfieldSetElement = document.getElementById('dropDownFieldAsPerGroup');
 	parentfieldSetElement.innerHTML = '';
-	
-	if (Array.isArray(jsonData.opts.rels.rel)){
-		for (let currRel of jsonData.opts.rels.rel){
-			let containerDiv = AddDropDownToFieldSetAsPerRelsList(currRel,jsonData.opts.rels.rel);
+
+	if (Array.isArray(jsonData.opts.rels.rel)) {
+		for (let currRel of jsonData.opts.rels.rel) {
+			let containerDiv = AddDropDownToFieldSetAsPerRelsList(currRel, jsonData.opts.rels.rel);
 			parentfieldSetElement.appendChild(containerDiv);
 		}
 	} else {
 		if (jsonData.opts.rels.rel) {
-			let containerDiv = AddDropDownToFieldSetAsPerRelsList(jsonData.opts.rels.rel,jsonData.opts.rels.rel);
+			let containerDiv = AddDropDownToFieldSetAsPerRelsList(jsonData.opts.rels.rel, jsonData.opts.rels.rel);
 			parentfieldSetElement.appendChild(containerDiv);
 		}
 	}
@@ -889,7 +883,7 @@ function GetPriorityType(selectedType) {
 			});
 			// when the value of dropdown change from JS then on-change event will not trigger 
 			checkMessageObjectFields(messageObject);
-		})	
+		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
 			console.error('Error:', textStatus, errorThrown);
 		});
@@ -942,9 +936,9 @@ function GetTaskTypes(selectedTask) {
 				typeList.push(typeObj);
 			}
 			const inboundDD = document.getElementById('trace-type');
-			inboundDD.innerHTML = '';			
+			inboundDD.innerHTML = '';
 			addNoneOptionToDropDown(inboundDD);
-			
+
 			// Populate the dropdown
 			typeList.forEach(item => {
 				const option = document.createElement('option');
@@ -1070,7 +1064,7 @@ function GetGroupsByUserId() {
 }
 
 function BindClickOnRowForSearch() {
-	
+
 	$('#searchTable tbody tr').on('click', function () {
 		if ($(this).find('td').first().text().trim().toLowerCase() === "no data found") {
 			return;
@@ -1084,7 +1078,7 @@ function BindClickOnRowForSearch() {
 			DisableButtonById("#selectBtn");
 			return;
 		}
-		
+
 		$('#searchTable tbody tr').removeClass('selected');
 		$(this).addClass('selected');
 		// Collect data from the selected row
@@ -1126,7 +1120,7 @@ function BindRowSelectFunction() {
 			DisableButtonById("#selectBtn");
 			return;
 		}
-		
+
 		$('#contactTable tbody tr').removeClass('selected');
 		$(this).addClass('selected');
 		// Collect data from the selected row
@@ -1158,7 +1152,7 @@ function populateSearchTable(contactList) {
 	console.log(contactList);
 	const $tableBody = $("#searchTable tbody");
 	$tableBody.empty(); // Clear any existing rows
-	
+
 	contactList.forEach(contact => {
 		const row = `
 				<tr>
@@ -1185,7 +1179,7 @@ function populateSearchTable(contactList) {
 	}
 	$('#loader').hide();
 	EnableButtonById("#searchContacts");
-	
+
 	EnableButtonById("#skipit");
 	BindClickOnRowForSearch();
 }
@@ -1338,7 +1332,7 @@ function htmlToString(html) {
 	return tempDiv.textContent || tempDiv.innerText || "";
 }
 
-function AddChooseAboveItemFirstDDOption(dropdown){
+function AddChooseAboveItemFirstDDOption(dropdown) {
 	dropdown.disabled = true;
 	dropdown.innerHTML = '';
 	let option = document.createElement("option");
@@ -1349,7 +1343,7 @@ function AddChooseAboveItemFirstDDOption(dropdown){
 	dropdown.value = 0;
 }
 
-function AddDropDownToFieldSetAsPerRelsList(currRel,allRels){
+function AddDropDownToFieldSetAsPerRelsList(currRel, allRels) {
 	let containerDiv = document.createElement('div');
 	containerDiv.classList.add('input-container');
 	let currDropDownLabel = document.createElement('label');
@@ -1359,11 +1353,11 @@ function AddDropDownToFieldSetAsPerRelsList(currRel,allRels){
 	currDropDown.id = currRel.fldname["#text"];
 	// if 'currRel.child["#text"]' contain any value that mean current rel is parent of other rel. 
 	if (currRel.child["#text"]) {
-		parentRelIdtoChildRelVal[currRel.fldname["#text"]] = findRelByfldname(allRels,currRel.child["#text"]);
+		parentRelIdtoChildRelVal[currRel.fldname["#text"]] = findRelByfldname(allRels, currRel.child["#text"]);
 	}
 
 	if (currRel.parent["#text"] && currRel.parent["#text"] == 1) {
-		$(currDropDown).change(function() {
+		$(currDropDown).change(function () {
 			FilterChildRelOptOnChangeParentDD(currDropDown.id);
 		});
 	}
@@ -1374,7 +1368,7 @@ function AddDropDownToFieldSetAsPerRelsList(currRel,allRels){
 	} else {
 		addNoneOptionToDropDown(currDropDown);
 
-		if (Array.isArray(currRel.data.row)){
+		if (Array.isArray(currRel.data.row)) {
 			currRel.data.row.forEach(row => {
 				if (row && row.ID && row.ID["#text"] && row.DISPLAY && row.DISPLAY["#text"]) {
 					const option = document.createElement("option");
@@ -1417,17 +1411,17 @@ function stringToutf8ToBase64(content) {
 	// Use TextEncoder to convert the string to UTF-8
 	const encoder = new TextEncoder();
 	const uint8Array = encoder.encode(content);
-	
+
 	// Convert the byte array to Base64
 	let arr = '';
 	for (let i = 0; i < uint8Array.length; i++) {
 		arr += String.fromCharCode(uint8Array[i]);
 	}
-	console.log("typeof arr : ",typeof arr)
-	return btoa(arr); 
+	console.log("typeof arr : ", typeof arr)
+	return btoa(arr);
 }
 
-function FilterChildRelOptOnChangeParentDD(dropdownID){
+function FilterChildRelOptOnChangeParentDD(dropdownID) {
 	let parentDropDownvalue = document.getElementById(dropdownID).value;
 	let childRel = parentRelIdtoChildRelVal[dropdownID];
 	const hiddenSelect = document.getElementById(childRel.fldname["#text"]);
@@ -1438,7 +1432,7 @@ function FilterChildRelOptOnChangeParentDD(dropdownID){
 			hiddenSelect.disabled = false;
 			hiddenSelect.innerHTML = '';
 			addNoneOptionToDropDown(hiddenSelect);
-			
+
 			if (childRel) {
 				if (Array.isArray(childRel.data.row)) {
 					childRel.data.row.forEach(row => {
@@ -1481,7 +1475,7 @@ function toggleSelectAllButton() {
 }
 
 function toggleClearAllButton() {
-	let buttonId = $('#showGrid3').hasClass('active') ? '#ClearAllInbox' : '#ClearAllSentBox';	
+	let buttonId = $('#showGrid3').hasClass('active') ? '#ClearAllInbox' : '#ClearAllSentBox';
 	const targetTable = $(buttonId).data('target');
 	const selectedCount = $(targetTable).find('tbody tr input[type="checkbox"]:checked').length;
 	if (selectedCount <= 0) {
@@ -1505,7 +1499,7 @@ function toggleSyncButton(event) {
 	if (event) {
 		toggleSelectAllButton();
 		toggleClearAllButton();
-		const row = event.target.closest('tr'); 
+		const row = event.target.closest('tr');
 		if (event.target.checked) {
 			row.classList.add('selected');
 		} else {
@@ -1516,6 +1510,6 @@ function toggleSyncButton(event) {
 
 function AddOnRowSelectListener(selector) {
 	document.querySelectorAll(selector).forEach(checkbox => {
-		checkbox.addEventListener('change',toggleSyncButton)
+		checkbox.addEventListener('change', toggleSyncButton)
 	});
 }
