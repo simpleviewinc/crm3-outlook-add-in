@@ -193,8 +193,8 @@ Office.onReady(async (info) => {
 		// Initialize the public client application
 		pca = await createNestablePublicClientApplication({
 			auth: {
-				clientId: "e7f269b4-0f3c-49e1-beac-67d89c3c413a", 
-				authority: "https://login.microsoftonline.com/7e1a2e8a-1c06-4fdd-90b7-ccd696f0c7ee"
+				clientId: "f366e055-628e-45fe-9b6d-aefcfe1a5159",
+				authority: "https://login.microsoftonline.com/common"
 			},
 		});
 		await GetOutlookApiAccessToken();
