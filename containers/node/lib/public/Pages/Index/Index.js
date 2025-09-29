@@ -315,6 +315,8 @@ async function GetOutlookApiAccessToken(maxRetries = 3) {
 				retriesLeft--;
 
 				if (retriesLeft === 0) {
+					$('.statusMsg').children().hide();
+					$('#errMsgFetchTokenLimit').show();
 					throw new Error("Failed to get Outlook API access token after multiple retries.");
 				}
 			}
