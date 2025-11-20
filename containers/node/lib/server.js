@@ -45,14 +45,14 @@ app.post('/submit/', bodyParser.raw({ type: 'text/xml', limit: '20mb' }), routeE
 	const { apiUrl } = req.query;
 	const requestBody = req.body;
 
-	if (apiUrl === undefined || /^https:\/\/(?:[a-zA-Z0-9-]+\.)?ABCDEFG\.com(?:\/.*)?$/.test(apiUrl)) {
+	if (apiUrl === undefined || /^https:\/\/(?:[a-zA-Z0-9-]+\.)?ABCDEFG\.(com|dev|io)(?:\/.*)?$/.test(apiUrl)) {
 		return res.status(400).json({
 			success: false,
 			message: `The 'apiUrl' parameter is required`,
 		});
 	}
 
-	if (/^https:\/\/(?:[a-zA-Z0-9-]+\.)?simpleviewcrm\.com(:\/.*)?$/.test(apiUrl) !== true) {
+	if (/^https:\/\/(?:[a-zA-Z0-9-]+\.)?simpleviewcrm\.(com|dev|io)(:\/.*)?$/.test(apiUrl) !== true) {
 		return res.status(400).json({
 			success: false,
 			message: `The 'apiUrl' parameter must be a valid CRM URL (e.g. https://demo.simpleviewcrm.com)`,
