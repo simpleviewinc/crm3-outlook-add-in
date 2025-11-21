@@ -64,7 +64,7 @@ function GetCrmUrlFromLocalStorage() {
 			url = url.slice(0, -1);
 		}
 
-		if (url.endsWith(".simpleviewcrm.com")) {
+		if (url.endsWith(".simpleviewcrm.com") || url.endsWith(".simpleviewcrm.dev") || url.endsWith(".simpleviewcrm.io")) {
 			return url;
 		}
 		createDialog("Url " + url + " not valid",function() {});
@@ -75,7 +75,7 @@ function GetCrmUrlFromLocalStorage() {
 
 
 function ValidateCRMUrl(url) {
-	if (url.endsWith(".simpleviewcrm.com")) {
+	if (url.endsWith(".simpleviewcrm.com") || url.endsWith(".simpleviewcrm.dev") || url.endsWith(".simpleviewcrm.io")) {
 		return true;
 	} else {
 		createDialog("Url " + url + " not valid.", function() {});
