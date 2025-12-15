@@ -264,7 +264,7 @@ function attachClickEventHandlers() {
 	});
 
 	$('#settings-btn').on('click', () => {
-		openPopup('../Settings/Settings.html', 'Settings', 1000, 800);
+		openPopup('../Settings/Settings.html', 'Settings');
 	});
 }
 
@@ -533,7 +533,23 @@ function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
 
 	const left = (window.screen.width / 2) - (width / 2);
 	const top = (window.screen.height / 2) - (height / 2);
-	popupWindow = window.open(url, title, `width=${width}, height=${height}, top=${top}, left=${left}`);
+	popupWindow = window.open(
+		url,
+		title,
+		`
+			popup=true,
+			width=${width},
+			height=${height},
+			top=${top},
+			left=${left},
+			resizable=true,
+			scrollbars=true,
+			toolbar=false,
+			menubar=false,
+			location=false,
+			status=false
+		`
+	);
 
 	popupWindow.onload = function () {
 		popupWindow.window.inboxEmails = popupWindow.opener.inboxEmails;
