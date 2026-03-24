@@ -688,12 +688,14 @@ function CloseAll() {
 			window.close();
 		}
 	} else {
+		// Close task pane before closing the dialog: if 'close' is handled first, the parent may tear
+		// down the dialog before the JSON message for CloseTheTaskPane is processed (message lost).
+		callOpenerNoReturn('CloseTheTaskPane');
 		if (isOfficeDialogMode() && typeof Office !== 'undefined' && Office.context && Office.context.ui) {
 			Office.context.ui.messageParent('close');
 		} else {
 			window.close();
 		}
-		callOpenerNoReturn('CloseTheTaskPane');
 	}
 }
 
