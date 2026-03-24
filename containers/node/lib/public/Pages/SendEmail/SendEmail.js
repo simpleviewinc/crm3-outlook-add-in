@@ -37,12 +37,12 @@ window._dialogPendingRequests = {};
 
 /** Call parent method and return a Promise (for setCategoryToEmail, fetchMimeContentOfAllEmail). SendEmail-specific. */
 function callOpener(method) {
-	var args = Array.prototype.slice.call(arguments, 1);
+	const args = Array.prototype.slice.call(arguments, 1);
 	if (window.opener && !window.opener.closed && typeof window.opener[method] === 'function') {
 		return window.opener[method].apply(window.opener, args);
 	}
 	if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
-		var requestId = 'req_' + Math.random().toString(36).slice(2) + Date.now();
+		const requestId = 'req_' + Math.random().toString(36).slice(2) + Date.now();
 		return new Promise(function (resolve, reject) {
 			window._dialogPendingRequests[requestId] = { resolve: resolve, reject: reject };
 			try {
@@ -59,9 +59,9 @@ function callOpener(method) {
 if (typeof window.isOfficeDialogMode === 'function' && window.isOfficeDialogMode() && typeof Office !== 'undefined') {
 	Office.onReady(function () {
 		try {
-			var raw = localStorage.getItem('outlook-dialog-init');
+			const raw = localStorage.getItem('outlook-dialog-init');
 			if (raw) {
-				var data = JSON.parse(raw);
+				const data = JSON.parse(raw);
 				window.inboxEmails = data.inboxEmails || {};
 				window.sentEmails = data.sentEmails || {};
 				ApiUrl = data.ApiUrlVal || '';
@@ -77,9 +77,9 @@ if (typeof window.isOfficeDialogMode === 'function' && window.isOfficeDialogMode
 		if (Office.context && Office.context.ui) {
 			Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function (arg) {
 				try {
-					var msg = typeof arg.message === 'string' ? JSON.parse(arg.message) : arg.message;
+					const msg = typeof arg.message === 'string' ? JSON.parse(arg.message) : arg.message;
 					if (msg && msg.requestId && window._dialogPendingRequests[msg.requestId]) {
-						var pending = window._dialogPendingRequests[msg.requestId];
+						const pending = window._dialogPendingRequests[msg.requestId];
 						delete window._dialogPendingRequests[msg.requestId];
 						if (msg.success) {
 							pending.resolve(msg.result);
@@ -286,7 +286,7 @@ $(document).ready(function () {
 		DisableButtonById("#SendCancel");
 		let loader = $("#sendEmailLoader");
 		const emailid = $('#EmailId').val();
-		var loaderArg = isOfficeDialogMode() ? null : loader;
+		const loaderArg = isOfficeDialogMode() ? null : loader;
 		callOpener('fetchMimeContentOfAllEmail', emailid, loaderArg).then((EmailMIMEContent) => {
 			messageObject.attachment = messageObject.subject + ".eml";
 			messageObject.attachmentcontent = stringToutf8ToBase64(EmailMIMEContent);
@@ -675,7 +675,7 @@ function SendTheEmail() {
 
 function CloseAll() {
 	if (EmailSyncCompletedDialogObj.isSyncEmail) {
-		var dataObj = {
+		let dataObj = {
 			Popuptoshow: "EmailSyncCompletedDialog",
 			InboundEmails: EmailSyncCompletedDialogObj.NumberOfInboundEmails,
 			OutboundEmails: EmailSyncCompletedDialogObj.NumberOfOutboundEmails,

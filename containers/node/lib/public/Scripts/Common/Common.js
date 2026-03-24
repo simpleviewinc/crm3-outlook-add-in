@@ -196,7 +196,7 @@ function isOfficeDialogMode() {
 }
 
 function callOpenerNoReturn(method) {
-	var args = Array.prototype.slice.call(arguments, 1);
+	let args = Array.prototype.slice.call(arguments, 1);
 	if (window.opener && !window.opener.closed && typeof window.opener[method] === 'function') {
 		window.opener[method].apply(window.opener, args);
 		return;

@@ -661,41 +661,41 @@ function handleDialogMessageFromChild(msg) {
 	}
 
 	switch (method) {
-		case 'ReloadTaskPane':
-			// Defer reload until dialog closes so Close button still works (parent keeps dialog reference).
-			pendingReloadTaskPane = args[0];
-			break;
-		case 'SetLocalStorageItem':
-			if (typeof window.SetLocalStorageItem === 'function') {
-				window.SetLocalStorageItem(args[0]);
-			}
-			break;
-		case 'CloseTheTaskPane':
-			if (typeof window.CloseTheTaskPane === 'function') {
-				window.CloseTheTaskPane();
-			}
-			break;
-		case 'showOutlookPopup':
-			if (typeof window.showOutlookPopup === 'function') {
-				window.showOutlookPopup(args[0], args[1] || 35, args[2] || 30);
-			}
-			break;
-		case 'setCategoryToEmail':
-			if (typeof window.setCategoryToEmail === 'function') {
-				window.setCategoryToEmail(args[0], args[1])
-					.then(function (r) { sendResponse(true, r); })
-					.catch(function (err) { sendResponse(false, null, err && err.message); });
-			}
-			break;
-		case 'fetchMimeContentOfAllEmail':
-			if (typeof window.fetchMimeContentOfAllEmail === 'function') {
-				window.fetchMimeContentOfAllEmail(args[0], args[1] || null)
-					.then(function (mimeContent) { sendResponse(true, mimeContent); })
-					.catch(function (err) { sendResponse(false, null, err && err.message); });
-			}
-			break;
-		default:
-			console.warn('Unknown dialog message method:', method);
+	case 'ReloadTaskPane':
+		// Defer reload until dialog closes so Close button still works (parent keeps dialog reference).
+		pendingReloadTaskPane = args[0];
+		break;
+	case 'SetLocalStorageItem':
+		if (typeof window.SetLocalStorageItem === 'function') {
+			window.SetLocalStorageItem(args[0]);
+		}
+		break;
+	case 'CloseTheTaskPane':
+		if (typeof window.CloseTheTaskPane === 'function') {
+			window.CloseTheTaskPane();
+		}
+		break;
+	case 'showOutlookPopup':
+		if (typeof window.showOutlookPopup === 'function') {
+			window.showOutlookPopup(args[0], args[1] || 35, args[2] || 30);
+		}
+		break;
+	case 'setCategoryToEmail':
+		if (typeof window.setCategoryToEmail === 'function') {
+			window.setCategoryToEmail(args[0], args[1])
+				.then(function (r) { sendResponse(true, r); })
+				.catch(function (err) { sendResponse(false, null, err && err.message); });
+		}
+		break;
+	case 'fetchMimeContentOfAllEmail':
+		if (typeof window.fetchMimeContentOfAllEmail === 'function') {
+			window.fetchMimeContentOfAllEmail(args[0], args[1] || null)
+				.then(function (mimeContent) { sendResponse(true, mimeContent); })
+				.catch(function (err) { sendResponse(false, null, err && err.message); });
+		}
+		break;
+	default:
+		console.warn('Unknown dialog message method:', method);
 	}
 }
 
