@@ -101,10 +101,6 @@ legend {
         margin-top: 15px;
     }
 
-    .settingsUI .input-container label {
-        /* flex: 0 0 150px; */ /* Don't grow, don't shrink, start at 150px */
-    }
-
 /*========== MAIN PLUGIN PAGE ==========*/
 
 .content-main {
@@ -202,8 +198,7 @@ button.disabled {
     border: 1px solid #BEBEBE;
     margin: 0px;
     padding: 10px;
-    width: calc(100% - 15px); /* Full width minus margin and border */
-    height: 450px; /* Fixed height */
+    min-height: 150px; /* Fixed height */
     overflow-y: scroll; /* Enable vertical scroll if content overflows */
     position: relative; /* Required for absolute positioning */
 }

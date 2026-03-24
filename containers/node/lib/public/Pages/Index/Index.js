@@ -524,9 +524,185 @@ function getSpecificEmailDetails(id, accessToken) {
 }
 
 let popupWindow = null;
-// Open a generic popup
+/** @type {Office.Dialog | null} */
+let openOfficeDialog = null;
+/** If set, run ReloadTaskPane with this value when the Office dialog closes (avoids reloading while dialog is open). */
+let pendingReloadTaskPane = undefined;
+
+/**
+ * Returns true when running inside Office (Outlook desktop or web) with the Dialog API available.
+ * Using displayDialogAsync keeps the dialog in the host process and preserves session context;
+ * window.open in desktop Outlook can open in a separate browser tab and lose context.
+ */
+function isOfficeDialogApiAvailable() {
+	return typeof Office !== 'undefined' &&
+		Office.context &&
+		Office.context.ui &&
+		typeof Office.context.ui.displayDialogAsync === 'function';
+}
+
+/**
+ * Opens a popup using Office.context.ui.displayDialogAsync when in Office (retains session context),
+ * otherwise falls back to window.open for web-only usage.
+ */
 function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
-	// Close the existing popup if it's open
+	if (isOfficeDialogApiAvailable()) {
+		openPopupViaOfficeDialog(url, title, width, height, onloadCallback);
+	} else {
+		openPopupViaWindowOpen(url, title, width, height, onloadCallback);
+	}
+}
+
+/**
+ * Opens a dialog using the Office Dialog API so it stays within the Outlook host and retains session context.
+ */
+function openPopupViaOfficeDialog(url, title, width, height, onloadCallback) {
+	if (openOfficeDialog) {
+		console.warn('An Office dialog is already open; only one is allowed.');
+		return;
+	}
+
+	const dialogUrl = new URL(url, window.location.href).href;
+	const urlWithMode = dialogUrl + (dialogUrl.indexOf('?') >= 0 ? '&' : '?') + 'mode=dialog';
+
+	const isSendEmail = url.indexOf('SendEmail') >= 0;
+	const isSettings = url.indexOf('Settings') >= 0;
+
+	if (isSendEmail) {
+		try {
+			localStorage.setItem('outlook-dialog-init', JSON.stringify({
+				type: 'sendEmail',
+				isSync: title === 'Synchronize Email with CRM',
+				selectedEmails: selectedEmails,
+				ApiUrlVal: window.ApiUrlVal,
+				inboxEmails: window.inboxEmails,
+				sentEmails: window.sentEmails
+			}));
+		} catch (e) {
+			console.error('Failed to store dialog init data:', e);
+		}
+	} else if (isSettings) {
+		try {
+			localStorage.setItem('outlook-dialog-init', JSON.stringify({
+				type: 'settings',
+				ApiUrlVal: window.ApiUrlVal
+			}));
+		} catch (e) {
+			console.error('Failed to store dialog init data:', e);
+		}
+	}
+
+	const dialogHeight = Math.min(80, (height / window.screen.height) * 100);
+	const dialogWidth = Math.min(80, (width / window.screen.width) * 100);
+
+	Office.context.ui.displayDialogAsync(urlWithMode, {
+		width: dialogWidth,
+		height: dialogHeight,
+		displayInIframe: true
+	}, function (result) {
+		if (result.status !== Office.AsyncResultStatus.Succeeded) {
+			console.error('Office dialog failed to open:', result.error && result.error.message);
+			return;
+		}
+		openOfficeDialog = result.value;
+
+		openOfficeDialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
+			try {
+				const msg = typeof arg.message === 'string' ? JSON.parse(arg.message) : arg.message;
+				handleDialogMessageFromChild(msg);
+			} catch (e) {
+				// Treat as simple message (e.g. 'close')
+				if (arg.message === 'close') {
+					if (openOfficeDialog) {
+						openOfficeDialog.close();
+						openOfficeDialog = null;
+					}
+					if (pendingReloadTaskPane !== undefined) {
+						const doReload = pendingReloadTaskPane;
+						pendingReloadTaskPane = undefined;
+						if (typeof window.ReloadTaskPane === 'function') {
+							window.ReloadTaskPane(doReload);
+						}
+					}
+				}
+			}
+		});
+
+		openOfficeDialog.addEventHandler(Office.EventType.DialogEventReceived, function (event) {
+			if (event.error === 12006) {
+				openOfficeDialog = null;
+			}
+		});
+
+		if (onloadCallback && typeof onloadCallback === 'function') {
+			onloadCallback(null);
+		}
+	});
+}
+
+/**
+ * Handles messages from the Office dialog (SendEmail/Settings) and invokes task pane methods or sends responses.
+ */
+function handleDialogMessageFromChild(msg) {
+	if (!msg || typeof msg.method !== 'string') return;
+
+	const method = msg.method;
+	const args = Array.isArray(msg.args) ? msg.args : [];
+	const requestId = msg.requestId;
+	const dialog = openOfficeDialog;
+
+	function sendResponse(success, result, error) {
+		if (!requestId || !dialog) return;
+		try {
+			dialog.messageChild(JSON.stringify({ requestId: requestId, success: success, result: result, error: error }), { targetOrigin: window.location.origin });
+		} catch (e) {
+			console.error('messageChild failed:', e);
+		}
+	}
+
+	switch (method) {
+		case 'ReloadTaskPane':
+			// Defer reload until dialog closes so Close button still works (parent keeps dialog reference).
+			pendingReloadTaskPane = args[0];
+			break;
+		case 'SetLocalStorageItem':
+			if (typeof window.SetLocalStorageItem === 'function') {
+				window.SetLocalStorageItem(args[0]);
+			}
+			break;
+		case 'CloseTheTaskPane':
+			if (typeof window.CloseTheTaskPane === 'function') {
+				window.CloseTheTaskPane();
+			}
+			break;
+		case 'showOutlookPopup':
+			if (typeof window.showOutlookPopup === 'function') {
+				window.showOutlookPopup(args[0], args[1] || 35, args[2] || 30);
+			}
+			break;
+		case 'setCategoryToEmail':
+			if (typeof window.setCategoryToEmail === 'function') {
+				window.setCategoryToEmail(args[0], args[1])
+					.then(function (r) { sendResponse(true, r); })
+					.catch(function (err) { sendResponse(false, null, err && err.message); });
+			}
+			break;
+		case 'fetchMimeContentOfAllEmail':
+			if (typeof window.fetchMimeContentOfAllEmail === 'function') {
+				window.fetchMimeContentOfAllEmail(args[0], args[1] || null)
+					.then(function (mimeContent) { sendResponse(true, mimeContent); })
+					.catch(function (err) { sendResponse(false, null, err && err.message); });
+			}
+			break;
+		default:
+			console.warn('Unknown dialog message method:', method);
+	}
+}
+
+/**
+ * Original window.open-based popup (used when not in Office or Dialog API unavailable, e.g. web-only).
+ */
+function openPopupViaWindowOpen(url, title, width, height, onloadCallback) {
 	if (popupWindow && !popupWindow.closed) {
 		popupWindow.close();
 	}
@@ -550,6 +726,11 @@ function openPopup(url, title, width = 1000, height = 800, onloadCallback) {
 			status=false
 		`
 	);
+
+	if (!popupWindow) {
+		console.error('Popup was blocked. Please allow popups for this site.');
+		return;
+	}
 
 	popupWindow.onload = function () {
 		popupWindow.window.inboxEmails = popupWindow.opener.inboxEmails;
@@ -677,7 +858,7 @@ function fetchEmailsWithCategoryAndTimeFilter(isInbox, daysToSync, sentCategoryC
 }
 
 window.fetchMimeContentOfAllEmail = function (EmailIdTogetMIME, loader) {
-	loader.show();
+	if (loader) loader.show();
 	return new Promise((resolve, reject) => {
 		// Get access token from Office context
 		const retries = MAX_RETRIES;
@@ -710,10 +891,10 @@ window.fetchMimeContentOfAllEmail = function (EmailIdTogetMIME, loader) {
 		};
 
 		fetchEmailMimeContent(EmailIdTogetMIME, retries, delay).then((mimedata) => {
-			loader.hide();
+			if (loader) loader.hide();
 			resolve(mimedata);
 		}).catch((error) => {
-			loader.hide();
+			if (loader) loader.hide();
 			reject(error);
 		});
 	});
