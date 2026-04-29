@@ -1,4 +1,4 @@
-﻿let messageObject = {
+let messageObject = {
 		groupid: '',
 		userid: '',
 		acctid: '',
@@ -30,6 +30,70 @@ let listOfRelfIdvalsDynamicObj = {};
 let index = 1;
 
 SetApiUrl();
+
+// ---- Office Dialog mode: when opened via displayDialogAsync (desktop Outlook), retain session context ----
+// isOfficeDialogMode, callOpenerNoReturn, closeSyncOrSendDialog are in Common.js and exposed on window.
+window._dialogPendingRequests = {};
+
+/** Call parent method and return a Promise (for setCategoryToEmail, fetchMimeContentOfAllEmail). SendEmail-specific. */
+function callOpener(method) {
+	const args = Array.prototype.slice.call(arguments, 1);
+	if (window.opener && !window.opener.closed && typeof window.opener[method] === 'function') {
+		return window.opener[method].apply(window.opener, args);
+	}
+	if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+		const requestId = 'req_' + Math.random().toString(36).slice(2) + Date.now();
+		return new Promise(function (resolve, reject) {
+			window._dialogPendingRequests[requestId] = { resolve: resolve, reject: reject };
+			try {
+				Office.context.ui.messageParent(JSON.stringify({ requestId: requestId, method: method, args: args }));
+			} catch (e) {
+				delete window._dialogPendingRequests[requestId];
+				reject(e);
+			}
+		});
+	}
+	return Promise.reject(new Error('No parent or Office dialog context available'));
+}
+
+if (typeof window.isOfficeDialogMode === 'function' && window.isOfficeDialogMode() && typeof Office !== 'undefined') {
+	Office.onReady(function () {
+		try {
+			const raw = localStorage.getItem('outlook-dialog-init');
+			if (raw) {
+				const data = JSON.parse(raw);
+				window.inboxEmails = data.inboxEmails || {};
+				window.sentEmails = data.sentEmails || {};
+				ApiUrl = data.ApiUrlVal || '';
+				window.ApiUrl = ApiUrl;
+				localStorage.removeItem('outlook-dialog-init');
+				if (data.type === 'sendEmail' && typeof window.initPopup === 'function') {
+					window.initPopup(data.isSync === true, data.selectedEmails || []);
+				}
+			}
+		} catch (e) {
+			console.error('Dialog init failed:', e);
+		}
+		if (Office.context && Office.context.ui) {
+			Office.context.ui.addHandlerAsync(Office.EventType.DialogParentMessageReceived, function (arg) {
+				try {
+					const msg = typeof arg.message === 'string' ? JSON.parse(arg.message) : arg.message;
+					if (msg && msg.requestId && window._dialogPendingRequests[msg.requestId]) {
+						const pending = window._dialogPendingRequests[msg.requestId];
+						delete window._dialogPendingRequests[msg.requestId];
+						if (msg.success) {
+							pending.resolve(msg.result);
+						} else {
+							pending.reject(msg.error || new Error('Parent returned error'));
+						}
+					}
+				} catch (e) {
+					console.error('DialogParentMessageReceived handler error:', e);
+				}
+			});
+		}
+	});
+}
 
 window.initPopup = function (isSyncEmail, selectedEmails) {
 	console.log("init popup: " + isSyncEmail);
@@ -182,47 +246,29 @@ $(document).ready(function () {
 		DisableButtonById("#sendEmail");
 		DisableButtonById("#SendCancel");
 		const id = $('#EmailId').val();
-		if (window.opener && !window.opener.closed) {
-			if (typeof window.opener.setCategoryToEmail === 'function') {
-				console.log("Email Id: " + id);
-				$("#sendEmailLoader").show();
-
-				window.opener.setCategoryToEmail(id, false).then(() => {
-					removeFirstItem(currentSelectedData);
-					if (currentSelectedData && currentSelectedData.length > 0) {
-						ProcessSelectedData(currentSelectedData);
-						$("#sendEmailLoader").hide();
-						EnableButtonById("#skipit");
-						EnableButtonById("#diffContact");
-						EnableButtonById("#sendEmail");
-						EnableButtonById("#SendCancel");
-						// checkMessageObjectFields execute only on SendEmail screen
-						if ($('#selectContact').hasClass('active'))
-							checkMessageObjectFields(messageObject);
-					} else {
-						CloseAll();
-					}
-				}).catch(() => {
-					$("#sendEmailLoader").hide();
-					EnableButtonById("#skipit");
-					EnableButtonById("#diffContact");
-					EnableButtonById("#sendEmail");
-					EnableButtonById("#SendCancel");
-				});
-			} else {
-				console.error("Parent window method setCategoryToEmail is not defined.");
+		console.log("Email Id: " + id);
+		$("#sendEmailLoader").show();
+		callOpener('setCategoryToEmail', id, false).then(() => {
+			removeFirstItem(currentSelectedData);
+			if (currentSelectedData && currentSelectedData.length > 0) {
+				ProcessSelectedData(currentSelectedData);
+				$("#sendEmailLoader").hide();
 				EnableButtonById("#skipit");
 				EnableButtonById("#diffContact");
 				EnableButtonById("#sendEmail");
 				EnableButtonById("#SendCancel");
+				if ($('#selectContact').hasClass('active'))
+					checkMessageObjectFields(messageObject);
+			} else {
+				CloseAll();
 			}
-		} else {
-			console.error("Parent window is not available.");
+		}).catch(() => {
+			$("#sendEmailLoader").hide();
 			EnableButtonById("#skipit");
 			EnableButtonById("#diffContact");
 			EnableButtonById("#sendEmail");
 			EnableButtonById("#SendCancel");
-		}
+		});
 	});
 
 
@@ -240,22 +286,14 @@ $(document).ready(function () {
 		DisableButtonById("#SendCancel");
 		let loader = $("#sendEmailLoader");
 		const emailid = $('#EmailId').val();
-		window.opener.fetchMimeContentOfAllEmail(emailid, loader).then((EmailMIMEContent) => {
-			// set the parameters related to the attachement name and content by convert string to Base64
+		const loaderArg = isOfficeDialogMode() ? null : loader;
+		callOpener('fetchMimeContentOfAllEmail', emailid, loaderArg).then((EmailMIMEContent) => {
 			messageObject.attachment = messageObject.subject + ".eml";
 			messageObject.attachmentcontent = stringToutf8ToBase64(EmailMIMEContent);
 			messageObject.priorityid = $("#priority").val();
 			messageObject.typeid = $("#trace-type").val();
 			console.log(messageObject);
-			if (window.opener && !window.opener.closed) {
-				if (typeof window.opener.setCategoryToEmail === 'function') {
-					SendTheEmail();
-				} else {
-					console.error("Parent window method setCategoryToEmail is not defined.");
-				}
-			} else {
-				console.error("Parent window is not available.");
-			}
+			SendTheEmail();
 		}).catch((error) => {
 			console.error("Error fetching MIME content:", error);
 			createDialog("Something went wrong while fetching the MIME content of email from Outlook API. Please try again.", function () {
@@ -296,7 +334,7 @@ $(document).ready(function () {
 		$('#selectBtn').addClass('hide');
 	});
 	$('#SendCancel').on('click', function () {
-		window.close();
+		closeSyncOrSendDialog();
 	});
 
 	$('#diffContact').on('click', function () {
@@ -559,7 +597,7 @@ function SendTheEmail() {
 	$.ajax(settings)
 		.done(function (response) {
 			console.log(response)
-			window.opener.setCategoryToEmail(id, true).then(() => {
+			callOpener('setCategoryToEmail', id, true).then(() => {
 				let getMatchesReturn = response.getElementsByTagName("sendEmailReturn");
 				const decodedString = htmlToString(getMatchesReturn[0].innerHTML);
 				$("#sendEmailLoader").hide();
@@ -636,26 +674,28 @@ function SendTheEmail() {
 }
 
 function CloseAll() {
-	if (window.opener && !window.opener.closed) {
-		if (typeof window.opener.CloseTheTaskPane === 'function') {
-			if (EmailSyncCompletedDialogObj.isSyncEmail) {
-				let dataObj = {
-					Popuptoshow: "EmailSyncCompletedDialog",
-					InboundEmails: EmailSyncCompletedDialogObj.NumberOfInboundEmails,
-					OutboundEmails: EmailSyncCompletedDialogObj.NumberOfOutboundEmails,
-					IsCloseTaskPanel: true
-				}
-				window.opener.showOutlookPopup(dataObj, 35, 30);
-				window.close();
-			} else {
-				window.close();
-				window.opener.CloseTheTaskPane();
-			}
+	if (EmailSyncCompletedDialogObj.isSyncEmail) {
+		let dataObj = {
+			Popuptoshow: "EmailSyncCompletedDialog",
+			InboundEmails: EmailSyncCompletedDialogObj.NumberOfInboundEmails,
+			OutboundEmails: EmailSyncCompletedDialogObj.NumberOfOutboundEmails,
+			IsCloseTaskPanel: true
+		};
+		callOpenerNoReturn('showOutlookPopup', dataObj, 35, 30);
+		if (isOfficeDialogMode() && typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+			Office.context.ui.messageParent('close');
 		} else {
-			console.error("Parent window method setCategoryToEmail is not defined.");
+			window.close();
 		}
 	} else {
-		console.error("Parent window is not available.");
+		// Close task pane before closing the dialog: if 'close' is handled first, the parent may tear
+		// down the dialog before the JSON message for CloseTheTaskPane is processed (message lost).
+		callOpenerNoReturn('CloseTheTaskPane');
+		if (isOfficeDialogMode() && typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+			Office.context.ui.messageParent('close');
+		} else {
+			window.close();
+		}
 	}
 }
 

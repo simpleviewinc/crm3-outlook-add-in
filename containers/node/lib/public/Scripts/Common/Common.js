@@ -1,4 +1,4 @@
-﻿/* global decodeFromBase64 */
+/* global decodeFromBase64 */
 function GetDataFromLocalStorage() {
 	//this function also set the window.ApiUrl, which was not ideal.
 	//I'd like to replace this with 3 fuctions:
@@ -190,6 +190,39 @@ function decodeFromBase64(base64Str) {
 	return JSON.parse(jsonString);
 }
 
+// ---- Shared helpers for Office dialog vs window.open popup (used by Settings, SendEmail, etc.) ----
+function isOfficeDialogMode() {
+	return typeof window !== 'undefined' && window.location && window.location.search && window.location.search.indexOf('mode=dialog') >= 0;
+}
+
+function callOpenerNoReturn(method) {
+	let args = Array.prototype.slice.call(arguments, 1);
+	if (window.opener && !window.opener.closed && typeof window.opener[method] === 'function') {
+		window.opener[method].apply(window.opener, args);
+		return;
+	}
+	if (typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+		try {
+			Office.context.ui.messageParent(JSON.stringify({ method: method, args: args }));
+		} catch (e) {
+			console.error('messageParent failed:', e);
+		}
+	}
+}
+
+/** Close dialog (Office) or popup (window.open). Use from Settings, SendEmail, or any dialog/popup page. */
+function closeDialogOrPopup() {
+	if (isOfficeDialogMode() && typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+		Office.context.ui.messageParent('close');
+	} else {
+		window.close();
+	}
+}
+
 window.GetDataFromLocalStorage = GetDataFromLocalStorage;
 window.addNoneOptionToDropDown = addNoneOptionToDropDown;
 window.createDialog = createDialog;
+window.isOfficeDialogMode = isOfficeDialogMode;
+window.callOpenerNoReturn = callOpenerNoReturn;
+window.closeSyncOrSendDialog = closeDialogOrPopup;
+window.closeDialogOrPopup = closeDialogOrPopup;

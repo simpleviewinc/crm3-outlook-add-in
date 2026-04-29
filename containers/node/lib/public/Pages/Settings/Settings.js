@@ -1,7 +1,7 @@
-﻿let ApiUrl = '',
+let ApiUrl = '',
 	UserId = '';
 
-$(document).ready(function () {
+function initSettings() {
 	let resval = localStorage.getItem("crm");
 	let data = {};
 	if (resval != null) {
@@ -311,26 +311,9 @@ $(document).ready(function () {
 
 
 		createDialog("Settings updated.", function () {
-			if (window.opener && !window.opener.closed) {
-				if (typeof window.opener.ReloadTaskPane === 'function') {
-					console.log('window.opener.CloseTheTaskPane');
-					window.opener.ReloadTaskPane(false);
-					$('#saveUpdateSettings').text("Update");
-					//window.close(); // Optionally close the popup after sending data
-				} else {
-					console.error("Parent window method ReloadTaskPane is not defined.");
-				}
-				if (typeof window.opener.SetLocalStorageItem === 'function') {
-					console.log('window.opener.CloseTheTaskPane');
-					window.opener.SetLocalStorageItem(formDataString);
-					//window.close(); // Optionally close the popup after sending data
-				} else {
-					console.error("Parent window method SetLocalStorageItem is not defined.");
-				}
-
-			} else {
-				console.error("Parent window is not available.");
-			}
+			window.callOpenerNoReturn('ReloadTaskPane', false);
+			window.callOpenerNoReturn('SetLocalStorageItem', formDataString);
+			$('#saveUpdateSettings').text("Update");
 		});
 	});
 
@@ -338,17 +321,17 @@ $(document).ready(function () {
 		localStorage.removeItem('crm');
 		createDialog("Settings removed.", function () {
 			window.location.reload();
-			if (window.opener && !window.opener.closed) {
-				if (typeof window.opener.ReloadTaskPane === 'function') {
-					console.log('window.opener.CloseTheTaskPane');
-					window.opener.ReloadTaskPane(true);
-					//window.close(); // Optionally close the popup after sending data
-				} else {
-					console.error("Parent window method ReloadTaskPane is not defined.");
-				}
-			} else {
-				console.error("Parent window is not available.");
-			}
+			window.callOpenerNoReturn('ReloadTaskPane', true);
 		});
 	});
-});
+}
+
+if (typeof Office !== 'undefined') {
+	Office.onReady(function () {
+		initSettings();
+	});
+} else {
+	$(document).ready(function () {
+		initSettings();
+	});
+}
