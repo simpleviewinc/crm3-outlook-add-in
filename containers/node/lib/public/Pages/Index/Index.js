@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 /* global Office, GetDataFromLocalStorageAndSetApiUrlGlobal, ApiUrl*/
 const { createNestablePublicClientApplication } = msal;
 window.MatchedData = {};
@@ -528,6 +528,8 @@ let popupWindow = null;
 let openOfficeDialog = null;
 /** If set, run ReloadTaskPane with this value when the Office dialog closes (avoids reloading while dialog is open). */
 let pendingReloadTaskPane = undefined;
+/** If set, run showOutlookPopup after the Office dialog fully closes (avoids 12007: cannot open a second dialog while the first is active). */
+let pendingShowOutlookPopup = null;
 
 /**
  * Returns true when running inside Office (Outlook desktop or web) with the Dialog API available.
@@ -561,6 +563,8 @@ function openPopupViaOfficeDialog(url, title, width, height, onloadCallback) {
 		console.warn('An Office dialog is already open; only one is allowed.');
 		return;
 	}
+
+	pendingShowOutlookPopup = null;
 
 	const dialogUrl = new URL(url, window.location.href).href;
 	const urlWithMode = dialogUrl + (dialogUrl.indexOf('?') >= 0 ? '&' : '?') + 'mode=dialog';
@@ -614,8 +618,10 @@ function openPopupViaOfficeDialog(url, title, width, height, onloadCallback) {
 				// Treat as simple message (e.g. 'close')
 				if (arg.message === 'close') {
 					if (openOfficeDialog) {
+						// Do not set openOfficeDialog = null here. The host still counts this dialog as
+						// active until DialogEventReceived (12006). Clearing early causes displayDialogAsync
+						// to fail with 12007 if the user opens another dialog immediately (e.g. after Skip).
 						openOfficeDialog.close();
-						openOfficeDialog = null;
 					}
 					if (pendingReloadTaskPane !== undefined) {
 						const doReload = pendingReloadTaskPane;
@@ -631,6 +637,13 @@ function openPopupViaOfficeDialog(url, title, width, height, onloadCallback) {
 		openOfficeDialog.addEventHandler(Office.EventType.DialogEventReceived, function (event) {
 			if (event.error === 12006) {
 				openOfficeDialog = null;
+				if (pendingShowOutlookPopup) {
+					const pending = pendingShowOutlookPopup;
+					pendingShowOutlookPopup = null;
+					if (typeof window.showOutlookPopup === 'function') {
+						window.showOutlookPopup(pending.data, pending.width, pending.height);
+					}
+				}
 			}
 		});
 
@@ -675,10 +688,34 @@ function handleDialogMessageFromChild(msg) {
 			window.CloseTheTaskPane();
 		}
 		break;
+	case 'CloseDialogAndTaskPane':
+		// SendEmail CloseAll (non-sync): do not call CloseTheTaskPane synchronously before close() (12007 zombie).
+		// Some hosts never deliver DialogEventReceived (12006) before the task pane must act again, so run CloseTheTaskPane in a microtask after close()+null.
+		if (openOfficeDialog) {
+			try {
+				openOfficeDialog.close();
+			} catch (e) {
+				console.error('Office dialog close failed:', e);
+			}
+			openOfficeDialog = null;
+		}
+		queueMicrotask(function () {
+			if (typeof window.CloseTheTaskPane === 'function') {
+				window.CloseTheTaskPane();
+			}
+		});
+		break;
 	case 'showOutlookPopup':
 		if (typeof window.showOutlookPopup === 'function') {
 			window.showOutlookPopup(args[0], args[1] || 35, args[2] || 30);
 		}
+		break;
+	case 'DeferShowOutlookPopup':
+		pendingShowOutlookPopup = {
+			data: args[0],
+			width: args[1] != null ? args[1] : 35,
+			height: args[2] != null ? args[2] : 30
+		};
 		break;
 	case 'setCategoryToEmail':
 		if (typeof window.setCategoryToEmail === 'function') {

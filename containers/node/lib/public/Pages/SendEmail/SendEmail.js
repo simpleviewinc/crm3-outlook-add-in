@@ -681,19 +681,24 @@ function CloseAll() {
 			OutboundEmails: EmailSyncCompletedDialogObj.NumberOfOutboundEmails,
 			IsCloseTaskPanel: true
 		};
-		callOpenerNoReturn('showOutlookPopup', dataObj, 35, 30);
 		if (isOfficeDialogMode() && typeof Office !== 'undefined' && Office.context && Office.context.ui) {
+			callOpenerNoReturn('DeferShowOutlookPopup', dataObj, 35, 30);
 			Office.context.ui.messageParent('close');
 		} else {
+			callOpenerNoReturn('showOutlookPopup', dataObj, 35, 30);
 			window.close();
 		}
 	} else {
-		// Close task pane before closing the dialog: if 'close' is handled first, the parent may tear
-		// down the dialog before the JSON message for CloseTheTaskPane is processed (message lost).
-		callOpenerNoReturn('CloseTheTaskPane');
 		if (isOfficeDialogMode() && typeof Office !== 'undefined' && Office.context && Office.context.ui) {
-			Office.context.ui.messageParent('close');
+			// Single parent message: close Office dialog first, defer CloseTheTaskPane until 12006 on parent.
+			// Sending CloseTheTaskPane before close() runs closeContainer() and strands the dialog (12007).
+			try {
+				Office.context.ui.messageParent(JSON.stringify({ method: 'CloseDialogAndTaskPane', args: [] }));
+			} catch (e) {
+				console.error('messageParent CloseDialogAndTaskPane failed:', e);
+			}
 		} else {
+			callOpenerNoReturn('CloseTheTaskPane');
 			window.close();
 		}
 	}
