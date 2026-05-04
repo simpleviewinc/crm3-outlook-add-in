@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 /* global Office, GetDataFromLocalStorageAndSetApiUrlGlobal, ApiUrl*/
 const { createNestablePublicClientApplication } = msal;
 window.MatchedData = {};
@@ -618,10 +618,24 @@ function openPopupViaOfficeDialog(url, title, width, height, onloadCallback) {
 				// Treat as simple message (e.g. 'close')
 				if (arg.message === 'close') {
 					if (openOfficeDialog) {
-						// Do not set openOfficeDialog = null here. The host still counts this dialog as
-						// active until DialogEventReceived (12006). Clearing early causes displayDialogAsync
-						// to fail with 12007 if the user opens another dialog immediately (e.g. after Skip).
-						openOfficeDialog.close();
+						try {
+							openOfficeDialog.close();
+						} catch (closeErr) {
+							console.error('Office dialog close failed:', closeErr);
+						}
+						// Some hosts omit DialogEventReceived (12006); clear the ref after close() (same as
+						// CloseDialogAndTaskPane) so the next displayDialogAsync is not blocked by our guard.
+						openOfficeDialog = null;
+					}
+					// When 12006 is missing, DeferShowOutlookPopup would never run; flush after close like 12006 would.
+					if (pendingShowOutlookPopup) {
+						const pending = pendingShowOutlookPopup;
+						pendingShowOutlookPopup = null;
+						queueMicrotask(function () {
+							if (typeof window.showOutlookPopup === 'function') {
+								window.showOutlookPopup(pending.data, pending.width, pending.height);
+							}
+						});
 					}
 					if (pendingReloadTaskPane !== undefined) {
 						const doReload = pendingReloadTaskPane;
@@ -637,6 +651,7 @@ function openPopupViaOfficeDialog(url, title, width, height, onloadCallback) {
 		openOfficeDialog.addEventHandler(Office.EventType.DialogEventReceived, function (event) {
 			if (event.error === 12006) {
 				openOfficeDialog = null;
+				// Plain 'close' may already have nulled the ref and flushed pendingShowOutlookPopup via queueMicrotask.
 				if (pendingShowOutlookPopup) {
 					const pending = pendingShowOutlookPopup;
 					pendingShowOutlookPopup = null;
