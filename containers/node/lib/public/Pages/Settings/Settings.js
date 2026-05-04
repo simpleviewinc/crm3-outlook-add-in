@@ -97,7 +97,7 @@ function initSettings() {
 			})
 			.fail(function (jqXHR, textStatus, errorThrown) {
 				$("#settingLoader").hide();
-				createDialog("Url or credentials not valid.", function () { console.error('Error:', textStatus, errorThrown); });
+				createDialog("URL or credentials are not valid.", function () { console.error('Error:', textStatus, errorThrown); });
 			});
 	}
 

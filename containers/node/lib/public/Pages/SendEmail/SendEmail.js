@@ -629,35 +629,46 @@ function SendTheEmail() {
 			});
 		})
 		.fail(function (jqXHR, textStatus, errorThrown) {
-			let errorMessage = "";
-			if (jqXHR.responseText.includes('faultstring')) {
-				const parser = new DOMParser();
-				const xmlDoc = parser.parseFromString(jqXHR.responseText, "application/xml");
-
-				let getErrorSting = xmlDoc.getElementsByTagName("faultstring")[0].innerHTML;
-				console.log(getErrorSting);
-
-				const bracketMatch = getErrorSting.match(/\[(.*?)\]/);
-				console.log("bracketMatch", bracketMatch)
-				if (bracketMatch) {
-					const extractedString = bracketMatch[1];
-					console.log("bracketMatch", extractedString);
-					// Further extract the relevant message after the colon
-					const messageMatch = extractedString.match(/:\s*(.*)/);
-					if (messageMatch) {
-						errorMessage = messageMatch[1].trim(); // Get the message after the colon
-						console.log("errorMessage", errorMessage);
-					}
-				} else if (getErrorSting.includes(':')) {
-					errorMessage = getErrorSting;
-				}
+			let userFacingMessage;
+			if (jqXHR.status === 413) {
+				userFacingMessage = `
+					This email could not be sent because it exceeds the 20 MB limit.
+					
+					Try removing large attachments, compressing files, or sending a smaller copy of the message.
+				`;
 			} else {
-				errorMessage = errorThrown;
+				let errorMessage = "";
+				const responseText = jqXHR.responseText || "";
+				if (responseText.includes('faultstring')) {
+					const parser = new DOMParser();
+					const xmlDoc = parser.parseFromString(responseText, "application/xml");
+
+					let getErrorSting = xmlDoc.getElementsByTagName("faultstring")[0].innerHTML;
+					console.log(getErrorSting);
+
+					const bracketMatch = getErrorSting.match(/\[(.*?)\]/);
+					console.log("bracketMatch", bracketMatch)
+					if (bracketMatch) {
+						const extractedString = bracketMatch[1];
+						console.log("bracketMatch", extractedString);
+						// Further extract the relevant message after the colon
+						const messageMatch = extractedString.match(/:\s*(.*)/);
+						if (messageMatch) {
+							errorMessage = messageMatch[1].trim(); // Get the message after the colon
+							console.log("errorMessage", errorMessage);
+						}
+					} else if (getErrorSting.includes(':')) {
+						errorMessage = getErrorSting;
+					}
+				} else {
+					errorMessage = errorThrown;
+				}
+				userFacingMessage = "Simpleview API error: " + errorMessage;
 			}
 
 			// Log the response text for debugging
 			$("#sendEmailLoader").hide();
-			createDialog("Simpleview API error: " + errorMessage, function () {
+			createDialog(userFacingMessage, function () {
 				removeFirstItem(currentSelectedData);
 				if (currentSelectedData && currentSelectedData.length > 0) {
 					ProcessSelectedData(currentSelectedData);

@@ -151,7 +151,7 @@ function createDialog(msg, callbackFunction) {
 	const message = document.createElement('p');
 	message.style.fontSize = '16px';
 	message.style.overflowWrap = 'break-word';
-	message.textContent = msg;
+	message.innerText = msg;
 	
 	// Create the OK button
 	const okButton = document.createElement('button');
