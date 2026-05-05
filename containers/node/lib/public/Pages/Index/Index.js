@@ -224,29 +224,42 @@ window.ReloadTaskPane = function (isRemoveSettings) {
 
 // eslint-disable-next-line no-unused-vars
 
+/** Opens GenericPopup. extraBusyRetries: rAF retries when OWA still reports an active dialog (e.g. right after closing SendEmail). */
+function openOutlookGenericPopup(data, width, height, extraBusyRetries) {
+	let dialogUrl = window.location.origin + '/Pages/Dialog/GenericPopup.html' + '?data=' + encodeURIComponent(JSON.stringify(data));
+	const attempt = function (extraLeft) {
+		Office.context.ui.displayDialogAsync(dialogUrl, { width: width, height: height, displayInIframe: true }, function (result) {
+			if (result.status === Office.AsyncResultStatus.Succeeded) {
+				let dialog = result.value;
+				dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
+					if (arg.message === 'close') {
+						dialog.close();
+						if (data.IsCloseTaskPanel)
+							CloseTheTaskPane();
+					}
+				});
+				if (data.IsCloseTaskPanel) {
+					dialog.addEventHandler(Office.EventType.DialogEventReceived, function (event) {
+						if (data.IsCloseTaskPanel && event.error === 12006)
+							CloseTheTaskPane();
+					});
+				}
+				return;
+			}
+			const err = result.error;
+			const busy = err && (err.code === 12007 || (err.message && String(err.message).indexOf('active dialog') !== -1));
+			if (busy && extraLeft > 0) {
+				requestAnimationFrame(function () { attempt(extraLeft - 1); });
+				return;
+			}
+			console.error('Dialog failed to open:', err && err.message);
+		});
+	};
+	attempt(extraBusyRetries);
+}
 
 window.showOutlookPopup = function (data, width, height) {
-	let dialogUrl = window.location.origin + '/Pages/Dialog/GenericPopup.html' + '?data=' + encodeURIComponent(JSON.stringify(data));
-	Office.context.ui.displayDialogAsync(dialogUrl, { width: width, height: height, displayInIframe: true }, function (result) {
-		if (result.status === Office.AsyncResultStatus.Succeeded) {
-			let dialog = result.value;
-			dialog.addEventHandler(Office.EventType.DialogMessageReceived, function (arg) {
-				if (arg.message === 'close') {
-					dialog.close();
-					if (data.IsCloseTaskPanel)
-						CloseTheTaskPane();
-				}
-			});
-			if (data.IsCloseTaskPanel) {
-				dialog.addEventHandler(Office.EventType.DialogEventReceived, function (event) {
-					if (data.IsCloseTaskPanel && event.error === 12006)
-						CloseTheTaskPane();
-				});
-			}
-		} else {
-			console.error('Dialog failed to open:', result.error.message);
-		}
-	});
+	openOutlookGenericPopup(data, width, height, 0);
 }
 
 // Attach click event handlers for buttons
@@ -632,9 +645,7 @@ function openPopupViaOfficeDialog(url, title, width, height, onloadCallback) {
 						const pending = pendingShowOutlookPopup;
 						pendingShowOutlookPopup = null;
 						queueMicrotask(function () {
-							if (typeof window.showOutlookPopup === 'function') {
-								window.showOutlookPopup(pending.data, pending.width, pending.height);
-							}
+							openOutlookGenericPopup(pending.data, pending.width, pending.height, 20);
 						});
 					}
 					if (pendingReloadTaskPane !== undefined) {
@@ -655,9 +666,7 @@ function openPopupViaOfficeDialog(url, title, width, height, onloadCallback) {
 				if (pendingShowOutlookPopup) {
 					const pending = pendingShowOutlookPopup;
 					pendingShowOutlookPopup = null;
-					if (typeof window.showOutlookPopup === 'function') {
-						window.showOutlookPopup(pending.data, pending.width, pending.height);
-					}
+					openOutlookGenericPopup(pending.data, pending.width, pending.height, 20);
 				}
 			}
 		});
