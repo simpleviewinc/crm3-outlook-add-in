@@ -31,3 +31,7 @@ workflows:
             - circleci-config/gce_build_deploy_kubernetes
             - circleci-config/gce_test_kubernetes
 
+  security_checks:
+    jobs:
+      - circleci-config/security_checks:
+          context: default
