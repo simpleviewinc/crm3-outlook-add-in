@@ -1,4 +1,4 @@
 mountdir: false
 frontendIp: 10.1.6.4
 imagePullPolicy: Always
-replicas: 2
+replicas: 1
